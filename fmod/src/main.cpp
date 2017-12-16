@@ -1,23 +1,21 @@
-// myextension.cpp
-// Extension lib defines
 #define LIB_NAME "DefoldFMOD"
 #define MODULE_NAME "fmod"
 
-// include the Defold SDK
 #include <dmsdk/sdk.h>
 
 #if defined(DM_PLATFORM_OSX)
 
+#include "fmod_bridge.hpp"
+
 dmExtension::Result InitializeDefoldFMOD(dmExtension::Params* params)
 {
-    lua_State* L = params->m_L;
-    printf("Initializing FMOD with lua state %p\n", L);
+    FMODBridge::init(params->m_L);
     return dmExtension::RESULT_OK;
 }
 
 dmExtension::Result FinalizeDefoldFMOD(dmExtension::Params* params)
 {
-    printf("Finalizing FMOD\n");
+    FMODBridge::finalize();
     return dmExtension::RESULT_OK;
 }
 
