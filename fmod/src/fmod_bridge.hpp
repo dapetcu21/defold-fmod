@@ -10,6 +10,10 @@ namespace FMODBridge {
     void finalize();
 
     extern FMOD::Studio::System* system;
+    extern FMOD::System* lowLevelSystem;
+
+    void registerClasses(lua_State *L);
+    void registerEnums(lua_State *L);
 }
 
 #endif

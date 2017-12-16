@@ -8,22 +8,7 @@ using namespace FMODBridge;
 using namespace luabridge;
 
 FMOD::Studio::System* FMODBridge::system = NULL;
-
-namespace FMODBridge {
-    void registerClasses(lua_State *L);
-}
-
-void FMODBridge::registerClasses(lua_State *L) {
-    getGlobalNamespace(L)
-        .beginNamespace("fmod")
-            .beginClass<FMOD::System>("System")
-            .endClass()
-            .beginNamespace("studio")
-                .beginClass<FMOD::Studio::System>("System")
-                .endClass()
-            .endNamespace()
-        .endNamespace();
-}
+FMOD::System* FMODBridge::lowLevelSystem = NULL;
 
 void FMODBridge::init(lua_State *L) {
     FMOD_RESULT res;
@@ -35,25 +20,33 @@ void FMODBridge::init(lua_State *L) {
         return;
     }
 
+    res = system->getLowLevelSystem(&lowLevelSystem);
+    if (res != FMOD_OK) {
+        printf("FMOD Error: %s\n", FMOD_ErrorString(res));
+        system->release();
+        system = NULL;
+        return;
+    }
+
+    void* extraDriverData = NULL;
+    res = system->initialize(1024, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, extraDriverData);
+    if (res != FMOD_OK) {
+        printf("FMOD Error: %s\n", FMOD_ErrorString(res));
+        system->release();
+        system = NULL;
+        return;
+    }
+
+    registerEnums(L);
     registerClasses(L);
 
     getGlobalNamespace(L)
         .beginNamespace("fmod")
+            .addVariable("system", &lowLevelSystem, false)
             .beginNamespace("studio")
                 .addVariable("system", &system, false)
             .endNamespace()
         .endNamespace();
-
-    FMOD::System* lowLevelSystem;
-    res = system->getLowLevelSystem(&lowLevelSystem);
-    if (res != FMOD_OK) {
-        printf("FMOD Error: %s\n", FMOD_ErrorString(res));
-    } else {
-        getGlobalNamespace(L)
-            .beginNamespace("fmod")
-                .addVariable("system", &lowLevelSystem, false)
-            .endNamespace();
-    }
 }
 
 void FMODBridge::finalize() {
