@@ -8,10 +8,27 @@ function init(self)
 
   local event = fmod.studio.system.get_event("event:/Vehicles/Basic Engine")
   print(event:get_path())
+
+  local listener_attr = fmod._3D_ATTRIBUTES()
+  self.listener_attr = listener_attr
+  listener_attr.position = go.get_world_position("listener")
+  listener_attr.velocity = vmath.vector3(0.0)
+  listener_attr.forward = vmath.vector3(0.0, 1.0, 0.0)
+  listener_attr.up = vmath.vector3(0.0, 0.0, 1.0)
+  fmod.studio.system.set_listener_attributes(0, listener_attr)
+end
+
+local function update_attributes(attr, dt, new_position)
+  local delta_pos = new_position - attr.position
+  attr.position = new_position
+  attr.velocity = delta_pos * (1.0 / dt)
 end
 
 function update(self, dt)
   local listener_pos = go.get_world_position("listener")
+  update_attributes(self.listener_attr, dt, listener_pos)
+  fmod.studio.system.set_listener_attributes(0, self.listener_attr)
+
   local source_pos = go.get_world_position("source")
   -- print("Should set positions now")
 end
