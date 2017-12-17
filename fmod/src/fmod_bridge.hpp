@@ -7,6 +7,7 @@
 
 namespace FMODBridge {
     void init(lua_State* L);
+    void update();
     void finalize();
 
     extern FMOD::Studio::System* system;

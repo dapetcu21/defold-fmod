@@ -13,6 +13,12 @@ dmExtension::Result InitializeDefoldFMOD(dmExtension::Params* params)
     return dmExtension::RESULT_OK;
 }
 
+dmExtension::Result UpdateDefoldFMOD(dmExtension::Params* params)
+{
+    FMODBridge::update();
+    return dmExtension::RESULT_OK;
+}
+
 dmExtension::Result FinalizeDefoldFMOD(dmExtension::Params* params)
 {
     FMODBridge::finalize();
@@ -25,6 +31,8 @@ dmExtension::Result InitializeDefoldFMOD(dmExtension::Params* params)
 {
     return dmExtension::RESULT_OK;
 }
+
+#define UpdateDefoldFMOD 0
 
 dmExtension::Result FinalizeDefoldFMOD(dmExtension::Params* params)
 {
@@ -43,4 +51,4 @@ dmExtension::Result AppFinalizeDefoldFMOD(dmExtension::AppParams* params)
     return dmExtension::RESULT_OK;
 }
 
-DM_DECLARE_EXTENSION(DefoldFMOD, LIB_NAME, AppInitializeDefoldFMOD, AppFinalizeDefoldFMOD, InitializeDefoldFMOD, 0, 0, FinalizeDefoldFMOD)
+DM_DECLARE_EXTENSION(DefoldFMOD, LIB_NAME, AppInitializeDefoldFMOD, AppFinalizeDefoldFMOD, InitializeDefoldFMOD, UpdateDefoldFMOD, 0, FinalizeDefoldFMOD)

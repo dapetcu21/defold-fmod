@@ -50,6 +50,18 @@ void FMODBridge::init(lua_State *L) {
     registerClasses(L);
 }
 
+void FMODBridge::update() {
+    if (system) {
+        FMOD_RESULT res = system->update();
+        if (res != FMOD_OK) {
+            printf("FMOD Error: %s\n", FMOD_ErrorString(res));
+            system->release();
+            system = NULL;
+            return;
+        }
+    }
+}
+
 void FMODBridge::finalize() {
     if (system) {
         FMOD_RESULT res = system->release();
