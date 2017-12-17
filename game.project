@@ -1,6 +1,7 @@
 [project]
 title = My project
 version = 0.1
+custom_resources = resources/
 
 [bootstrap]
 main_collection = /main/main.collectionc

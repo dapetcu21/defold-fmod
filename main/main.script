@@ -1,6 +1,13 @@
 function init(self)
   go.animate("center", "euler.z", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_LINEAR, 3.0)
   msg.post(".", "acquire_input_focus")
+
+  fmod.studio.system.load_bank_memory(resource.load("/resources/Master Bank.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
+  fmod.studio.system.load_bank_memory(resource.load("/resources/Master Bank.strings.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
+  fmod.studio.system.load_bank_memory(resource.load("/resources/Vehicles.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
+
+  local event = fmod.studio.system.get_event("event:/Vehicles/Basic Engine")
+  print(event:get_path())
 end
 
 function update(self, dt)

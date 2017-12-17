@@ -3,6 +3,7 @@ files['.luacheckrc'].global = false
 unused_args = false
 
 globals = {
+  "fmod",
   "sys",
   "go",
   "gui",
