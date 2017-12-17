@@ -38,4 +38,6 @@ DYLD_LIBRARY_PATH="/path/to/defold-fmod/fmod/lib/x86_64-osx" /path/to/Defold.app
 
 ## Usage
 
-> TODO. Meanwhile, see example.
+> TODO. Meanwhile, see [example].
+
+[example]: ./main/main.script
