@@ -6,6 +6,8 @@
 #include <fmod_studio.hpp>
 #include <fmod.hpp>
 #include <fmod_errors.h>
+#include <map>
+#include "fmod_bridge.hpp"
 
 namespace FMODBridge {
     inline void errCheck_(FMOD_RESULT res, lua_State* L) {
@@ -14,6 +16,31 @@ namespace FMODBridge {
             lua_error(L);
         }
     }
+
+    extern std::map<void*, int> refCounts;
+
+    template<class T>
+    class RefCountedProxy {
+    protected:
+        T* instance;
+    public:
+        RefCountedProxy(T* instance_): instance(instance_) {
+            refCounts[instance_] += 1;
+        }
+        RefCountedProxy(const RefCountedProxy<T>& other): instance(other.instance) {
+            refCounts[instance] += 1;
+        }
+        ~RefCountedProxy() {
+            int count = refCounts[instance];
+            if (count <= 1) {
+                if (FMODBridge::system) { instance->release(); }
+                refCounts.erase(instance);
+            } else {
+                refCounts[instance] = count - 1;
+            }
+        }
+    };
+
 }
 
 #define errCheck(res) FMODBridge::errCheck_(res, L)

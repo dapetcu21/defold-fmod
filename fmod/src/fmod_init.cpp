@@ -28,6 +28,15 @@ void FMODBridge::init(lua_State *L) {
         return;
     }
 
+    // TODO: Make this configurable somehow
+    res = lowLevelSystem->setSoftwareFormat(0, FMOD_SPEAKERMODE_5POINT1, 0);
+    if (res != FMOD_OK) {
+        printf("FMOD Error: %s\n", FMOD_ErrorString(res));
+        system->release();
+        system = NULL;
+        return;
+    }
+
     void* extraDriverData = NULL;
     res = system->initialize(1024, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, extraDriverData);
     if (res != FMOD_OK) {
