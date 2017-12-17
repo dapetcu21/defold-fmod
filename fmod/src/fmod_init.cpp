@@ -39,14 +39,6 @@ void FMODBridge::init(lua_State *L) {
 
     registerEnums(L);
     registerClasses(L);
-
-    getGlobalNamespace(L)
-        .beginNamespace("fmod")
-            .addVariable("system", &lowLevelSystem, false)
-            .beginNamespace("studio")
-                .addVariable("system", &system, false)
-            .endNamespace()
-        .endNamespace();
 }
 
 void FMODBridge::finalize() {
