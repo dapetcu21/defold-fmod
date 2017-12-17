@@ -2,7 +2,7 @@
 
 # FMOD extension for Defold
 
-> **Experimental** FMOD bindings for Defold. Currently macOS-only.
+> **Experimental** [FMOD] bindings for Defold. Currently macOS-only.
 
 ## Installation
 
@@ -41,3 +41,4 @@ DYLD_LIBRARY_PATH="/path/to/defold-fmod/fmod/lib/x86_64-osx" /path/to/Defold.app
 > TODO. Meanwhile, see [example].
 
 [example]: ./main/main.script
+[FMOD]: https://fmod.com
