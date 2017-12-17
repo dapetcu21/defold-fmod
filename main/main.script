@@ -1,7 +1,6 @@
 local world_scale = 0.01
 
 function init(self)
-  go.animate("center", "euler.z", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_LINEAR, 3.0)
   msg.post(".", "acquire_input_focus")
 
   fmod.studio.system.load_bank_memory(resource.load("/resources/Master Bank.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
@@ -9,14 +8,15 @@ function init(self)
   fmod.studio.system.load_bank_memory(resource.load("/resources/Vehicles.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
 
   local event_description = fmod.studio.system.get_event("event:/Vehicles/Basic Engine")
-  self.event_description = event_description
+  local event = event_description:create_instance()
+  self.event = event
 
   local listener_attr = fmod._3D_ATTRIBUTES()
   self.listener_attr = listener_attr
   listener_attr.position = go.get_world_position("listener") * world_scale
   listener_attr.velocity = vmath.vector3(0.0)
   listener_attr.forward = vmath.vector3(0.0, 1.0, 0.0)
-  listener_attr.up = vmath.vector3(0.0, 0.0, 1.0)
+  listener_attr.up = vmath.vector3(0.0, 0.0, -1.0)
   fmod.studio.system.set_listener_attributes(0, listener_attr)
 
   local source_attr = fmod._3D_ATTRIBUTES()
@@ -24,7 +24,11 @@ function init(self)
   source_attr.position = go.get_world_position("source") * world_scale
   source_attr.velocity = vmath.vector3(0.0)
   source_attr.forward = vmath.vector3(0.0, 1.0, 0.0)
-  source_attr.up = vmath.vector3(0.0, 0.0, 1.0)
+  source_attr.up = vmath.vector3(0.0, 0.0, -1.0)
+  event:set_3d_attributes(source_attr)
+
+  event:set_parameter_value("RPM", 650.0)
+  event:start()
 end
 
 local function update_attributes(attr, dt, new_position)
@@ -40,14 +44,11 @@ function update(self, dt)
 
   local source_pos = go.get_world_position("source") * world_scale
   update_attributes(self.source_attr, dt, source_pos)
+  self.event:set_3d_attributes(self.source_attr)
 end
 
 function on_input(self, action_id, action)
-  if action_id == hash("click") and action.pressed then
-    local event = self.event_description:create_instance()
-    event:set_3d_attributes(self.source_attr)
-    event:set_parameter_value("RPM", 650.0)
-    event:start()
-    print("Started " .. event:get_description():get_path())
+  if action_id == hash("click") then
+    go.set_position(vmath.vector3(action.x, action.y, 0.0), "source")
   end
 end
