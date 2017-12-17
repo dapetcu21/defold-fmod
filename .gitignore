@@ -8,3 +8,7 @@ build
 .cproject
 builtins
 .internal
+
+/fmod/include/fmod*
+/fmod/lib/x86_64-osx/libfmod*.dylib
+/fmod/res/x86_64-osx/Contents/MacOS/libfmod*.dylib
