@@ -30,6 +30,7 @@ namespace FMODBridge {
         RefCountedProxy(const RefCountedProxy<T>& other): instance(other.instance) {
             refCounts[instance] += 1;
         }
+        operator T*() const { return instance; }
         ~RefCountedProxy() {
             int count = refCounts[instance];
             if (count <= 1) {
@@ -41,12 +42,21 @@ namespace FMODBridge {
         }
     };
 
+    template<class T>
+    class Proxy {
+    protected:
+        T* instance;
+    public:
+        Proxy(T* instance_): instance(instance_) {}
+        Proxy(const Proxy<T>& other): instance(other.instance) {}
+        operator T*() const { return instance; }
+    };
 }
 
 #define errCheck(res) FMODBridge::errCheck_(res, L)
 
-#define makeStringGetter(instance, fname) \
-    std::string fname(lua_State* L) { \
+#define defineStringGetter(declname, fname) \
+    std::string declname(lua_State* L) { \
         int size; \
         errCheck(instance->fname(NULL, 0, &size)); \
         char* tmp = new char[size]; \
@@ -56,45 +66,59 @@ namespace FMODBridge {
         return str; \
     }
 
-#define makeCastGetter(RT, T, instance, fname) \
-    RT fname(lua_State* L) { \
+#define makeStringGetter(fname) defineStringGetter(fname, fname)
+
+#define defineCastGetter(declname, fname, RT, T) \
+    RT declname(lua_State* L) { \
         T result; \
         errCheck(instance->fname(&result)); \
         return result; \
     }
 
-#define makeCastGetter1(RT, T, instance, fname, T1) \
-    RT fname(T1 arg1, lua_State* L) { \
+#define defineCastGetter1(declname, fname, RT, T, T1) \
+    RT declname(T1 arg1, lua_State* L) { \
         T result; \
         errCheck(instance->fname(arg1, &result)); \
         return result; \
     }
 
-#define makeCastGetter2(RT, T, instance, fname, T1, T2) \
-    RT fname(T1 arg1, T2 arg2, lua_State* L) { \
+#define defineCastGetter2(declname, fname, RT, T, T1, T2) \
+    RT declname(T1 arg1, T2 arg2, lua_State* L) { \
         T result; \
         errCheck(instance->fname(arg1, arg2, &result)); \
         return result; \
     }
 
-#define makeValueGetter(T, instance, fname) makeCastGetter(T, T, instance, fname)
-#define makeValueGetter1(T, instance, fname, T1) makeCastGetter1(T, T, instance, fname, T1)
-#define makeValueGetter2(T, instance, fname, T1, T2) makeCastGetter2(T, T, instance, fname, T1, T2)
+#define defineGetter(declname, fname, T) defineCastGetter(declname, fname, T, T)
+#define defineGetter1(declname, fname, T, T1) defineCastGetter1(declname, fname, T, T, T1)
+#define defineGetter2(declname, fname, T, T1, T2) defineCastGetter2(declname, fname, T, T, T1, T2)
 
-#define makeMethod(instance, fname) \
-    void fname(lua_State* L) { \
+#define makeGetter(fname, T) defineGetter(fname, fname, T)
+#define makeGetter1(fname, T, T1) defineGetter1(fname, fname, T, T1)
+#define makeGetter2(fname, T, T1, T2) defineGetter2(fname, fname, T, T1, T2)
+
+#define makeCastGetter(fname, RT, T) defineCastGetter(fname, fname, RT, T)
+#define makeCastGetter1(fname, RT, T, T1) defineCastGetter1(fname, fname, RT, T, T1)
+#define makeCastGetter2(fname, RT, T, T1, T2) defineCastGetter2(fname, fname, RT, T, T1, T2)
+
+#define defineMethod(declname, fname) \
+    void declname(lua_State* L) { \
         errCheck(instance->fname()); \
     }
 
-#define makeMethod1(instance, fname, T1) \
-    void fname(T1 arg1, lua_State* L) { \
+#define defineMethod1(declname, fname, T1) \
+    void declname(T1 arg1, lua_State* L) { \
         errCheck(instance->fname(arg1)); \
     }
 
-#define makeMethod2(instance, fname, T1, T2) \
-    void fname(T1 arg1, T2 arg2, lua_State* L) { \
+#define defineMethod2(declname, fname, T1, T2) \
+    void declname(T1 arg1, T2 arg2, lua_State* L) { \
         errCheck(instance->fname(arg1, arg2)); \
     }
+
+#define makeMethod(fname) defineMethod(fname, fname)
+#define makeMethod1(fname, T1) defineMethod1(fname, fname, T1)
+#define makeMethod2(fname, T1, T2) defineMethod2(fname, fname, T1, T2)
 
 namespace luabridge {
     template <>

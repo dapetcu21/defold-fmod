@@ -3,11 +3,11 @@ local world_scale = 0.01
 function init(self)
   msg.post(".", "acquire_input_focus")
 
-  fmod.studio.system.load_bank_memory(resource.load("/resources/Master Bank.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
-  fmod.studio.system.load_bank_memory(resource.load("/resources/Master Bank.strings.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
-  fmod.studio.system.load_bank_memory(resource.load("/resources/Vehicles.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
+  fmod.studio.system:load_bank_memory(resource.load("/resources/Master Bank.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
+  fmod.studio.system:load_bank_memory(resource.load("/resources/Master Bank.strings.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
+  fmod.studio.system:load_bank_memory(resource.load("/resources/Vehicles.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
 
-  local event_description = fmod.studio.system.get_event("event:/Vehicles/Basic Engine")
+  local event_description = fmod.studio.system:get_event("event:/Vehicles/Basic Engine")
   local event = event_description:create_instance()
   self.event = event
 
@@ -17,7 +17,7 @@ function init(self)
   listener_attr.velocity = vmath.vector3(0.0)
   listener_attr.forward = vmath.vector3(0.0, 1.0, 0.0)
   listener_attr.up = vmath.vector3(0.0, 0.0, -1.0)
-  fmod.studio.system.set_listener_attributes(0, listener_attr)
+  fmod.studio.system:set_listener_attributes(0, listener_attr)
 
   local source_attr = fmod._3D_ATTRIBUTES()
   self.source_attr = source_attr
@@ -40,7 +40,7 @@ end
 function update(self, dt)
   local listener_pos = go.get_world_position("listener") * world_scale
   update_attributes(self.listener_attr, dt, listener_pos)
-  fmod.studio.system.set_listener_attributes(0, self.listener_attr)
+  fmod.studio.system:set_listener_attributes(0, self.listener_attr)
 
   local source_pos = go.get_world_position("source") * world_scale
   update_attributes(self.source_attr, dt, source_pos)
