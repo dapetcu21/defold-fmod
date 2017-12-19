@@ -39,7 +39,33 @@ DYLD_LIBRARY_PATH="/path/to/defold-fmod/fmod/lib/x86_64-osx" /path/to/Defold.app
 
 ## Usage
 
-> TODO. Meanwhile, see [example].
+Structs and classes are exposed on the `fmod` and `fmod.studio` namespaces. All
+method names are converted from `camelCase` to `snake_case`. Methods that
+returned a value through a last pointer argument now actually return the value and
+throw with an error string when their result is not `FMOD_OK`.
+
+Enums are exposed on the `fmod` table without the leading `FMOD_`. (eg.: `FMOD_STUDIO_PLAYBACK_PLAYING` is exposed as `fmod.STUDIO_PLAYBACK_PLAYING`)
+
+A fully initialised instance of `FMOD::Studio::System` is exposed to Lua as `fmod.studio.system` and the corresponding instance of `FMOD::System` (the low level system), is exposed as `fmod.system`.
+
+See an [example script][example] to get an idea.
+
+Refer to the [FMOD API Documentation] for details about the available APIs.
+
+Not all APIs are exposed yet. For a full list of exposed functions, see [fmod/src/fmod_classes.cpp#L161](fmod/src/fmod_classes.cpp#L161).
+
+Here's some sample code:
+
+```lua
+fmod.studio.system:load_bank_memory(resource.load("/resources/Master Bank.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
+fmod.studio.system:load_bank_memory(resource.load("/resources/Master Bank.strings.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
+fmod.studio.system:load_bank_memory(resource.load("/resources/Vehicles.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
+
+local event_description = fmod.studio.system:get_event("event:/Vehicles/Basic Engine")
+local event = event_description:create_instance()
+event:start()
+```
 
 [example]: ./main/main.script
 [FMOD]: https://fmod.com
+[FMOD API Documentation]: https://www.fmod.com/resources/documentation-api
