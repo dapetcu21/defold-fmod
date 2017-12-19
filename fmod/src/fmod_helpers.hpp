@@ -60,13 +60,25 @@ namespace FMODBridge {
         int size; \
         errCheck(instance->fname(NULL, 0, &size)); \
         char* tmp = new char[size]; \
-        errCheck(instance->getPath(tmp, size, NULL)); \
+        errCheck(instance->fname(tmp, size, NULL)); \
+        std::string str(tmp); \
+        delete[] tmp; \
+        return str; \
+    }
+
+#define defineStringGetter1(declname, fname, T1) \
+    std::string declname(T1 arg1, lua_State* L) { \
+        int size; \
+        errCheck(instance->fname(arg1, NULL, 0, &size)); \
+        char* tmp = new char[size]; \
+        errCheck(instance->fname(arg1, tmp, size, NULL)); \
         std::string str(tmp); \
         delete[] tmp; \
         return str; \
     }
 
 #define makeStringGetter(fname) defineStringGetter(fname, fname)
+#define makeStringGetter1(fname, T1) defineStringGetter1(fname, fname, T1)
 
 #define defineCastGetter(declname, fname, RT, T) \
     RT declname(lua_State* L) { \
@@ -119,6 +131,40 @@ namespace FMODBridge {
 #define makeMethod(fname) defineMethod(fname, fname)
 #define makeMethod1(fname, T1) defineMethod1(fname, fname, T1)
 #define makeMethod2(fname, T1, T2) defineMethod2(fname, fname, T1, T2)
+
+#define define2FloatGetter(declname, fname) \
+    int declname(lua_State* L) { \
+        float value, finalValue; \
+        errCheck(instance->fname(&value, &finalValue)); \
+        lua_pushnumber(L, value); \
+        lua_pushnumber(L, finalValue); \
+        return 2; \
+    }
+
+#define define2FloatGetter1(declname, fname, T1) \
+    int declname(lua_State* L) { \
+        T1 arg1 = luabridge::Stack<T1>::get(L, 2); \
+        float value, finalValue; \
+        errCheck(instance->fname(arg1, &value, &finalValue)); \
+        lua_pushnumber(L, value); \
+        lua_pushnumber(L, finalValue); \
+        return 2; \
+    }
+
+#define define2FloatGetter2(declname, fname, T1, T2) \
+    int declname(lua_State* L) { \
+        T1 arg1 = luabridge::Stack<T1>::get(L, 2); \
+        T2 arg2 = luabridge::Stack<T2>::get(L, 3); \
+        float value, finalValue; \
+        errCheck(instance->fname(arg1, arg2, &value, &finalValue)); \
+        lua_pushnumber(L, value); \
+        lua_pushnumber(L, finalValue); \
+        return 2; \
+    }
+
+#define make2FloatGetter(fname) define2FloatGetter(fname, fname)
+#define make2FloatGetter1(fname, T1) define2FloatGetter1(fname, fname, T1)
+#define make2FloatGetter2(fname, T1, T2) define2FloatGetter2(fname, fname, T1, T2)
 
 namespace luabridge {
     template <>
