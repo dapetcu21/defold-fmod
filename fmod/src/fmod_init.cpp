@@ -1,8 +1,10 @@
+#include "fmod_bridge.hpp"
+
+#ifdef PLATFORM_SUPPORTED
+
 #include <fmod_errors.h>
 #include <dmsdk/sdk.h>
 #include <LuaBridge/LuaBridge.h>
-
-#include "fmod_bridge.hpp"
 
 using namespace FMODBridge;
 using namespace luabridge;
@@ -69,3 +71,5 @@ void FMODBridge::finalize() {
         system = NULL;
     }
 }
+
+#endif

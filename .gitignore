@@ -12,3 +12,7 @@ builtins
 /fmod/include/fmod*
 /fmod/lib/x86_64-osx/libfmod*.dylib
 /fmod/res/x86_64-osx/Contents/MacOS/libfmod*.dylib
+/fmod/lib/x86_64-win32/fmod*.lib
+/fmod/res/x86_64-win32/fmod*.dll
+/fmod/lib/x86-win32/fmod*.lib
+/fmod/res/x86-win32/fmod*.dll

@@ -2,10 +2,9 @@
 #define MODULE_NAME "fmod"
 
 #include <dmsdk/sdk.h>
-
-#if defined(DM_PLATFORM_OSX)
-
 #include "fmod_bridge.hpp"
+
+#ifdef PLATFORM_SUPPORTED
 
 dmExtension::Result InitializeDefoldFMOD(dmExtension::Params* params)
 {

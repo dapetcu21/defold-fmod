@@ -1,4 +1,7 @@
 #include "fmod_bridge.hpp"
+
+#ifdef PLATFORM_SUPPORTED
+
 #include "fmod_helpers.hpp"
 #include <LuaBridge/LuaBridge.h>
 #include <string>
@@ -245,3 +248,5 @@ void FMODBridge::registerClasses(lua_State *L) {
             .endNamespace()
         .endNamespace();
 }
+
+#endif

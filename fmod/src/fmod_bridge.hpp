@@ -1,6 +1,9 @@
 #ifndef FMOD_BRIDGE_H
 #define FMOD_BRIDGE_H
 
+#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS)
+#define PLATFORM_SUPPORTED
+
 #include <dmsdk/sdk.h>
 #include <fmod_studio.hpp>
 #include <fmod.hpp>
@@ -17,4 +20,5 @@ namespace FMODBridge {
     void registerEnums(lua_State *L);
 }
 
+#endif
 #endif

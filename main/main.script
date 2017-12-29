@@ -3,6 +3,11 @@ local world_scale = 0.01
 function init(self)
   msg.post(".", "acquire_input_focus")
 
+  if not fmod then
+    label.set_text("#label", "Sorry! Your platform is not yet supported.")
+    return
+  end
+
   fmod.studio.system:load_bank_memory(resource.load("/resources/Master Bank.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
   fmod.studio.system:load_bank_memory(resource.load("/resources/Master Bank.strings.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
   fmod.studio.system:load_bank_memory(resource.load("/resources/Vehicles.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
