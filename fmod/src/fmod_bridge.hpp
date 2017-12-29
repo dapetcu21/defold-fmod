@@ -1,7 +1,7 @@
 #ifndef FMOD_BRIDGE_H
 #define FMOD_BRIDGE_H
 
-#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS)
+#if defined(DM_PLATFORM_OSX)
 #define PLATFORM_SUPPORTED
 
 #include <dmsdk/sdk.h>
