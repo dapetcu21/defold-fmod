@@ -89,8 +89,11 @@ private:
     }
     else
     {
-      // throw std::logic_error ("invalid stack");
+      #ifdef __EXCEPTIONS
+      throw std::logic_error ("invalid stack");
+      #else
       *(volatile int*)((volatile void*)0) = 42;
+      #endif
     }
   }
 
@@ -144,8 +147,11 @@ private:
         else
         {
           lua_pop (L, 2);
-          // throw std::logic_error ("not a cfunction");
+          #ifdef __EXCEPTIONS
+          throw std::logic_error ("not a cfunction");
+          #else
           *(volatile int*)((volatile void*)0) = 42;
+          #endif
         }
 
         rawgetfield (L, -1, "__propget");           // get __propget table
@@ -171,8 +177,11 @@ private:
             lua_pop (L, 2);
 
             // We only put cfunctions into __propget.
-            // throw std::logic_error ("not a cfunction");
+            #ifdef __EXCEPTIONS
+            throw std::logic_error ("not a cfunction");
+            #else
             *(volatile int*)((volatile void*)0) = 42;
+            #endif
           }
         }
         else
@@ -180,8 +189,11 @@ private:
           lua_pop (L, 2);
 
           // __propget is missing, or not a table.
-          // throw std::logic_error ("missing __propget table");
+          #ifdef __EXCEPTIONS
+          throw std::logic_error ("missing __propget table");
+          #else
           *(volatile int*)((volatile void*)0) = 42;
+          #endif
         }
 
         // Repeat the lookup in the __parent metafield,
@@ -201,8 +213,11 @@ private:
         {
           lua_pop (L, 2);
 
-          // throw std::logic_error ("__parent is not a table");
+          #ifdef __EXCEPTIONS
+          throw std::logic_error ("__parent is not a table");
+          #else
           *(volatile int*)((volatile void*)0) = 42;
+          #endif
         }
       }
 
@@ -403,8 +418,11 @@ private:
       }
       else
       {
-        // throw std::logic_error ("invalid stack");
+        #ifdef __EXCEPTIONS
+        throw std::logic_error ("invalid stack");
+        #else
         *(volatile int*)((volatile void*)0) = 42;
+        #endif
       }
     }
 

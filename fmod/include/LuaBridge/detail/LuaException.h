@@ -79,8 +79,11 @@ public:
   template <class Exception>
   static void Throw (Exception e)
   {
-    // throw e;
+    #ifdef __EXCEPTIONS
+    throw e;
+    #else
     *(volatile int*)((volatile void*)0) = 42;
+    #endif
   }
 
   //----------------------------------------------------------------------------
