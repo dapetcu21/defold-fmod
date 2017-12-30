@@ -4,6 +4,7 @@
 #if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_LINUX)
 #define PLATFORM_SUPPORTED
 
+#define DLIB_LOG_DOMAIN "fmod"
 #include <dmsdk/sdk.h>
 #include <fmod_studio.hpp>
 #include <fmod.hpp>

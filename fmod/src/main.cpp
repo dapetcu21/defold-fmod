@@ -1,7 +1,6 @@
 #define LIB_NAME "DefoldFMOD"
 #define MODULE_NAME "fmod"
 
-#include <dmsdk/sdk.h>
 #include "fmod_bridge.hpp"
 
 #ifdef PLATFORM_SUPPORTED

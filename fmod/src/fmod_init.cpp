@@ -3,7 +3,6 @@
 #ifdef PLATFORM_SUPPORTED
 
 #include <fmod_errors.h>
-#include <dmsdk/sdk.h>
 #include <LuaBridge/LuaBridge.h>
 
 using namespace FMODBridge;
