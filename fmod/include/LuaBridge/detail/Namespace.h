@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
   https://github.com/vinniefalco/LuaBridge
-  
+
   Copyright 2012, Vinnie Falco <vinnie.falco@gmail.com>
   Copyright 2007, Nathan Reed
 
@@ -89,7 +89,8 @@ private:
     }
     else
     {
-      throw std::logic_error ("invalid stack");
+      // throw std::logic_error ("invalid stack");
+      *(volatile int*)((volatile void*)0) = 42;
     }
   }
 
@@ -143,7 +144,8 @@ private:
         else
         {
           lua_pop (L, 2);
-          throw std::logic_error ("not a cfunction");
+          // throw std::logic_error ("not a cfunction");
+          *(volatile int*)((volatile void*)0) = 42;
         }
 
         rawgetfield (L, -1, "__propget");           // get __propget table
@@ -169,7 +171,8 @@ private:
             lua_pop (L, 2);
 
             // We only put cfunctions into __propget.
-            throw std::logic_error ("not a cfunction");
+            // throw std::logic_error ("not a cfunction");
+            *(volatile int*)((volatile void*)0) = 42;
           }
         }
         else
@@ -177,7 +180,8 @@ private:
           lua_pop (L, 2);
 
           // __propget is missing, or not a table.
-          throw std::logic_error ("missing __propget table");
+          // throw std::logic_error ("missing __propget table");
+          *(volatile int*)((volatile void*)0) = 42;
         }
 
         // Repeat the lookup in the __parent metafield,
@@ -197,7 +201,8 @@ private:
         {
           lua_pop (L, 2);
 
-          throw std::logic_error ("__parent is not a table");
+          // throw std::logic_error ("__parent is not a table");
+          *(volatile int*)((volatile void*)0) = 42;
         }
       }
 
@@ -272,7 +277,7 @@ private:
       rawsetfield (L, -2, "__newindex");
       lua_newtable (L);
       rawsetfield (L, -2, "__propget");
-      
+
       if (Security::hideMetatables ())
       {
         lua_pushnil (L);
@@ -398,7 +403,8 @@ private:
       }
       else
       {
-        throw std::logic_error ("invalid stack");
+        // throw std::logic_error ("invalid stack");
+        *(volatile int*)((volatile void*)0) = 42;
       }
     }
 
@@ -457,7 +463,7 @@ private:
 
       assert (lua_istable (L, -1));
       rawgetfield (L, -1, name);
-      
+
       if (lua_isnil (L, -1))
       {
         lua_pop (L, 1);
@@ -586,7 +592,7 @@ private:
     {
       typedef U (*get_t)();
       typedef void (*set_t)(U);
-      
+
       assert (lua_istable (L, -1));
 
       rawgetfield (L, -1, "__propget");
@@ -1031,7 +1037,7 @@ public:
 
     return *this;
   }
-  
+
   //----------------------------------------------------------------------------
   /**
       Add or replace a property.

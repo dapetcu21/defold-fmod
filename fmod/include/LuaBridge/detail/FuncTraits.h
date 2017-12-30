@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
   https://github.com/vinniefalco/LuaBridge
-  
+
   Copyright 2012, Vinnie Falco <vinnie.falco@gmail.com>
 
   License: The MIT License (http://www.opensource.org/licenses/mit-license.php)
@@ -67,7 +67,7 @@ struct FuncTraits <R (*) (), D>
   static bool const isMemberFunction = false;
   typedef D DeclType;
   typedef R ReturnType;
-  typedef None Params;
+  typedef NoneT Params;
   static R call (D fp, TypeListValues <Params>)
   {
     return fp ();
@@ -188,7 +188,7 @@ struct FuncTraits <R (T::*) (), D>
   typedef D DeclType;
   typedef T ClassType;
   typedef R ReturnType;
-  typedef None Params;
+  typedef NoneT Params;
   static R call (T* obj, D fp, TypeListValues <Params>)
   {
     return (obj->*fp)();
@@ -325,7 +325,7 @@ struct FuncTraits <R (T::*) () const, D>
   typedef D DeclType;
   typedef T ClassType;
   typedef R ReturnType;
-  typedef None Params;
+  typedef NoneT Params;
   static R call (T const* obj, D fp, TypeListValues <Params>)
   {
     return (obj->*fp)();
@@ -463,7 +463,7 @@ struct FuncTraits <R (*) () LUABRIDGE_THROWSPEC, D>
   static bool const isMemberFunction = false;
   typedef D DeclType;
   typedef R ReturnType;
-  typedef None Params;
+  typedef NoneT Params;
   static R call (D fp, TypeListValues <Params> const&)
   {
     return fp ();
@@ -584,7 +584,7 @@ struct FuncTraits <R (T::*) () LUABRIDGE_THROWSPEC, D>
   typedef D DeclType;
   typedef T ClassType;
   typedef R ReturnType;
-  typedef None Params;
+  typedef NoneT Params;
   static R call (T* obj, D fp, TypeListValues <Params> const&)
   {
     return (obj->*fp)();
@@ -721,7 +721,7 @@ struct FuncTraits <R (T::*) () const LUABRIDGE_THROWSPEC, D>
   typedef D DeclType;
   typedef T ClassType;
   typedef R ReturnType;
-  typedef None Params;
+  typedef NoneT Params;
   static R call (T const* obj, D fp, TypeListValues <Params>)
   {
     return (obj->*fp)();

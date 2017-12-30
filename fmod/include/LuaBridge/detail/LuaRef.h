@@ -841,7 +841,7 @@ public:
   }
 
   // should never happen
-  //inline bool isNone () const { return m_ref == LUA_NOREF; }
+  //inline bool isNoneT () const { return m_ref == LUA_NOREF; }
 
   inline bool isNil () const { return type () == LUA_TNIL; }
   inline bool isNumber () const { return type () == LUA_TNUMBER; }

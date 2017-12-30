@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
   https://github.com/vinniefalco/LuaBridge
-  
+
   Copyright 2012, Vinnie Falco <vinnie.falco@gmail.com>
 
   License: The MIT License (http://www.opensource.org/licenses/mit-license.php)
@@ -153,13 +153,9 @@ struct CFunc
   */
   static int readOnlyError (lua_State* L)
   {
-    std::string s;
-    
-    s = s + "'" + lua_tostring (L, lua_upvalueindex (1)) + "' is read-only";
-
-    return luaL_error (L, s.c_str ());
+    return luaL_error (L, "'%s' is read-only", lua_tostring (L, lua_upvalueindex (1)));
   }
-  
+
   //----------------------------------------------------------------------------
   /**
       lua_CFunction to get a variable.

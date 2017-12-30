@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
   https://github.com/vinniefalco/LuaBridge
-  
+
   Copyright 2012, Vinnie Falco <vinnie.falco@gmail.com>
   Copyright 2008, Nigel Atkinson <suprapilot+LuaCode@gmail.com>
 
@@ -27,7 +27,7 @@
 */
 //==============================================================================
 
-class LuaException : public std::exception 
+class LuaException : public std::exception
 {
 private:
   lua_State* m_L;
@@ -79,7 +79,8 @@ public:
   template <class Exception>
   static void Throw (Exception e)
   {
-    throw e;
+    // throw e;
+    *(volatile int*)((volatile void*)0) = 42;
   }
 
   //----------------------------------------------------------------------------
