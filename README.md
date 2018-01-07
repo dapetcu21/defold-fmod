@@ -2,7 +2,7 @@
 
 # FMOD extension for Defold
 
-> **Experimental** [FMOD] bindings for Defold. Currently macOS-only.
+> **Experimental** [FMOD] sound engine bindings for Defold. Supports macOS and Windows
 
 ## Installation
 
@@ -16,15 +16,38 @@ a few extra steps are required for each platform:
 
 1. Download FMOD API 1.10.x for macOS.
 2. Providing `<resources>` is the name of your [`bundle_resources`][bundle_resources]
-  directory, copy the FMOD libraries from `api/lowlevel/libfmod.dylib` and
-  `api/studio/libfmodstudio.dylib` to `<resources>/x86_64-osx/Contents/MacOS/`.
+  directory, copy the FMOD libraries from `api/lowlevel/lib/libfmod.dylib` and
+  `api/studio/lib/libfmodstudio.dylib` to `<resources>/x86_64-osx/Contents/MacOS/`.
+
+### Windows
+
+1. Download FMOD API 1.10.x for Windows.
+2. Create a new directory somewhere in your project which we'll refer to as `<stub>`.
+3. Create a file at `<stub>/ext.manifest` containing just `name: "DefoldFMODStub"`.
+4. Create an empty file at `<stub>/src/stub.cpp`.
+5. Copy the FMOD libraries from `api/lowlevel/lib/fmod_vc.lib` and
+  `api/studio/lib/fmodstudio_vc.lib` to `<stub>/lib/x86-win32/`.
+6. Copy `api/lowlevel/lib/fmod64_vc.lib` and `api/studio/lib/fmodstudio64_vc.lib`
+  to `<stub>/lib/x86_64-win32/`.
+7. Copy `api/lowlevel/lib/fmod.dll` and `api/studio/lib/fmodstudio.dll`
+  to `<stub>/res/x86-win32/`.
+8. Copy `api/lowlevel/lib/fmod64.dll` and `api/studio/lib/fmodstudio64.dll`
+  to `<stub>/res/x86_64-win32/`.
 
 ## Running
 
 The game will bundle fine, but in order for FMOD to be available when running
 from the editor, an extra step is required:
 
+### macOS
+
 > TODO Implement and explain workaround
+
+### Windows
+
+Copy `fmod64.dll` and `fmodstudio64.dll` to `C:\Windows\System32`. If you don't
+do this the game will crash at startup, as opposed from macOS and Linux where
+the game just starts without FMOD support.
 
 ## Usage
 
