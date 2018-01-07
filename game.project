@@ -1,7 +1,8 @@
 [project]
 title = FMOD
 version = 0.1
-custom_resources = resources/
+custom_resources = banks/
+bundle_resources = /resources
 
 [bootstrap]
 main_collection = /main/main.collectionc

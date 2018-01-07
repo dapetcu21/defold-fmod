@@ -1,7 +1,4 @@
 #include "fmod_bridge.hpp"
-
-#ifdef PLATFORM_SUPPORTED
-
 #include "fmod_helpers.hpp"
 #include <LuaBridge/LuaBridge.h>
 #include <string>
@@ -99,12 +96,12 @@ namespace FMODBridge {
     public:
         StudioSystem(FMOD::Studio::System* instance): Proxy(instance) {}
 
-        StudioBank loadBankMemory(dmScript::LuaHBuffer* buffer, FMOD_STUDIO_LOAD_BANK_FLAGS flags, lua_State* L) {
+        StudioBank loadBankMemory(LuaHBuffer* buffer, FMOD_STUDIO_LOAD_BANK_FLAGS flags, lua_State* L) {
             FMOD::Studio::Bank *result;
 
             uint32_t size;
             void* bytes;
-            if (dmBuffer::GetBytes(buffer->m_Buffer, &bytes, &size) != dmBuffer::RESULT_OK) {
+            if (FMODBridge_dmBuffer_GetBytes(buffer->handle, &bytes, &size) != 0) {
                 lua_pushstring(L, "dmBuffer::GetBytes failed");
                 lua_error(L);
             }
@@ -248,5 +245,3 @@ void FMODBridge::registerClasses(lua_State *L) {
             .endNamespace()
         .endNamespace();
 }
-
-#endif

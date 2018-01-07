@@ -1,0 +1,18 @@
+LIBPATH := ../fmod/res/x86_64-osx/Contents/MacOS/libfmodbridge.dylib
+
+SOURCES = \
+	src/fmod_init.cpp \
+	src/fmod_classes.cpp \
+	src/fmod_enums.cpp
+
+HEADERS = \
+	src/fmod_bridge.hpp \
+	src/fmod_helpers.hpp
+
+CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include
+LDFLAGS := -dynamiclib -current_version 1.0 -compatibility_version 1.0 -Wl,-undefined -Wl,dynamic_lookup
+
+all: $(LIBPATH)
+
+$(LIBPATH): $(SOURCES) $(HEADERS)
+	$(CXX) -dynamiclib $(CXXFLAGS) $(SOURCES) $(LDFLAGS) -o $(LIBPATH)

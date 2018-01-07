@@ -1,7 +1,4 @@
 #include "fmod_bridge.hpp"
-
-#ifdef PLATFORM_SUPPORTED
-
 #include <LuaBridge/LuaBridge.h>
 
 #define CONCAT_(a, b) a ## b
@@ -488,5 +485,3 @@ void FMODBridge::registerEnums(lua_State *L) {
 
     ns.endNamespace();
 }
-
-#endif

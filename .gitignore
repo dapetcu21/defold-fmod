@@ -1,4 +1,3 @@
-
 .externalToolBuilders
 .DS_Store
 .lock-wscript
@@ -9,14 +8,9 @@ build
 builtins
 .internal
 
-/fmod/include/fmod*
-/fmod/lib/x86_64-osx/libfmod*.dylib
-/fmod/res/x86_64-osx/Contents/MacOS/libfmod*.dylib
-/fmod/lib/x86_64-win32/fmod*.lib
-/fmod/res/x86_64-win32/fmod*.dll
-/fmod/lib/x86-win32/fmod*.lib
-/fmod/res/x86-win32/fmod*.dll
-/fmod/lib/x86_64-linux/libfmod*.so*
-/fmod/res/x86_64-linux/libfmod*.so*
-/fmod/lib/x86-linux/libfmod*.so*
-/fmod/res/x86-linux/libfmod*.so*
+/bridge/include/fmod*
+/resources/x86_64-osx/Contents/MacOS/libfmod*.dylib
+/resources/x86_64-win32/fmod*.dll
+/resources/x86-win32/fmod*.dll
+/resources/x86_64-linux/libfmod*.so*
+/resources/x86-linux/libfmod*.so*

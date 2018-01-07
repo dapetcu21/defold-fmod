@@ -1,13 +1,12 @@
 #ifndef FMOD_HELPERS_H
 #define FMOD_HELPERS_H
 
-#include <dmsdk/sdk.h>
+#include "fmod_bridge.hpp"
 #include <LuaBridge/LuaBridge.h>
 #include <fmod_studio.hpp>
 #include <fmod.hpp>
 #include <fmod_errors.h>
 #include <map>
-#include "fmod_bridge.hpp"
 
 namespace FMODBridge {
     inline void errCheck_(FMOD_RESULT res, lua_State* L) {
@@ -168,13 +167,15 @@ namespace FMODBridge {
 
 namespace luabridge {
     template <>
-    struct Stack <dmScript::LuaHBuffer*> {
-      static void push (lua_State* L, dmScript::LuaHBuffer* luaBuffer) {
-          dmScript::PushBuffer(L, *luaBuffer);
+    struct Stack <FMODBridge::LuaHBuffer*> {
+      static void push(lua_State* L, FMODBridge::LuaHBuffer* luaBuffer) {
+          FMODBridge_dmScript_PushBuffer(L, luaBuffer->handle);
       }
 
-      static dmScript::LuaHBuffer* get(lua_State* L, int index) {
-          return dmScript::CheckBuffer(L, index);
+      static FMODBridge::LuaHBuffer* get(lua_State* L, int index) {
+          static FMODBridge::LuaHBuffer wrapper;
+          wrapper.handle = FMODBridge_dmScript_CheckBuffer(L, index);
+          return &wrapper;
       }
     };
 

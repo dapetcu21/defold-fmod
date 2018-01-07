@@ -1,7 +1,4 @@
 #include "fmod_bridge.hpp"
-
-#ifdef PLATFORM_SUPPORTED
-
 #include <fmod_errors.h>
 #include <LuaBridge/LuaBridge.h>
 
@@ -11,21 +8,21 @@ using namespace luabridge;
 FMOD::Studio::System* FMODBridge::system = NULL;
 FMOD::System* FMODBridge::lowLevelSystem = NULL;
 
-void FMODBridge::init(lua_State *L) {
+extern "C" EXPORT void FMODBridge_init(lua_State *L) {
     FMOD_RESULT res;
 
-    res = FMOD::Studio::System::create(&system);
+    res = FMOD::Studio::System::create(&FMODBridge::system);
     if (res != FMOD_OK) {
         printf("FMOD Error: %s\n", FMOD_ErrorString(res));
-        system = NULL;
+        FMODBridge::system = NULL;
         return;
     }
 
-    res = system->getLowLevelSystem(&lowLevelSystem);
+    res = FMODBridge::system->getLowLevelSystem(&lowLevelSystem);
     if (res != FMOD_OK) {
         printf("FMOD Error: %s\n", FMOD_ErrorString(res));
-        system->release();
-        system = NULL;
+        FMODBridge::system->release();
+        FMODBridge::system = NULL;
         return;
     }
 
@@ -33,17 +30,17 @@ void FMODBridge::init(lua_State *L) {
     res = lowLevelSystem->setSoftwareFormat(0, FMOD_SPEAKERMODE_5POINT1, 0);
     if (res != FMOD_OK) {
         printf("FMOD Error: %s\n", FMOD_ErrorString(res));
-        system->release();
-        system = NULL;
+        FMODBridge::system->release();
+        FMODBridge::system = NULL;
         return;
     }
 
     void* extraDriverData = NULL;
-    res = system->initialize(1024, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, extraDriverData);
+    res = FMODBridge::system->initialize(1024, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, extraDriverData);
     if (res != FMOD_OK) {
         printf("FMOD Error: %s\n", FMOD_ErrorString(res));
-        system->release();
-        system = NULL;
+        FMODBridge::system->release();
+        FMODBridge::system = NULL;
         return;
     }
 
@@ -51,24 +48,22 @@ void FMODBridge::init(lua_State *L) {
     registerClasses(L);
 }
 
-void FMODBridge::update() {
-    if (system) {
-        FMOD_RESULT res = system->update();
+extern "C" EXPORT void FMODBridge_update() {
+    if (FMODBridge::system) {
+        FMOD_RESULT res = FMODBridge::system->update();
         if (res != FMOD_OK) {
             printf("FMOD Error: %s\n", FMOD_ErrorString(res));
-            system->release();
-            system = NULL;
+            FMODBridge::system->release();
+            FMODBridge::system = NULL;
             return;
         }
     }
 }
 
-void FMODBridge::finalize() {
-    if (system) {
-        FMOD_RESULT res = system->release();
+extern "C" EXPORT void FMODBridge_finalize() {
+    if (FMODBridge::system) {
+        FMOD_RESULT res = FMODBridge::system->release();
         if (res != FMOD_OK) { printf("FMOD Error: %s\n", FMOD_ErrorString(res)); }
-        system = NULL;
+        FMODBridge::system = NULL;
     }
 }
-
-#endif
