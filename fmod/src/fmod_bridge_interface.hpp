@@ -14,8 +14,16 @@ extern "C" {
     FMODBridge_HBuffer FMODBridge_dmScript_CheckBuffer(lua_State* L, int);
 }
 
+#if defined(DM_PLATFORM_OSX)
 static void (*FMODBridge_init)(lua_State* L) = NULL;
 static void (*FMODBridge_update)() = NULL;
 static void (*FMODBridge_finalize)() = NULL;
+#else
+extern "C" {
+    void FMODBridge_init(lua_State* L);
+    void FMODBridge_update();
+    void FMODBridge_finalize();
+}
+#endif
 
 #endif

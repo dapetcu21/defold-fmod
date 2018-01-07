@@ -7,10 +7,19 @@ build
 .cproject
 builtins
 .internal
+.vs
+Debug
+Release
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
 
 /bridge/include/fmod*
 /resources/x86_64-osx/Contents/MacOS/libfmod*.dylib
-/resources/x86_64-win32/fmod*.dll
-/resources/x86-win32/fmod*.dll
 /resources/x86_64-linux/libfmod*.so*
 /resources/x86-linux/libfmod*.so*
+/stub/lib/x86_64-win32/fmod*.lib
+/stub/lib/x86-win32/fmod*.lib
+/stub/res/x86_64-win32/fmod*.dll
+/stub/res/x86-win32/fmod*.dll

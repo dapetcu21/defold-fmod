@@ -21,3 +21,6 @@ scale = 0.02
 [script]
 shared_state = 1
 
+[library]
+include_dirs = fmod
+

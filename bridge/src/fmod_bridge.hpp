@@ -10,7 +10,11 @@ extern "C" {
 #include <fmod_studio.hpp>
 #include <fmod.hpp>
 
+#if defined(__APPLE__)
 #define EXPORT __attribute__((visibility("default")))
+#else
+#define EXPORT
+#endif
 
 extern "C" {
     typedef unsigned int FMODBridge_HBuffer;

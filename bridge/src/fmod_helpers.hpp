@@ -200,17 +200,17 @@ namespace luabridge {
 
           lua_pushstring(L, "x");
           lua_gettable(L, index);
-          vec.x = luaL_checknumber(L, -1);
+          vec.x = (float)luaL_checknumber(L, -1);
           lua_pop(L, 1);
 
           lua_pushstring(L, "y");
           lua_gettable(L, index);
-          vec.y = luaL_checknumber(L, -1);
+          vec.y = (float)luaL_checknumber(L, -1);
           lua_pop(L, 1);
 
           lua_pushstring(L, "z");
           lua_gettable(L, index);
-          vec.z = luaL_checknumber(L, -1);
+          vec.z = (float)luaL_checknumber(L, -1);
           lua_pop(L, 1);
 
           return vec;

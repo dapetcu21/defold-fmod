@@ -10,7 +10,7 @@ void FMODBridge::registerEnums(lua_State *L) {
 
     #define add_enum(x) \
         lua_pushstring(L, #x); \
-        lua_pushnumber(L, CONCAT(FMOD_, x)); \
+        lua_pushnumber(L, (lua_Number)CONCAT(FMOD_, x)); \
         lua_rawset(L, -3)
 
     add_enum(STUDIO_INIT_NORMAL);

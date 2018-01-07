@@ -1,15 +1,21 @@
 #define LIB_NAME "DefoldFMOD"
 #define MODULE_NAME "fmod"
 
-#if defined(DM_PLATFORM_OSX)
+#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS)
 
+#if defined(DM_PLATFORM_OSX)
 #include <dlfcn.h>
 #include <libgen.h>
 #include <mach-o/dyld.h>
 #include <string>
+#endif
+
 #include "fmod_bridge_interface.hpp"
 
+#define LINK_DYNAMICALLY defined(DM_PLATFORM_OSX)
+
 static void FMODBridge_link() {
+#if LINK_DYNAMICALLY
     if (FMODBridge_init) { return; }
 
     uint32_t bufsize = 0;
@@ -31,28 +37,40 @@ static void FMODBridge_link() {
     FMODBridge_init = (void (*)(lua_State*))dlsym(fmodbridge_handle, "FMODBridge_init");
     FMODBridge_update = (void (*)())dlsym(fmodbridge_handle, "FMODBridge_update");
     FMODBridge_finalize = (void (*)())dlsym(fmodbridge_handle, "FMODBridge_finalize");
+#endif
 }
 
 dmExtension::Result InitializeDefoldFMOD(dmExtension::Params* params) {
     FMODBridge_link();
+#if LINK_DYNAMICALLY
     if (FMODBridge_init) {
         FMODBridge_init(params->m_L);
-    } else {
     }
+#else
+    FMODBridge_init(params->m_L);
+#endif
     return dmExtension::RESULT_OK;
 }
 
 dmExtension::Result UpdateDefoldFMOD(dmExtension::Params* params) {
+#if LINK_DYNAMICALLY
     if (FMODBridge_update) {
         FMODBridge_update();
     }
+#else
+    FMODBridge_update();
+#endif
     return dmExtension::RESULT_OK;
 }
 
 dmExtension::Result FinalizeDefoldFMOD(dmExtension::Params* params) {
+#if LINK_DYNAMICALLY
     if (FMODBridge_finalize) {
         FMODBridge_finalize();
     }
+#else
+    FMODBridge_finalize();
+#endif
     return dmExtension::RESULT_OK;
 }
 
