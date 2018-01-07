@@ -6,36 +6,25 @@
 
 ## Installation
 
-~~As usual, add `https://github.com/dapetcu21/defold-fmod/master.zip` to
-dependencies in `game.project`.~~
+First, add `https://github.com/dapetcu21/defold-fmod/master.zip` to
+your dependencies in `game.project`.
 
-Because the FMOD license doesn't allow me to distribute FMOD with this package, you'll have to:
+Because the FMOD license doesn't allow me to distribute FMOD with this package,
+a few extra steps are required for each platform:
 
-1. Clone/fork this repo.
-2. Download FMOD API 1.10.02 for macOS.
-3. Copy the FMOD headers from `api/lowlevel/inc` and `api/studio/inc` to `fmod/include`.
-4. Copy the FMOD libraries from `api/lowlevel/libfmod.dylib` and `api/studio/libfmodstudio.dylib` to `fmod/lib/x86_64-osx`.
-5. Change the install paths of the libraries (workaround for DEF-2732):
-  ```bash
-  cd fmod/lib/x86_64-osx
-  install_name_tool -id @executable_path/libfmod.dylib libfmod.dylib
-  install_name_tool -id @executable_path/libfmodstudio.dylib libfmodstudio.dylib
-  install_name_tool -change @rpath/libfmod.dylib @executable_path/libfmod.dylib libfmodstudio.dylib
-  ```
-6. Copy the libraries you just patched to `fmod/res/x86_64-osx/Contents/MacOS` (workaround for DEF-2732).
-7. Make a zip out of the whole thing and add its URL to dependencies in `game.project`, or just copy the `fmod` dir into your project.
+### macOS
+
+1. Download FMOD API 1.10.x for macOS.
+2. Providing `<resources>` is the name of your [`bundle_resources`][bundle_resources]
+  directory, copy the FMOD libraries from `api/lowlevel/libfmod.dylib` and
+  `api/studio/libfmodstudio.dylib` to `<resources>/x86_64-osx/Contents/MacOS/`.
 
 ## Running
 
-Defold doesn't currently support dynamic libraries (DEF-2732), so a hacky
-workaround is needed to run the game in the editor.
+The game will bundle fine, but in order for FMOD to be available when running
+from the editor, an extra step is required:
 
-The game will bundle fine, but will not start in the editor unless you start
-the editor with:
-
-```bash
-DYLD_LIBRARY_PATH="/path/to/defold-fmod/fmod/lib/x86_64-osx" /path/to/Defold.app/Contents/MacOS/Defold
-```
+> TODO Implement and explain workaround
 
 ## Usage
 
@@ -69,3 +58,4 @@ event:start()
 [example]: ./main/main.script
 [FMOD]: https://fmod.com
 [FMOD API Documentation]: https://www.fmod.com/resources/documentation-api
+[bundle_resources]: https://www.defold.com/manuals/project-settings/#_project
