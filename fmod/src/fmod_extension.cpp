@@ -8,22 +8,37 @@
 #include <libgen.h>
 #include <mach-o/dyld.h>
 #include <string>
+#include <stdlib.h>
 #endif
 
 #include "fmod_bridge_interface.hpp"
 
-#define LINK_DYNAMICALLY defined(DM_PLATFORM_OSX)
+#if defined(DM_PLATFORM_OSX)
+#define LINK_DYNAMICALLY
+#endif
 
 static void FMODBridge_link() {
-#if LINK_DYNAMICALLY
+#ifdef LINK_DYNAMICALLY
     if (FMODBridge_init) { return; }
 
-    uint32_t bufsize = 0;
-    _NSGetExecutablePath(NULL, &bufsize);
-    char* path = new char[bufsize];
-    _NSGetExecutablePath(path, &bufsize);
-    std::string libpath(dirname(path));
-    delete[] path;
+    std::string libpath;
+
+    #ifdef DM_PLATFORM_LINUX
+    char* env = secure_getenv("DEFOLD_FMOD_LIB_PATH");
+    #else
+    char* env = getenv("DEFOLD_FMOD_LIB_PATH");
+    #endif
+
+    if (env && env[0]) {
+        libpath = env;
+    } else {
+        uint32_t bufsize = 0;
+        _NSGetExecutablePath(NULL, &bufsize);
+        char* path = new char[bufsize];
+        _NSGetExecutablePath(path, &bufsize);
+        libpath = dirname(path);
+        delete[] path;
+    }
 
     void* fmod_handle = dlopen((libpath + "/libfmod.dylib").c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (!fmod_handle) { dmLogWarning("%s", dlerror()); }
@@ -32,19 +47,26 @@ static void FMODBridge_link() {
     if (!fmodstudio_handle) { dmLogWarning("%s", dlerror()); }
 
     void* fmodbridge_handle = dlopen((libpath + "/libfmodbridge.dylib").c_str(), RTLD_NOW | RTLD_GLOBAL);
-    if (!fmodbridge_handle) { dmLogWarning("%s", dlerror()); }
+    if (!fmodbridge_handle) { dmLogWarning("%s", dlerror()); return; }
 
     FMODBridge_init = (void (*)(lua_State*))dlsym(fmodbridge_handle, "FMODBridge_init");
+    if (!FMODBridge_init) { dmLogWarning("%s", dlerror()); }
+
     FMODBridge_update = (void (*)())dlsym(fmodbridge_handle, "FMODBridge_update");
+    if (!FMODBridge_update) { dmLogWarning("%s", dlerror()); }
+
     FMODBridge_finalize = (void (*)())dlsym(fmodbridge_handle, "FMODBridge_finalize");
+    if (!FMODBridge_update) { dmLogWarning("%s", dlerror()); }
 #endif
 }
 
 dmExtension::Result InitializeDefoldFMOD(dmExtension::Params* params) {
     FMODBridge_link();
-#if LINK_DYNAMICALLY
+#ifdef LINK_DYNAMICALLY
     if (FMODBridge_init) {
         FMODBridge_init(params->m_L);
+    } else {
+        dmLogWarning("FMOD libraries could not be loaded. FMOD will be disabled for this session");
     }
 #else
     FMODBridge_init(params->m_L);
@@ -53,7 +75,7 @@ dmExtension::Result InitializeDefoldFMOD(dmExtension::Params* params) {
 }
 
 dmExtension::Result UpdateDefoldFMOD(dmExtension::Params* params) {
-#if LINK_DYNAMICALLY
+#ifdef LINK_DYNAMICALLY
     if (FMODBridge_update) {
         FMODBridge_update();
     }
@@ -64,7 +86,7 @@ dmExtension::Result UpdateDefoldFMOD(dmExtension::Params* params) {
 }
 
 dmExtension::Result FinalizeDefoldFMOD(dmExtension::Params* params) {
-#if LINK_DYNAMICALLY
+#ifdef LINK_DYNAMICALLY
     if (FMODBridge_finalize) {
         FMODBridge_finalize();
     }

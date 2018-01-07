@@ -41,7 +41,12 @@ from the editor, an extra step is required:
 
 ### macOS
 
-> TODO Implement and explain workaround
+1. Copy `libfmod.dylib`, `libfmodbridge.dylib` and `libfmodstudio.dylib` from
+  a bundled macOS build of your game to a directory on your file system.
+2. Open `/etc/launchd.conf` in a text editor. You might need to create the file.
+  You also might need `sudo`.
+3. Add `setenv DEFOLD_FMOD_LIB_PATH /path/to/the/libs` at the end of the file.
+4. Restart your computer (Or run `launchctl setenv DEFOLD_FMOD_LIB_PATH /path/to/the/libs` and just restart Defold).
 
 ### Windows
 
