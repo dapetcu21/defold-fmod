@@ -43,10 +43,27 @@ from the editor, an extra step is required:
 
 1. Copy `libfmod.dylib`, `libfmodbridge.dylib` and `libfmodstudio.dylib` from
   a bundled macOS build of your game to a directory on your file system.
-2. Open `/etc/launchd.conf` in a text editor. You might need to create the file.
-  You also might need `sudo`.
-3. Add `setenv DEFOLD_FMOD_LIB_PATH /path/to/the/libs` at the end of the file.
-4. Restart your computer (Or run `launchctl setenv DEFOLD_FMOD_LIB_PATH /path/to/the/libs` and just restart Defold).
+2. Create a `~/Library/LaunchAgents/defold-fmod.plist` file containing:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>my.defold-fmod</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>launchctl</string>
+    <string>setenv</string>
+    <string>DEFOLD_FMOD_LIB_PATH</string>
+    <string>/path/where/you/copied/the/libs</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+</dict>
+</plist>
+```
+3. Run `launchctl load ~/Library/LaunchAgents/defold-fmod.plist`.
 
 ### Windows
 
