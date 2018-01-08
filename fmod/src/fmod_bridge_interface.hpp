@@ -12,18 +12,10 @@ extern "C" {
     int FMODBridge_dmBuffer_GetBytes(FMODBridge_HBuffer, void**, uint32_t*);
     void FMODBridge_dmScript_PushBuffer(lua_State* L, FMODBridge_HBuffer);
     FMODBridge_HBuffer FMODBridge_dmScript_CheckBuffer(lua_State* L, int);
-}
 
-#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_LINUX)
-static void (*FMODBridge_init)(lua_State* L) = NULL;
-static void (*FMODBridge_update)() = NULL;
-static void (*FMODBridge_finalize)() = NULL;
-#else
-extern "C" {
     void FMODBridge_init(lua_State* L);
     void FMODBridge_update();
     void FMODBridge_finalize();
 }
-#endif
 
 #endif

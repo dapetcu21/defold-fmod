@@ -5,6 +5,7 @@
 #include <LuaBridge/LuaBridge.h>
 #include <fmod_errors.h>
 #include <map>
+#include <string>
 
 namespace FMODBridge {
     inline void errCheck_(FMOD_RESULT res, lua_State* L) {
@@ -42,7 +43,8 @@ namespace FMODBridge {
 
     #define makeProxyConstructor(className, typeName) \
         className(typeName* instance): RefCountedProxy(instance) { \
-            release = &makeFname(Release); \
+            ensure(currentLib, makeFname(Release), FMOD_RESULT, typeName*); \
+            release = makeFname(Release); \
         }
 
     template<class T>
@@ -58,9 +60,6 @@ namespace FMODBridge {
 
 #define errCheck(res) FMODBridge::errCheck_(res, L)
 
-#define CONCAT_(x, y) x ## y
-#define CONCAT(x, y) CONCAT_(x, y)
-
 #define LIB_PREFIX_LL FMOD_
 #define LIB_PREFIX_ST FMOD_Studio_
 #define libPrefix(x) CONCAT(LIB_PREFIX_, x)
@@ -68,6 +67,7 @@ namespace FMODBridge {
 
 #define defineStringGetter(declname, fname) \
     std::string declname(lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, const char*, int, int*); \
         int size; \
         errCheck(makeFname(fname)(instance, NULL, 0, &size)); \
         char* tmp = new char[size]; \
@@ -79,6 +79,7 @@ namespace FMODBridge {
 
 #define defineStringGetter1(declname, fname, T1) \
     std::string declname(T1 arg1, lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, T1, const char*, int, int*); \
         int size; \
         errCheck(makeFname(fname)(instance, arg1, NULL, 0, &size)); \
         char* tmp = new char[size]; \
@@ -93,6 +94,7 @@ namespace FMODBridge {
 
 #define defineCastGetter(declname, fname, RT, T) \
     RT declname(lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, T*); \
         T result; \
         errCheck(makeFname(fname)(instance, &result)); \
         return result; \
@@ -100,6 +102,7 @@ namespace FMODBridge {
 
 #define defineCastGetter1(declname, fname, RT, T, T1) \
     RT declname(T1 arg1, lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, T1, T*); \
         T result; \
         errCheck(makeFname(fname)(instance, arg1, &result)); \
         return result; \
@@ -107,6 +110,7 @@ namespace FMODBridge {
 
 #define defineCastGetter2(declname, fname, RT, T, T1, T2) \
     RT declname(T1 arg1, T2 arg2, lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, T1, T2, T*); \
         T result; \
         errCheck(makeFname(fname)(instance, arg1, arg2, &result)); \
         return result; \
@@ -126,16 +130,19 @@ namespace FMODBridge {
 
 #define defineMethod(declname, fname) \
     void declname(lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*); \
         errCheck(makeFname(fname)(instance)); \
     }
 
 #define defineMethod1(declname, fname, T1) \
     void declname(T1 arg1, lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, T1); \
         errCheck(makeFname(fname)(instance, arg1)); \
     }
 
 #define defineMethod2(declname, fname, T1, T2) \
     void declname(T1 arg1, T2 arg2, lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, T1, T2); \
         errCheck(makeFname(fname)(instance, arg1, arg2)); \
     }
 
@@ -145,6 +152,7 @@ namespace FMODBridge {
 
 #define define2FloatGetter(declname, fname) \
     int declname(lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, float*, float*); \
         float value, finalValue; \
         errCheck(makeFname(fname)(instance, &value, &finalValue)); \
         lua_pushnumber(L, value); \
@@ -154,6 +162,7 @@ namespace FMODBridge {
 
 #define define2FloatGetter1(declname, fname, T1) \
     int declname(lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, T1, float*, float*); \
         T1 arg1 = luabridge::Stack<T1>::get(L, 2); \
         float value, finalValue; \
         errCheck(makeFname(fname)(instance, arg1, &value, &finalValue)); \
@@ -164,6 +173,7 @@ namespace FMODBridge {
 
 #define define2FloatGetter2(declname, fname, T1, T2) \
     int declname(lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, T1, T2, float*, float*); \
         T1 arg1 = luabridge::Stack<T1>::get(L, 2); \
         T2 arg2 = luabridge::Stack<T2>::get(L, 3); \
         float value, finalValue; \

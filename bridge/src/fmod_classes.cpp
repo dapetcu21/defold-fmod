@@ -1,7 +1,6 @@
 #include "fmod_bridge.hpp"
 #include "fmod_helpers.hpp"
 #include <LuaBridge/LuaBridge.h>
-#include <string>
 #include <map>
 
 using namespace luabridge;
@@ -14,14 +13,22 @@ namespace FMODBridge {
     #define currentLib LL
 
     class ChannelGroup: public Proxy<FMOD_CHANNELGROUP> {
+    #define currentClass ChannelGroup
+    #define currentType FMOD_CHANNELGROUP
     public:
         ChannelGroup(FMOD_CHANNELGROUP *instance): Proxy(instance) {}
+    #undef currentClass
+    #undef currentType
     };
 
 
     class System: public Proxy<FMOD_SYSTEM> {
+    #define currentClass System
+    #define currentType FMOD_SYSTEM
     public:
         System(FMOD_SYSTEM* instance): Proxy(instance) {}
+    #undef currentClass
+    #undef currentType
     };
 
     // STUDIO CLASSES
@@ -32,6 +39,7 @@ namespace FMODBridge {
 
     class StudioVCA: public Proxy<FMOD_STUDIO_VCA> {
     #define currentClass VCA
+    #define currentType FMOD_STUDIO_VCA
     public:
         StudioVCA(FMOD_STUDIO_VCA *instance): Proxy(instance) {}
         makeGetter(GetID, FMOD_GUID);
@@ -39,28 +47,34 @@ namespace FMODBridge {
         make2FloatGetter(GetVolume);
         makeMethod1(SetVolume, float);
     #undef currentClass
+    #undef currentType
     };
 
     class StudioBus: public Proxy<FMOD_STUDIO_BUS> {
     #define currentClass Bus
+    #define currentType FMOD_STUDIO_BUS
     public:
         StudioBus(FMOD_STUDIO_BUS *instance): Proxy(instance) {}
         makeGetter(GetID, FMOD_GUID);
         makeStringGetter(GetPath);
     #undef currentClass
+    #undef currentType
     };
 
     class StudioBank: public Proxy<FMOD_STUDIO_BANK> {
     #define currentClass Bank
+    #define currentType FMOD_STUDIO_BANK
     public:
         StudioBank(FMOD_STUDIO_BANK *instance): Proxy(instance) {}
         makeGetter(GetID, FMOD_GUID);
         makeStringGetter(GetPath);
     #undef currentClass
+    #undef currentType
     };
 
     class StudioEventInstance: public RefCountedProxy<FMOD_STUDIO_EVENTINSTANCE> {
     #define currentClass EventInstance
+    #define currentType FMOD_STUDIO_EVENTINSTANCE
     public:
         makeProxyConstructor(StudioEventInstance, FMOD_STUDIO_EVENTINSTANCE);
         makeGetter(Get3DAttributes, FMOD_3D_ATTRIBUTES);
@@ -92,27 +106,38 @@ namespace FMODBridge {
         makeMethod1(Stop, FMOD_STUDIO_STOP_MODE);
         makeMethod(TriggerCue);
     #undef currentClass
+    #undef currentType
     };
 
     class StudioEventDescription: public Proxy<FMOD_STUDIO_EVENTDESCRIPTION> {
     #define currentClass EventDescription
+    #define currentType FMOD_STUDIO_EVENTDESCRIPTION
     public:
         StudioEventDescription(FMOD_STUDIO_EVENTDESCRIPTION *instance): Proxy(instance) {};
         makeStringGetter(GetPath);
         makeCastGetter(CreateInstance, StudioEventInstance, FMOD_STUDIO_EVENTINSTANCE*);
     #undef currentClass
+    #undef currentType
     };
 
     #define currentClass EventInstance
+    #define currentType FMOD_STUDIO_EVENTINSTANCE
     defineCastGetter(StudioEventInstance::GetDescription, GetDescription, StudioEventDescription, FMOD_STUDIO_EVENTDESCRIPTION*);
     #undef currentClass
+    #undef currentType
 
     class StudioSystem: public Proxy<FMOD_STUDIO_SYSTEM> {
     #define currentClass System
+    #define currentType FMOD_STUDIO_SYSTEM
     public:
         StudioSystem(FMOD_STUDIO_SYSTEM* instance): Proxy(instance) {}
 
         StudioBank LoadBankMemory(LuaHBuffer* buffer, FMOD_STUDIO_LOAD_BANK_FLAGS flags, lua_State* L) {
+            ensure(ST, FMOD_Studio_System_LoadBankMemory, FMOD_RESULT,
+                FMOD_STUDIO_SYSTEM*, const char*, int, FMOD_STUDIO_LOAD_MEMORY_MODE,
+                FMOD_STUDIO_LOAD_BANK_FLAGS, FMOD_STUDIO_BANK**
+            );
+
             FMOD_STUDIO_BANK *result;
 
             uint32_t size;
@@ -141,9 +166,11 @@ namespace FMODBridge {
         makeStringGetter1(LookupPath, const FMOD_GUID*);
         makeMethod2(SetListenerAttributes, int, FMOD_3D_ATTRIBUTES*);
     #undef currentClass
+    #undef currentType
     };
 
     FMOD_GUID parseID(const char *idString, lua_State* L) {
+        ensure(ST, FMOD_Studio_ParseID, FMOD_RESULT, const char*, FMOD_GUID*);
         FMOD_GUID id;
         errCheck(FMOD_Studio_ParseID(idString, &id));
         return id;

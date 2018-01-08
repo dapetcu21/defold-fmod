@@ -1,23 +1,28 @@
-LIBPATH := ../fmod/res/x86_64-osx/Contents/MacOS/libfmodbridge.dylib
+LIBPATH := ../fmod/lib/x86_64-osx/libfmodbridge.a
 
 SOURCES = \
 	src/fmod_init.cpp \
 	src/fmod_classes.cpp \
-	src/fmod_enums.cpp
+	src/fmod_enums.cpp \
+	src/fmod_dynamic_loading.cpp
 
 HEADERS = \
 	src/fmod_bridge.hpp \
 	src/fmod_helpers.hpp
 
-CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include
-LDFLAGS := -dynamiclib -current_version 1.0 -compatibility_version 1.0 -Wl,-undefined -Wl,dynamic_lookup
+CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include -mmacosx-version-min=10.7
 
 all: $(LIBPATH)
 
-$(LIBPATH): $(SOURCES) $(HEADERS)
-	$(CXX) $(CXXFLAGS) $(SOURCES) $(LDFLAGS) -o $@
+OBJECTS = $(patsubst src/%.cpp,build/%.o,$(SOURCES))
+
+build/%.o: src/%.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(LIBPATH): $(OBJECTS)
+	libtool -static $^ -o $@
 
 clean:
-	rm -f $(LIBPATH)
+	rm -f $(LIBPATH) build/*.o
 
 .PHONY: all clean

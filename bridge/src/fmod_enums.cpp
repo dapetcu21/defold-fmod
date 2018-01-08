@@ -1,9 +1,6 @@
 #include "fmod_bridge.hpp"
 #include <LuaBridge/LuaBridge.h>
 
-#define CONCAT_(a, b) a ## b
-#define CONCAT(a, b) CONCAT_(a, b)
-
 void FMODBridge::registerEnums(lua_State *L) {
     luabridge::Namespace ns = luabridge::getGlobalNamespace(L).beginNamespace("fmod");
     assert(lua_istable(L, -1));
