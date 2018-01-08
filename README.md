@@ -76,7 +76,7 @@ See an [example script][example] to get an idea.
 
 Refer to the [FMOD API Documentation] for details about the available APIs.
 
-Not all APIs are exposed yet. For a full list of exposed functions, see [fmod/src/fmod_classes.cpp#L161](fmod/src/fmod_classes.cpp#L161).
+Not all APIs are exposed yet. For a full list of exposed functions, see [bridge/src/fmod_classes.cpp](bridge/src/fmod_classes.cpp#L207).
 
 Here's some sample code:
 
