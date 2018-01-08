@@ -14,14 +14,25 @@ a few extra steps are required for each platform:
 
 ### macOS
 
-1. Download FMOD API 1.10.x for macOS.
+1. Download FMOD API 1.10.2 for macOS.
 2. Providing `<resources>` is the name of your [`bundle_resources`][bundle_resources]
   directory, copy the FMOD libraries from `api/lowlevel/lib/libfmod.dylib` and
   `api/studio/lib/libfmodstudio.dylib` to `<resources>/x86_64-osx/Contents/MacOS/`.
 
+### Linux
+
+1. Download FMOD API 1.10.2 for Linux.
+2. Providing `<resources>` is the name of your [`bundle_resources`][bundle_resources]
+  directory, copy the FMOD libraries from `api/lowlevel/lib/x86_64/libfmod.so.10.2` and
+  `api/studio/lib/x86_64/libfmodstudio.so.10.2` to `<resources>/x86_64-linux/`.
+3. Copy the FMOD libraries from `api/lowlevel/lib/x86/libfmod.so.10.2` and
+  `api/studio/lib/x86/libfmodstudio.so.10.2` to `<resources>/x86-linux/`.
+4. Remove the version numbers from the filenames of the libraries you just copied,
+  leaving just the `.so` extension.
+
 ### Windows
 
-1. Download FMOD API 1.10.x for Windows.
+1. Download FMOD API 1.10.2 for Windows.
 2. Create a new directory somewhere in your project which we'll refer to as `<stub>`.
 3. Create a file at `<stub>/ext.manifest` containing just `name: "DefoldFMODStub"`.
 4. Create an empty file at `<stub>/src/stub.cpp`.
@@ -37,39 +48,18 @@ a few extra steps are required for each platform:
 ## Running
 
 The game will bundle fine, but in order for FMOD to be available when running
-from the editor, an extra step is required:
-
-### macOS
-
-1. Copy `libfmod.dylib`, `libfmodbridge.dylib` and `libfmodstudio.dylib` from
-  a bundled macOS build of your game to a directory on your file system.
-2. Create a `~/Library/LaunchAgents/defold-fmod.plist` file containing:
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key>
-  <string>my.defold-fmod</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>launchctl</string>
-    <string>setenv</string>
-    <string>DEFOLD_FMOD_LIB_PATH</string>
-    <string>/path/where/you/copied/the/libs</string>
-  </array>
-  <key>RunAtLoad</key>
-  <true/>
-</dict>
-</plist>
-```
-3. Run `launchctl load ~/Library/LaunchAgents/defold-fmod.plist`.
+from the editor, an extra step might be required.
 
 ### Windows
 
 Copy `fmod64.dll` and `fmodstudio64.dll` to `C:\Windows\System32`. If you don't
-do this the game will crash at startup, as opposed from macOS and Linux where
-the game just starts without FMOD support.
+do this the game will crash at startup in the editor, silently and with no error.
+
+### macOS & Linux
+
+The game should run fine in the editor, but if for any reason it doesn't seem
+to find the FMOD libraries, run the editor with `DEFOLD_FMOD_LIB_PATH=/path/to/fmod/shared/libraries`
+in its environment.
 
 ## Usage
 
