@@ -1,0 +1,27 @@
+LIBPATH64 := ../fmod/res/x86_64-linux/libfmodbridge.so
+LIBPATH32 := ../fmod/res/x86-linux/libfmodbridge.so
+
+SOURCES = \
+	src/fmod_init.cpp \
+	src/fmod_classes.cpp \
+	src/fmod_enums.cpp
+
+HEADERS = \
+	src/fmod_bridge.hpp \
+	src/fmod_helpers.hpp
+
+CXXFLAGS := -std=c++11 -fPIC -O3 -fvisibility=hidden -I./include
+LDFLAGS := -shared
+
+all: $(LIBPATH64) $(LIBPATH32)
+
+$(LIBPATH64): $(SOURCES) $(HEADERS)
+	$(CXX) -m64 $(CXXFLAGS) $(SOURCES) $(LDFLAGS) -o $@
+
+$(LIBPATH32): $(SOURCES) $(HEADERS)
+	$(CXX) -m32 $(CXXFLAGS) $(SOURCES) $(LDFLAGS) -o $@
+
+clean:
+	rm -f $(LIBPATH32) $(LIBPATH64)
+
+.PHONY: all clean

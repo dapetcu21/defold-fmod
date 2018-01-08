@@ -1,19 +1,24 @@
 #define LIB_NAME "DefoldFMOD"
 #define MODULE_NAME "fmod"
 
-#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS)
+#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS) || defined(DM_PLATFORM_LINUX)
 
-#if defined(DM_PLATFORM_OSX)
+#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_LINUX)
 #include <dlfcn.h>
 #include <libgen.h>
-#include <mach-o/dyld.h>
 #include <string>
 #include <stdlib.h>
+#ifdef DM_PLATFORM_OSX
+#include <mach-o/dyld.h>
+#endif
+#ifdef DM_PLATFORM_LINUX
+#include <unistd.h>
+#endif
 #endif
 
 #include "fmod_bridge_interface.hpp"
 
-#if defined(DM_PLATFORM_OSX)
+#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_LINUX)
 #define LINK_DYNAMICALLY
 #endif
 
@@ -32,21 +37,40 @@ static void FMODBridge_link() {
     if (env && env[0]) {
         libpath = env;
     } else {
+        #ifdef DM_PLATFORM_OSX
         uint32_t bufsize = 0;
         _NSGetExecutablePath(NULL, &bufsize);
         char* path = new char[bufsize];
         _NSGetExecutablePath(path, &bufsize);
         libpath = dirname(path);
         delete[] path;
+        #endif
+
+        #ifdef DM_PLATFORM_LINUX
+        char *path = new char[PATH_MAX + 2];
+        ssize_t ret = readlink("/proc/self/exe", path, PATH_MAX + 2);
+        if (ret >= 0 && ret <= PATH_MAX + 1) {
+          libpath = dirname(path);
+        } else {
+          libpath = ".";
+        }
+        delete[] path;
+        #endif
     }
 
-    void* fmod_handle = dlopen((libpath + "/libfmod.dylib").c_str(), RTLD_NOW | RTLD_GLOBAL);
+    #ifdef DM_PLATFORM_OSX
+    #define LIBEXT "dylib"
+    #else
+    #define LIBEXT "so"
+    #endif
+
+    void* fmod_handle = dlopen((libpath + "/libfmod." LIBEXT).c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (!fmod_handle) { dmLogWarning("%s", dlerror()); }
 
-    void* fmodstudio_handle = dlopen((libpath + "/libfmodstudio.dylib").c_str(), RTLD_NOW | RTLD_GLOBAL);
+    void* fmodstudio_handle = dlopen((libpath + "/libfmodstudio." LIBEXT).c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (!fmodstudio_handle) { dmLogWarning("%s", dlerror()); }
 
-    void* fmodbridge_handle = dlopen((libpath + "/libfmodbridge.dylib").c_str(), RTLD_NOW | RTLD_GLOBAL);
+    void* fmodbridge_handle = dlopen((libpath + "/libfmodbridge." LIBEXT).c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (!fmodbridge_handle) { dmLogWarning("%s", dlerror()); return; }
 
     FMODBridge_init = (void (*)(lua_State*))dlsym(fmodbridge_handle, "FMODBridge_init");

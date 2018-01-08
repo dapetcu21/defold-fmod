@@ -10,7 +10,7 @@ extern "C" {
 #include <fmod_studio.hpp>
 #include <fmod.hpp>
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
 #define EXPORT __attribute__((visibility("default")))
 #else
 #define EXPORT
