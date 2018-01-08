@@ -15,4 +15,4 @@ LDFLAGS := -dynamiclib -current_version 1.0 -compatibility_version 1.0 -Wl,-unde
 all: $(LIBPATH)
 
 $(LIBPATH): $(SOURCES) $(HEADERS)
-	$(CXX) -dynamiclib $(CXXFLAGS) $(SOURCES) $(LDFLAGS) -o $(LIBPATH)
+	$(CXX) $(CXXFLAGS) $(SOURCES) $(LDFLAGS) -o $(LIBPATH)
