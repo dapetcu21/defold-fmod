@@ -11,93 +11,109 @@ std::map<void*, int> FMODBridge::refCounts;
 
 namespace FMODBridge {
     // LOWLEVEL CLASSES
+    #define currentLib LL
 
-    class ChannelGroup: public Proxy<FMOD::ChannelGroup> {
+    class ChannelGroup: public Proxy<FMOD_CHANNELGROUP> {
     public:
-        ChannelGroup(FMOD::ChannelGroup *instance): Proxy(instance) {}
+        ChannelGroup(FMOD_CHANNELGROUP *instance): Proxy(instance) {}
     };
 
 
-    class System: public Proxy<FMOD::System> {
+    class System: public Proxy<FMOD_SYSTEM> {
     public:
-        System(FMOD::System* instance): Proxy(instance) {}
+        System(FMOD_SYSTEM* instance): Proxy(instance) {}
     };
 
     // STUDIO CLASSES
+    #undef currentLib
+    #define currentLib ST
 
     class StudioEventDescription;
 
-    class StudioVCA: public Proxy<FMOD::Studio::VCA> {
+    class StudioVCA: public Proxy<FMOD_STUDIO_VCA> {
+    #define currentClass VCA
     public:
-        StudioVCA(FMOD::Studio::VCA *instance): Proxy(instance) {}
-        makeGetter(getID, FMOD_GUID);
-        makeStringGetter(getPath);
-        make2FloatGetter(getVolume);
-        makeMethod1(setVolume, float);
+        StudioVCA(FMOD_STUDIO_VCA *instance): Proxy(instance) {}
+        makeGetter(GetID, FMOD_GUID);
+        makeStringGetter(GetPath);
+        make2FloatGetter(GetVolume);
+        makeMethod1(SetVolume, float);
+    #undef currentClass
     };
 
-    class StudioBus: public Proxy<FMOD::Studio::Bus> {
+    class StudioBus: public Proxy<FMOD_STUDIO_BUS> {
+    #define currentClass Bus
     public:
-        StudioBus(FMOD::Studio::Bus *instance): Proxy(instance) {}
-        makeGetter(getID, FMOD_GUID);
-        makeStringGetter(getPath);
+        StudioBus(FMOD_STUDIO_BUS *instance): Proxy(instance) {}
+        makeGetter(GetID, FMOD_GUID);
+        makeStringGetter(GetPath);
+    #undef currentClass
     };
 
-    class StudioBank: public Proxy<FMOD::Studio::Bank> {
+    class StudioBank: public Proxy<FMOD_STUDIO_BANK> {
+    #define currentClass Bank
     public:
-        StudioBank(FMOD::Studio::Bank *instance): Proxy(instance) {}
-        makeGetter(getID, FMOD_GUID);
-        makeStringGetter(getPath);
+        StudioBank(FMOD_STUDIO_BANK *instance): Proxy(instance) {}
+        makeGetter(GetID, FMOD_GUID);
+        makeStringGetter(GetPath);
+    #undef currentClass
     };
 
-    class StudioEventInstance: public RefCountedProxy<FMOD::Studio::EventInstance> {
+    class StudioEventInstance: public RefCountedProxy<FMOD_STUDIO_EVENTINSTANCE> {
+    #define currentClass EventInstance
     public:
-        StudioEventInstance(FMOD::Studio::EventInstance* instance): RefCountedProxy(instance) {}
-        makeGetter(get3DAttributes, FMOD_3D_ATTRIBUTES);
-        makeCastGetter(getChannelGroup, ChannelGroup, FMOD::ChannelGroup*);
-        StudioEventDescription getDescription(lua_State* L);
-        makeGetter(getListenerMask, unsigned int);
-        makeGetter(getParameterCount, int);
-        make2FloatGetter1(getParameterValue, const char*);
-        make2FloatGetter1(getParameterValueByIndex, int);
-        makeGetter(getPaused, bool);
-        make2FloatGetter(getPitch);
-        makeGetter(getPlaybackState, FMOD_STUDIO_PLAYBACK_STATE);
-        makeGetter1(getProperty, float, FMOD_STUDIO_EVENT_PROPERTY);
-        makeGetter1(getReverbLevel, float, int);
-        makeGetter(getTimelinePosition, int);
-        make2FloatGetter(getVolume);
-        makeGetter(isVirtual, bool);
-        makeMethod1(set3DAttributes, const FMOD_3D_ATTRIBUTES*);
-        makeMethod1(setListenerMask, unsigned int);
-        makeMethod2(setParameterValue, const char*, float);
-        makeMethod2(setParameterValueByIndex, int, float);
-        makeMethod1(setPaused, bool);
-        makeMethod1(setPitch, float);
-        makeMethod2(setProperty, FMOD_STUDIO_EVENT_PROPERTY, float);
-        makeMethod2(setReverbLevel, int, float);
-        makeMethod1(setTimelinePosition, int);
-        makeMethod1(setVolume, float);
-        makeMethod(start);
-        makeMethod1(stop, FMOD_STUDIO_STOP_MODE);
-        makeMethod(triggerCue);
+        makeProxyConstructor(StudioEventInstance, FMOD_STUDIO_EVENTINSTANCE);
+        makeGetter(Get3DAttributes, FMOD_3D_ATTRIBUTES);
+        makeCastGetter(GetChannelGroup, ChannelGroup, FMOD_CHANNELGROUP*);
+        StudioEventDescription GetDescription(lua_State* L);
+        makeGetter(GetListenerMask, unsigned int);
+        makeGetter(GetParameterCount, int);
+        make2FloatGetter1(GetParameterValue, const char*);
+        make2FloatGetter1(GetParameterValueByIndex, int);
+        makeCastGetter(GetPaused, bool, FMOD_BOOL);
+        make2FloatGetter(GetPitch);
+        makeGetter(GetPlaybackState, FMOD_STUDIO_PLAYBACK_STATE);
+        makeGetter1(GetProperty, float, FMOD_STUDIO_EVENT_PROPERTY);
+        makeGetter1(GetReverbLevel, float, int);
+        makeGetter(GetTimelinePosition, int);
+        make2FloatGetter(GetVolume);
+        makeCastGetter(IsVirtual, bool, FMOD_BOOL);
+        makeMethod1(Set3DAttributes, FMOD_3D_ATTRIBUTES*);
+        makeMethod1(SetListenerMask, unsigned int);
+        makeMethod2(SetParameterValue, const char*, float);
+        makeMethod2(SetParameterValueByIndex, int, float);
+        makeMethod1(SetPaused, bool);
+        makeMethod1(SetPitch, float);
+        makeMethod2(SetProperty, FMOD_STUDIO_EVENT_PROPERTY, float);
+        makeMethod2(SetReverbLevel, int, float);
+        makeMethod1(SetTimelinePosition, int);
+        makeMethod1(SetVolume, float);
+        makeMethod(Start);
+        makeMethod1(Stop, FMOD_STUDIO_STOP_MODE);
+        makeMethod(TriggerCue);
+    #undef currentClass
     };
 
-    class StudioEventDescription: public Proxy<FMOD::Studio::EventDescription> {
+    class StudioEventDescription: public Proxy<FMOD_STUDIO_EVENTDESCRIPTION> {
+    #define currentClass EventDescription
     public:
-        StudioEventDescription(FMOD::Studio::EventDescription *instance): Proxy(instance) {};
-        makeStringGetter(getPath);
-        makeCastGetter(createInstance, StudioEventInstance, FMOD::Studio::EventInstance*);
+        StudioEventDescription(FMOD_STUDIO_EVENTDESCRIPTION *instance): Proxy(instance) {};
+        makeStringGetter(GetPath);
+        makeCastGetter(CreateInstance, StudioEventInstance, FMOD_STUDIO_EVENTINSTANCE*);
+    #undef currentClass
     };
 
-    defineCastGetter(StudioEventInstance::getDescription, getDescription, StudioEventDescription, FMOD::Studio::EventDescription*);
+    #define currentClass EventInstance
+    defineCastGetter(StudioEventInstance::GetDescription, GetDescription, StudioEventDescription, FMOD_STUDIO_EVENTDESCRIPTION*);
+    #undef currentClass
 
-    class StudioSystem: public Proxy<FMOD::Studio::System> {
+    class StudioSystem: public Proxy<FMOD_STUDIO_SYSTEM> {
+    #define currentClass System
     public:
-        StudioSystem(FMOD::Studio::System* instance): Proxy(instance) {}
+        StudioSystem(FMOD_STUDIO_SYSTEM* instance): Proxy(instance) {}
 
-        StudioBank loadBankMemory(LuaHBuffer* buffer, FMOD_STUDIO_LOAD_BANK_FLAGS flags, lua_State* L) {
-            FMOD::Studio::Bank *result;
+        StudioBank LoadBankMemory(LuaHBuffer* buffer, FMOD_STUDIO_LOAD_BANK_FLAGS flags, lua_State* L) {
+            FMOD_STUDIO_BANK *result;
 
             uint32_t size;
             void* bytes;
@@ -106,27 +122,30 @@ namespace FMODBridge {
                 lua_error(L);
             }
 
-            errCheck(instance->loadBankMemory((char*)bytes, size, FMOD_STUDIO_LOAD_MEMORY, flags, &result));
+            errCheck(FMOD_Studio_System_LoadBankMemory(instance,
+                (char*)bytes, size, FMOD_STUDIO_LOAD_MEMORY, flags, &result
+            ));
             return result;
         }
 
-        makeCastGetter1(getBank, StudioBank, FMOD::Studio::Bank*, const char*);
-        makeCastGetter1(getBankByID, StudioBank, FMOD::Studio::Bank*, const FMOD_GUID*);
-        makeCastGetter1(getBus, StudioBus, FMOD::Studio::Bus*, const char*);
-        makeCastGetter1(getBusByID, StudioBus, FMOD::Studio::Bus*, const FMOD_GUID*);
-        makeCastGetter1(getEvent, StudioEventDescription, FMOD::Studio::EventDescription*, const char*);
-        makeCastGetter1(getEventByID, StudioEventDescription, FMOD::Studio::EventDescription*, const FMOD_GUID*);
-        makeGetter1(getListenerAttributes, FMOD_3D_ATTRIBUTES, int);
-        makeCastGetter1(getVCA, StudioVCA, FMOD::Studio::VCA*, const char*);
-        makeCastGetter1(getVCAByID, StudioVCA, FMOD::Studio::VCA*, const FMOD_GUID*);
-        makeGetter1(lookupID, FMOD_GUID, const char*);
-        makeStringGetter1(lookupPath, const FMOD_GUID*);
-        makeMethod2(setListenerAttributes, int, const FMOD_3D_ATTRIBUTES*);
+        makeCastGetter1(GetBank, StudioBank, FMOD_STUDIO_BANK*, const char*);
+        makeCastGetter1(GetBankByID, StudioBank, FMOD_STUDIO_BANK*, const FMOD_GUID*);
+        makeCastGetter1(GetBus, StudioBus, FMOD_STUDIO_BUS*, const char*);
+        makeCastGetter1(GetBusByID, StudioBus, FMOD_STUDIO_BUS*, const FMOD_GUID*);
+        makeCastGetter1(GetEvent, StudioEventDescription, FMOD_STUDIO_EVENTDESCRIPTION*, const char*);
+        makeCastGetter1(GetEventByID, StudioEventDescription, FMOD_STUDIO_EVENTDESCRIPTION*, const FMOD_GUID*);
+        makeGetter1(GetListenerAttributes, FMOD_3D_ATTRIBUTES, int);
+        makeCastGetter1(GetVCA, StudioVCA, FMOD_STUDIO_VCA*, const char*);
+        makeCastGetter1(GetVCAByID, StudioVCA, FMOD_STUDIO_VCA*, const FMOD_GUID*);
+        makeGetter1(LookupID, FMOD_GUID, const char*);
+        makeStringGetter1(LookupPath, const FMOD_GUID*);
+        makeMethod2(SetListenerAttributes, int, FMOD_3D_ATTRIBUTES*);
+    #undef currentClass
     };
 
     FMOD_GUID parseID(const char *idString, lua_State* L) {
         FMOD_GUID id;
-        errCheck(FMOD::Studio::parseID(idString, &id));
+        errCheck(FMOD_Studio_ParseID(idString, &id));
         return id;
     }
 };
@@ -134,25 +153,25 @@ namespace FMODBridge {
 // Perform the explicit cast to a wrapped instance
 namespace luabridge {
     template <>
-    struct Stack <FMOD::Studio::System*> {
-      static void push (lua_State* L, FMOD::Studio::System* instance) {
+    struct Stack <FMOD_STUDIO_SYSTEM*> {
+      static void push (lua_State* L, FMOD_STUDIO_SYSTEM* instance) {
           StudioSystem wrappedInstance(instance);
           return Stack<StudioSystem>::push(L, wrappedInstance);
       }
 
-      static FMOD::Studio::System* get(lua_State* L, int index) {
+      static FMOD_STUDIO_SYSTEM* get(lua_State* L, int index) {
           return Stack<StudioSystem>::get(L, index);
       }
     };
 
     template <>
-    struct Stack <FMOD::System*> {
-      static void push (lua_State* L, FMOD::System* instance) {
+    struct Stack <FMOD_SYSTEM*> {
+      static void push (lua_State* L, FMOD_SYSTEM* instance) {
           System wrappedInstance(instance);
           return Stack<System>::push(L, wrappedInstance);
       }
 
-      static FMOD::System* get(lua_State* L, int index) {
+      static FMOD_SYSTEM* get(lua_State* L, int index) {
           return Stack<System>::get(L, index);
       }
     };
@@ -179,67 +198,67 @@ void FMODBridge::registerClasses(lua_State *L) {
             .beginNamespace("studio")
                 .addFunction("parse_id", &parseID)
                 .beginClass<StudioBus>("Bus")
-                    .addFunction("get_id", &StudioBus::getID)
-                    .addFunction("get_path", &StudioBus::getPath)
+                    .addFunction("get_id", &StudioBus::GetID)
+                    .addFunction("get_path", &StudioBus::GetPath)
                 .endClass()
                 .beginClass<StudioBank>("Bank")
-                    .addFunction("get_id", &StudioBank::getID)
-                    .addFunction("get_path", &StudioBank::getPath)
+                    .addFunction("get_id", &StudioBank::GetID)
+                    .addFunction("get_path", &StudioBank::GetPath)
                 .endClass()
                 .beginClass<StudioEventInstance>("EventInstance")
-                    .addFunction("get_3d_attributes", &StudioEventInstance::get3DAttributes)
-                    .addFunction("get_channel_group", &StudioEventInstance::getChannelGroup)
-                    .addFunction("get_description", &StudioEventInstance::getDescription)
-                    .addFunction("get_listener_mask", &StudioEventInstance::getListenerMask)
-                    .addFunction("get_parameter_count", &StudioEventInstance::getParameterCount)
-                    .addCFunction("get_parameter_value", &StudioEventInstance::getParameterValue)
-                    .addCFunction("get_parameter_value_by_index", &StudioEventInstance::getParameterValueByIndex)
-                    .addFunction("get_paused", &StudioEventInstance::getPaused)
-                    .addCFunction("get_pitch", &StudioEventInstance::getPitch)
-                    .addFunction("get_playback_state", &StudioEventInstance::getPlaybackState)
-                    .addFunction("get_property", &StudioEventInstance::getProperty)
-                    .addFunction("get_reverb_level", &StudioEventInstance::getReverbLevel)
-                    .addFunction("get_timeline_position", &StudioEventInstance::getTimelinePosition)
-                    .addCFunction("get_volume", &StudioEventInstance::getVolume)
-                    .addFunction("is_virtual", &StudioEventInstance::isVirtual)
-                    .addFunction("set_3d_attributes", &StudioEventInstance::set3DAttributes)
-                    .addFunction("set_listener_mask", &StudioEventInstance::setListenerMask)
-                    .addFunction("set_parameter_value", &StudioEventInstance::setParameterValue)
-                    .addFunction("set_parameter_value_by_index", &StudioEventInstance::setParameterValueByIndex)
-                    .addFunction("set_paused", &StudioEventInstance::setPaused)
-                    .addFunction("set_pitch", &StudioEventInstance::setPitch)
-                    .addFunction("set_property", &StudioEventInstance::setProperty)
-                    .addFunction("set_reverb_level", &StudioEventInstance::setReverbLevel)
-                    .addFunction("set_timeline_position", &StudioEventInstance::setTimelinePosition)
-                    .addFunction("set_volume", &StudioEventInstance::setVolume)
-                    .addFunction("start", &StudioEventInstance::start)
-                    .addFunction("stop", &StudioEventInstance::stop)
-                    .addFunction("trigger_cue", &StudioEventInstance::triggerCue)
+                    .addFunction("get_3d_attributes", &StudioEventInstance::Get3DAttributes)
+                    .addFunction("get_channel_group", &StudioEventInstance::GetChannelGroup)
+                    .addFunction("get_description", &StudioEventInstance::GetDescription)
+                    .addFunction("get_listener_mask", &StudioEventInstance::GetListenerMask)
+                    .addFunction("get_parameter_count", &StudioEventInstance::GetParameterCount)
+                    .addCFunction("get_parameter_value", &StudioEventInstance::GetParameterValue)
+                    .addCFunction("get_parameter_value_by_index", &StudioEventInstance::GetParameterValueByIndex)
+                    .addFunction("get_paused", &StudioEventInstance::GetPaused)
+                    .addCFunction("get_pitch", &StudioEventInstance::GetPitch)
+                    .addFunction("get_playback_state", &StudioEventInstance::GetPlaybackState)
+                    .addFunction("get_property", &StudioEventInstance::GetProperty)
+                    .addFunction("get_reverb_level", &StudioEventInstance::GetReverbLevel)
+                    .addFunction("get_timeline_position", &StudioEventInstance::GetTimelinePosition)
+                    .addCFunction("get_volume", &StudioEventInstance::GetVolume)
+                    .addFunction("is_virtual", &StudioEventInstance::IsVirtual)
+                    .addFunction("set_3d_attributes", &StudioEventInstance::Set3DAttributes)
+                    .addFunction("set_listener_mask", &StudioEventInstance::SetListenerMask)
+                    .addFunction("set_parameter_value", &StudioEventInstance::SetParameterValue)
+                    .addFunction("set_parameter_value_by_index", &StudioEventInstance::SetParameterValueByIndex)
+                    .addFunction("set_paused", &StudioEventInstance::SetPaused)
+                    .addFunction("set_pitch", &StudioEventInstance::SetPitch)
+                    .addFunction("set_property", &StudioEventInstance::SetProperty)
+                    .addFunction("set_reverb_level", &StudioEventInstance::SetReverbLevel)
+                    .addFunction("set_timeline_position", &StudioEventInstance::SetTimelinePosition)
+                    .addFunction("set_volume", &StudioEventInstance::SetVolume)
+                    .addFunction("start", &StudioEventInstance::Start)
+                    .addFunction("stop", &StudioEventInstance::Stop)
+                    .addFunction("trigger_cue", &StudioEventInstance::TriggerCue)
                 .endClass()
                 .beginClass<StudioEventDescription>("EventDescription")
-                    .addFunction("create_instance", &StudioEventDescription::createInstance)
-                    .addFunction("get_path", &StudioEventDescription::getPath)
+                    .addFunction("create_instance", &StudioEventDescription::CreateInstance)
+                    .addFunction("get_path", &StudioEventDescription::GetPath)
                 .endClass()
                 .beginClass<StudioVCA>("VCA")
-                    .addFunction("get_id", &StudioVCA::getID)
-                    .addFunction("get_path", &StudioVCA::getPath)
-                    .addCFunction("get_volume", &StudioVCA::getVolume)
-                    .addFunction("set_volume", &StudioVCA::setVolume)
+                    .addFunction("get_id", &StudioVCA::GetID)
+                    .addFunction("get_path", &StudioVCA::GetPath)
+                    .addCFunction("get_volume", &StudioVCA::GetVolume)
+                    .addFunction("set_volume", &StudioVCA::SetVolume)
                 .endClass()
                 .beginClass<StudioSystem>("System")
-                    .addFunction("get_bank", &StudioSystem::getBank)
-                    .addFunction("get_bank_by_id", &StudioSystem::getBankByID)
-                    .addFunction("get_bus", &StudioSystem::getBus)
-                    .addFunction("get_bus_by_id", &StudioSystem::getBusByID)
-                    .addFunction("get_event", &StudioSystem::getEvent)
-                    .addFunction("get_event_by_id", &StudioSystem::getEventByID)
-                    .addFunction("get_listener_attributes", &StudioSystem::getListenerAttributes)
-                    .addFunction("get_vca", &StudioSystem::getVCA)
-                    .addFunction("get_vca_by_id", &StudioSystem::getVCAByID)
-                    .addFunction("load_bank_memory", &StudioSystem::loadBankMemory)
-                    .addFunction("lookup_id", &StudioSystem::lookupID)
-                    .addFunction("lookup_path", &StudioSystem::lookupPath)
-                    .addFunction("set_listener_attributes", &StudioSystem::setListenerAttributes)
+                    .addFunction("get_bank", &StudioSystem::GetBank)
+                    .addFunction("get_bank_by_id", &StudioSystem::GetBankByID)
+                    .addFunction("get_bus", &StudioSystem::GetBus)
+                    .addFunction("get_bus_by_id", &StudioSystem::GetBusByID)
+                    .addFunction("get_event", &StudioSystem::GetEvent)
+                    .addFunction("get_event_by_id", &StudioSystem::GetEventByID)
+                    .addFunction("get_listener_attributes", &StudioSystem::GetListenerAttributes)
+                    .addFunction("get_vca", &StudioSystem::GetVCA)
+                    .addFunction("get_vca_by_id", &StudioSystem::GetVCAByID)
+                    .addFunction("load_bank_memory", &StudioSystem::LoadBankMemory)
+                    .addFunction("lookup_id", &StudioSystem::LookupID)
+                    .addFunction("lookup_path", &StudioSystem::LookupPath)
+                    .addFunction("set_listener_attributes", &StudioSystem::SetListenerAttributes)
                 .endClass()
                 .addVariable("system", &FMODBridge::system, false)
             .endNamespace()

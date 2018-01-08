@@ -7,8 +7,8 @@ extern "C" {
 }
 
 #include <stdint.h>
-#include <fmod_studio.hpp>
-#include <fmod.hpp>
+#include <fmod_studio.h>
+#include <fmod.h>
 
 #if defined(__APPLE__) || defined(__linux__)
 #define EXPORT __attribute__((visibility("default")))
@@ -28,8 +28,8 @@ extern "C" {
 }
 
 namespace FMODBridge {
-    extern FMOD::Studio::System* system;
-    extern FMOD::System* lowLevelSystem;
+    extern FMOD_STUDIO_SYSTEM* system;
+    extern FMOD_SYSTEM* lowLevelSystem;
 
     struct LuaHBuffer {
         FMODBridge_HBuffer handle;

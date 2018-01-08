@@ -3,8 +3,6 @@
 
 #include "fmod_bridge.hpp"
 #include <LuaBridge/LuaBridge.h>
-#include <fmod_studio.hpp>
-#include <fmod.hpp>
 #include <fmod_errors.h>
 #include <map>
 
@@ -22,24 +20,30 @@ namespace FMODBridge {
     class RefCountedProxy {
     protected:
         T* instance;
+        FMOD_RESULT (*release)(T* instance);
     public:
-        RefCountedProxy(T* instance_): instance(instance_) {
+        RefCountedProxy(T* instance_): instance(instance_), release(NULL) {
             refCounts[instance_] += 1;
         }
-        RefCountedProxy(const RefCountedProxy<T>& other): instance(other.instance) {
+        RefCountedProxy(const RefCountedProxy<T> &other): instance(other.instance), release(other.release) {
             refCounts[instance] += 1;
         }
         operator T*() const { return instance; }
         ~RefCountedProxy() {
             int count = refCounts[instance];
             if (count <= 1) {
-                if (FMODBridge::system) { instance->release(); }
+                if (FMODBridge::system) { release(instance); }
                 refCounts.erase(instance);
             } else {
                 refCounts[instance] = count - 1;
             }
         }
     };
+
+    #define makeProxyConstructor(className, typeName) \
+        className(typeName* instance): RefCountedProxy(instance) { \
+            release = &makeFname(Release); \
+        }
 
     template<class T>
     class Proxy {
@@ -54,12 +58,20 @@ namespace FMODBridge {
 
 #define errCheck(res) FMODBridge::errCheck_(res, L)
 
+#define CONCAT_(x, y) x ## y
+#define CONCAT(x, y) CONCAT_(x, y)
+
+#define LIB_PREFIX_LL FMOD_
+#define LIB_PREFIX_ST FMOD_Studio_
+#define libPrefix(x) CONCAT(LIB_PREFIX_, x)
+#define makeFname(fname) CONCAT(libPrefix(currentLib), CONCAT(CONCAT(currentClass, _), fname))
+
 #define defineStringGetter(declname, fname) \
     std::string declname(lua_State* L) { \
         int size; \
-        errCheck(instance->fname(NULL, 0, &size)); \
+        errCheck(makeFname(fname)(instance, NULL, 0, &size)); \
         char* tmp = new char[size]; \
-        errCheck(instance->fname(tmp, size, NULL)); \
+        errCheck(makeFname(fname)(instance, tmp, size, NULL)); \
         std::string str(tmp); \
         delete[] tmp; \
         return str; \
@@ -68,9 +80,9 @@ namespace FMODBridge {
 #define defineStringGetter1(declname, fname, T1) \
     std::string declname(T1 arg1, lua_State* L) { \
         int size; \
-        errCheck(instance->fname(arg1, NULL, 0, &size)); \
+        errCheck(makeFname(fname)(instance, arg1, NULL, 0, &size)); \
         char* tmp = new char[size]; \
-        errCheck(instance->fname(arg1, tmp, size, NULL)); \
+        errCheck(makeFname(fname)(instance, arg1, tmp, size, NULL)); \
         std::string str(tmp); \
         delete[] tmp; \
         return str; \
@@ -82,21 +94,21 @@ namespace FMODBridge {
 #define defineCastGetter(declname, fname, RT, T) \
     RT declname(lua_State* L) { \
         T result; \
-        errCheck(instance->fname(&result)); \
+        errCheck(makeFname(fname)(instance, &result)); \
         return result; \
     }
 
 #define defineCastGetter1(declname, fname, RT, T, T1) \
     RT declname(T1 arg1, lua_State* L) { \
         T result; \
-        errCheck(instance->fname(arg1, &result)); \
+        errCheck(makeFname(fname)(instance, arg1, &result)); \
         return result; \
     }
 
 #define defineCastGetter2(declname, fname, RT, T, T1, T2) \
     RT declname(T1 arg1, T2 arg2, lua_State* L) { \
         T result; \
-        errCheck(instance->fname(arg1, arg2, &result)); \
+        errCheck(makeFname(fname)(instance, arg1, arg2, &result)); \
         return result; \
     }
 
@@ -114,17 +126,17 @@ namespace FMODBridge {
 
 #define defineMethod(declname, fname) \
     void declname(lua_State* L) { \
-        errCheck(instance->fname()); \
+        errCheck(makeFname(fname)(instance)); \
     }
 
 #define defineMethod1(declname, fname, T1) \
     void declname(T1 arg1, lua_State* L) { \
-        errCheck(instance->fname(arg1)); \
+        errCheck(makeFname(fname)(instance, arg1)); \
     }
 
 #define defineMethod2(declname, fname, T1, T2) \
     void declname(T1 arg1, T2 arg2, lua_State* L) { \
-        errCheck(instance->fname(arg1, arg2)); \
+        errCheck(makeFname(fname)(instance, arg1, arg2)); \
     }
 
 #define makeMethod(fname) defineMethod(fname, fname)
@@ -134,7 +146,7 @@ namespace FMODBridge {
 #define define2FloatGetter(declname, fname) \
     int declname(lua_State* L) { \
         float value, finalValue; \
-        errCheck(instance->fname(&value, &finalValue)); \
+        errCheck(makeFname(fname)(instance, &value, &finalValue)); \
         lua_pushnumber(L, value); \
         lua_pushnumber(L, finalValue); \
         return 2; \
@@ -144,7 +156,7 @@ namespace FMODBridge {
     int declname(lua_State* L) { \
         T1 arg1 = luabridge::Stack<T1>::get(L, 2); \
         float value, finalValue; \
-        errCheck(instance->fname(arg1, &value, &finalValue)); \
+        errCheck(makeFname(fname)(instance, arg1, &value, &finalValue)); \
         lua_pushnumber(L, value); \
         lua_pushnumber(L, finalValue); \
         return 2; \
@@ -155,7 +167,7 @@ namespace FMODBridge {
         T1 arg1 = luabridge::Stack<T1>::get(L, 2); \
         T2 arg2 = luabridge::Stack<T2>::get(L, 3); \
         float value, finalValue; \
-        errCheck(instance->fname(arg1, arg2, &value, &finalValue)); \
+        errCheck(makeFname(fname)(instance, arg1, arg2, &value, &finalValue)); \
         lua_pushnumber(L, value); \
         lua_pushnumber(L, finalValue); \
         return 2; \
