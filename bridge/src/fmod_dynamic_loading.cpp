@@ -25,6 +25,7 @@ bool FMODBridge::linkLibraries() {
 
     char *tmpPath = NULL;
     const char *libPath = ".";
+    bool mustFreeLibPath = false;
 
     #ifdef __linux__
     char* env = secure_getenv("DEFOLD_FMOD_LIB_PATH");
@@ -50,6 +51,49 @@ bool FMODBridge::linkLibraries() {
           libPath = dirname(tmpPath);
         }
         #endif
+
+        // Detect if the game is running in the editor
+
+        #if defined(__APPLE__)
+        #define FMB_PLATFORM_BUILD "darwin"
+        #define FMB_PLATFORM "osx"
+        #elif defined(__linux__)
+        #define FMB_PLATFORM_BUILD "linux"
+        #define FMB_PLATFORM "linux"
+        #endif
+
+        #if defined(__x86_64__)
+        #define FMB_ARCH "x86_64"
+        #elif defined(__i386)
+        #define FMB_ARCH "x86"
+        #endif
+
+        #if defined(FMB_PLATFORM) && defined(FMB_ARCH)
+        #define FMB_EDITOR_SUFFIX "/build/" FMB_ARCH "-" FMB_PLATFORM_BUILD "/dmengine"
+
+        static const size_t suffixLen = strlen(FMB_EDITOR_SUFFIX);
+        size_t tmpPathLen = strlen(tmpPath);
+        if (tmpPathLen >= suffixLen && 0 == strcmp(FMB_EDITOR_SUFFIX, tmpPath + tmpPathLen - suffixLen)) {
+            printf("INFO:fmod: Running in the editor. Will attempt to load libraries from project\n");
+
+            tmpPath = dirname(dirname(dirname(tmpPath)));
+            const char* resPath = FMODBridge_getBundleResourcesPath();
+
+            #ifdef __APPLE__
+            #define FMB_LIB_PATH "/" FMB_ARCH "-" FMB_PLATFORM "/Contents/MacOS"
+            #else
+            #define FMB_LIB_PATH "/" FMB_ARCH "-" FMB_PLATFORM
+            #endif
+
+            char* newPath = new char[strlen(tmpPath) + strlen(resPath) + strlen(FMB_LIB_PATH) + 1];
+            strcpy(newPath, tmpPath);
+            strcat(newPath, resPath);
+            strcat(newPath, FMB_LIB_PATH);
+            libPath = newPath;
+            mustFreeLibPath = true;
+        }
+
+        #endif
     }
 
     #ifdef __APPLE__
@@ -72,6 +116,7 @@ bool FMODBridge::linkLibraries() {
     FMODBridge::dlHandleST = dlopen(tmpPath, RTLD_NOW | RTLD_GLOBAL);
     if (!FMODBridge::dlHandleST) { printf("WARNING:fmod: %s\n", dlerror()); }
 
+    if (mustFreeLibPath) { delete[] libPath; }
     delete[] tmpPath;
     return (FMODBridge::dlHandleLL && FMODBridge::dlHandleST);
 }

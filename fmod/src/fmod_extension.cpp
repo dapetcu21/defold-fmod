@@ -5,6 +5,13 @@
 
 #include "fmod_bridge_interface.hpp"
 
+static dmConfigFile::HConfig appConfig;
+
+dmExtension::Result AppInitializeDefoldFMOD(dmExtension::AppParams* params) {
+    appConfig = params->m_ConfigFile;
+    return dmExtension::RESULT_OK;
+}
+
 dmExtension::Result InitializeDefoldFMOD(dmExtension::Params* params) {
     FMODBridge_init(params->m_L);
     return dmExtension::RESULT_OK;
@@ -33,6 +40,10 @@ FMODBridge_HBuffer FMODBridge_dmScript_CheckBuffer(lua_State* L, int index) {
     return dmScript::CheckBuffer(L, index)->m_Buffer;
 }
 
+const char* FMODBridge_getBundleResourcesPath() {
+    return dmConfigFile::GetString(appConfig, "project.bundle_resources", "");
+}
+
 #else
 
 dmExtension::Result InitializeDefoldFMOD(dmExtension::Params* params) {
@@ -45,11 +56,11 @@ dmExtension::Result FinalizeDefoldFMOD(dmExtension::Params* params) {
     return dmExtension::RESULT_OK;
 }
 
-#endif
-
 dmExtension::Result AppInitializeDefoldFMOD(dmExtension::AppParams* params) {
     return dmExtension::RESULT_OK;
 }
+
+#endif
 
 dmExtension::Result AppFinalizeDefoldFMOD(dmExtension::AppParams* params) {
     return dmExtension::RESULT_OK;
