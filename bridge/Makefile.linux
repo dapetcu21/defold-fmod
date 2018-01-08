@@ -26,10 +26,10 @@ build/64%.o: src/%.cpp $(HEADERS)
 	$(CXX) -m64 $(CXXFLAGS) -c $< -o $@
 
 $(LIBPATH32): $(OBJECTS32)
-	libtool -static $^ -o $@
+	ar rcs $@ $^
 
 $(LIBPATH64): $(OBJECTS64)
-	libtool -static $^ -o $@
+	ar rcs $@ $^
 
 clean:
 	rm -f $(LIBPATH32) $(LIBPATH64) build/*.o

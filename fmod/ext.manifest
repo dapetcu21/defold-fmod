@@ -1,5 +1,1 @@
 name: "DefoldFMOD"
-platforms:
-  x86_64-linux:
-    context:
-      linkFlags: ["-rdynamic"]

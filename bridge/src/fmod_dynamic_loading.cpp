@@ -23,7 +23,7 @@ bool FMODBridge::linkLibraries() {
     if (FMODBridge::dlHandleST) { dlclose(dlHandleST); }
     if (FMODBridge::dlHandleLL) { dlclose(dlHandleLL); }
 
-    char *tmpPath = NULL;
+    char *exePath = NULL;
     const char *libPath = ".";
     bool mustFreeLibPath = false;
 
@@ -39,16 +39,30 @@ bool FMODBridge::linkLibraries() {
         #ifdef __APPLE__
         uint32_t bufsize = 0;
         _NSGetExecutablePath(NULL, &bufsize);
-        tmpPath = new char[bufsize];
-        _NSGetExecutablePath(tmpPath, &bufsize);
-        libPath = dirname(tmpPath);
+        exePath = new char[bufsize];
+        _NSGetExecutablePath(exePath, &bufsize);
+        libPath = dirname(exePath);
+        char* newPath = new char[strlen(libPath) + 1];
+        strcpy(newPath, libPath);
+        libPath = newPath;
+        mustFreeLibPath = true;
         #endif
 
         #ifdef __linux__
-        tmpPath = new char[PATH_MAX + 2];
-        ssize_t ret = readlink("/proc/self/exe", tmpPath, PATH_MAX + 2);
+        exePath = new char[PATH_MAX + 2];
+        ssize_t ret = readlink("/proc/self/exe", exePath, PATH_MAX + 2);
         if (ret >= 0 && ret <= PATH_MAX + 1) {
-          libPath = dirname(tmpPath);
+          exePath[ret] = 0;
+          char* newPath = new char[ret + 1];
+          strcpy(newPath, exePath);
+          libPath = dirname(newPath); // dirname() clobbers newPath
+          char* finalPath = new char[ret + 1];
+          strcpy(finalPath, libPath);
+          libPath = finalPath;
+          mustFreeLibPath = true;
+          delete[] newPath;
+        } else {
+          exePath[0] = 0;
         }
         #endif
 
@@ -72,11 +86,11 @@ bool FMODBridge::linkLibraries() {
         #define FMB_EDITOR_SUFFIX "/build/" FMB_ARCH "-" FMB_PLATFORM_BUILD "/dmengine"
 
         static const size_t suffixLen = strlen(FMB_EDITOR_SUFFIX);
-        size_t tmpPathLen = strlen(tmpPath);
-        if (tmpPathLen >= suffixLen && 0 == strcmp(FMB_EDITOR_SUFFIX, tmpPath + tmpPathLen - suffixLen)) {
+        size_t exePathLen = strlen(exePath);
+        if (exePathLen >= suffixLen && 0 == strcmp(FMB_EDITOR_SUFFIX, exePath + exePathLen - suffixLen)) {
             printf("INFO:fmod: Running in the editor. Will attempt to load libraries from project\n");
 
-            tmpPath = dirname(dirname(dirname(tmpPath)));
+            exePath = dirname(dirname(dirname(exePath)));
             const char* resPath = FMODBridge_getBundleResourcesPath();
 
             #ifdef __APPLE__
@@ -85,10 +99,11 @@ bool FMODBridge::linkLibraries() {
             #define FMB_LIB_PATH "/" FMB_ARCH "-" FMB_PLATFORM
             #endif
 
-            char* newPath = new char[strlen(tmpPath) + strlen(resPath) + strlen(FMB_LIB_PATH) + 1];
-            strcpy(newPath, tmpPath);
+            char* newPath = new char[strlen(exePath) + strlen(resPath) + strlen(FMB_LIB_PATH) + 1];
+            strcpy(newPath, exePath);
             strcat(newPath, resPath);
             strcat(newPath, FMB_LIB_PATH);
+            if (mustFreeLibPath) { delete[] libPath; }
             libPath = newPath;
             mustFreeLibPath = true;
         }
@@ -102,22 +117,22 @@ bool FMODBridge::linkLibraries() {
     #define LIBEXT "so"
     #endif
 
-    if (tmpPath) { delete[] tmpPath; }
+    if (exePath) { delete[] exePath; }
     size_t maxPathLen = strlen(libPath) + 20;
-    tmpPath = new char[maxPathLen + 1];
+    exePath = new char[maxPathLen + 1];
 
-    strcpy(tmpPath, libPath);
-    strncat(tmpPath, "/libfmod." LIBEXT, maxPathLen);
-    FMODBridge::dlHandleLL = dlopen(tmpPath, RTLD_NOW | RTLD_GLOBAL);
+    strcpy(exePath, libPath);
+    strncat(exePath, "/libfmod." LIBEXT, maxPathLen);
+    FMODBridge::dlHandleLL = dlopen(exePath, RTLD_NOW | RTLD_GLOBAL);
     if (!FMODBridge::dlHandleLL) { printf("WARNING:fmod: %s\n", dlerror()); }
 
-    strcpy(tmpPath, libPath);
-    strncat(tmpPath, "/libfmodstudio." LIBEXT, maxPathLen);
-    FMODBridge::dlHandleST = dlopen(tmpPath, RTLD_NOW | RTLD_GLOBAL);
+    strcpy(exePath, libPath);
+    strncat(exePath, "/libfmodstudio." LIBEXT, maxPathLen);
+    FMODBridge::dlHandleST = dlopen(exePath, RTLD_NOW | RTLD_GLOBAL);
     if (!FMODBridge::dlHandleST) { printf("WARNING:fmod: %s\n", dlerror()); }
 
     if (mustFreeLibPath) { delete[] libPath; }
-    delete[] tmpPath;
+    delete[] exePath;
     return (FMODBridge::dlHandleLL && FMODBridge::dlHandleST);
 }
 
