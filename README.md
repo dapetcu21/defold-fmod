@@ -6,7 +6,7 @@
 
 ## Installation
 
-First, add `https://github.com/dapetcu21/defold-fmod/master.zip` to
+First, add `https://github.com/dapetcu21/defold-fmod/archive/master.zip` to
 your dependencies in `game.project`.
 
 Because the FMOD license doesn't allow me to distribute FMOD with this package,
