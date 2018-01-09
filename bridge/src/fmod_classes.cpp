@@ -96,7 +96,10 @@ namespace FMODBridge {
         makeMethod1(SetListenerMask, unsigned int);
         makeMethod2(SetParameterValue, const char*, float);
         makeMethod2(SetParameterValueByIndex, int, float);
-        makeMethod1(SetPaused, bool);
+        void SetPaused(bool arg1, lua_State* L) { // Need to cast bool to FMOD_BOOL
+            ensure(currentLib, makeFname(SetPaused), FMOD_RESULT, currentType*, FMOD_BOOL);
+            errCheck(makeFname(SetPaused)(instance, arg1));
+        }
         makeMethod1(SetPitch, float);
         makeMethod2(SetProperty, FMOD_STUDIO_EVENT_PROPERTY, float);
         makeMethod2(SetReverbLevel, int, float);
