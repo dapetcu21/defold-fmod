@@ -24,3 +24,6 @@ shared_state = 1
 [library]
 include_dirs = fmod
 
+[fmod]
+speaker_mode = 5.1
+

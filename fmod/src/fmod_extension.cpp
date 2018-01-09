@@ -40,8 +40,12 @@ FMODBridge_HBuffer FMODBridge_dmScript_CheckBuffer(lua_State* L, int index) {
     return dmScript::CheckBuffer(L, index)->m_Buffer;
 }
 
-const char* FMODBridge_getBundleResourcesPath() {
-    return dmConfigFile::GetString(appConfig, "project.bundle_resources", "");
+const char* FMODBridge_dmConfigFile_GetString(const char* config, const char* defaultValue) {
+    return dmConfigFile::GetString(appConfig, config, defaultValue);
+}
+
+int32_t FMODBridge_dmConfigFile_GetInt(const char* config, int32_t defaultValue) {
+    return dmConfigFile::GetInt(appConfig, config, defaultValue);
 }
 
 #else

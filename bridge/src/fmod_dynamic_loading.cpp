@@ -91,7 +91,7 @@ bool FMODBridge::linkLibraries() {
             printf("INFO:fmod: Running in the editor. Will attempt to load libraries from project\n");
 
             exePath = dirname(dirname(dirname(exePath)));
-            const char* resPath = FMODBridge_getBundleResourcesPath();
+            const char* resPath = FMODBridge_dmConfigFile_GetString("project.bundle_resources", "");
 
             #ifdef __APPLE__
             #define FMB_LIB_PATH "/" FMB_ARCH "-" FMB_PLATFORM "/Contents/MacOS"

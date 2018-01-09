@@ -8,6 +8,20 @@ using namespace luabridge;
 FMOD_STUDIO_SYSTEM* FMODBridge::system = NULL;
 FMOD_SYSTEM* FMODBridge::lowLevelSystem = NULL;
 
+static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
+    if (0 == strcmp(str, "default")) { return FMOD_SPEAKERMODE_DEFAULT; }
+    if (0 == strcmp(str, "stereo")) { return FMOD_SPEAKERMODE_STEREO; }
+    if (0 == strcmp(str, "mono")) { return FMOD_SPEAKERMODE_MONO; }
+    if (0 == strcmp(str, "5.1")) { return FMOD_SPEAKERMODE_5POINT1; }
+    if (0 == strcmp(str, "7.1")) { return FMOD_SPEAKERMODE_7POINT1; }
+    if (0 == strcmp(str, "quad")) { return FMOD_SPEAKERMODE_QUAD; }
+    if (0 == strcmp(str, "surround")) { return FMOD_SPEAKERMODE_SURROUND; }
+    if (0 == strcmp(str, "max")) { return FMOD_SPEAKERMODE_MAX; }
+    if (0 == strcmp(str, "raw")) { return FMOD_SPEAKERMODE_RAW; }
+    printf("WARNING:fmod: Invalid value for speaker_mode: \"%s\". Using default\n", str);
+    return FMOD_SPEAKERMODE_DEFAULT;
+}
+
 extern "C" void FMODBridge_init(lua_State *L) {
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
     if (!linkLibraries()) {
@@ -40,12 +54,19 @@ extern "C" void FMODBridge_init(lua_State *L) {
     }
 
     // TODO: Make this configurable somehow
-    res = FMOD_System_SetSoftwareFormat(lowLevelSystem, 0, FMOD_SPEAKERMODE_5POINT1, 0);
-    if (res != FMOD_OK) {
-        printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
-        FMOD_Studio_System_Release(FMODBridge::system);
-        FMODBridge::system = NULL;
-        return;
+    int sampleRate = FMODBridge_dmConfigFile_GetInt("fmod.sample_rate", 0);
+    int numRawSpeakers = FMODBridge_dmConfigFile_GetInt("fmod.num_raw_speakers", 0);
+    const char* speakerModeStr = FMODBridge_dmConfigFile_GetString("fmod.speaker_mode", "default");
+    FMOD_SPEAKERMODE speakerMode = speakerModeFromString(speakerModeStr);
+
+    if (sampleRate || numRawSpeakers || speakerMode != FMOD_SPEAKERMODE_DEFAULT) {
+        res = FMOD_System_SetSoftwareFormat(lowLevelSystem, sampleRate, speakerMode, numRawSpeakers);
+        if (res != FMOD_OK) {
+            printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
+            FMOD_Studio_System_Release(FMODBridge::system);
+            FMODBridge::system = NULL;
+            return;
+        }
     }
 
     void* extraDriverData = NULL;
