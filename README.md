@@ -45,6 +45,21 @@ a few extra steps are required for each platform:
 8. Copy `api/lowlevel/lib/fmod64.dll` and `api/studio/lib/fmodstudio64.dll`
   to `<stub>/res/x86_64-win32/`.
 
+## Setting speaker mode
+
+This step is [only required if you use Studio banks][set_software_format].
+To set the speaker mode, create an `fmod` section in you `game.project`:
+
+```
+[fmod]
+speaker_mode = 5.1
+```
+
+Supported values for `speaker_mode` are: `default`, `raw`, `mono`, `stereo`,
+`quad`, `surround`, `5.1`, `7.1`, `max`.
+
+If ever needed, you can also set `sample_rate` and `num_raw_speakers` in the same way.
+
 ## Running
 
 The game will bundle fine, but in order for FMOD to be available when running
@@ -94,3 +109,4 @@ event:start()
 [FMOD]: https://fmod.com
 [FMOD API Documentation]: https://www.fmod.com/resources/documentation-api
 [bundle_resources]: https://www.defold.com/manuals/project-settings/#_project
+[set_software_format]: https://www.fmod.org/docs/content/generated/FMOD_System_SetSoftwareFormat.html
