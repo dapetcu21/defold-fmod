@@ -48,7 +48,7 @@ a few extra steps are required for each platform:
 ## Setting speaker mode
 
 This step is [only required if you use Studio banks][set_software_format].
-To set the speaker mode, create an `fmod` section in you `game.project`:
+To set the speaker mode, create an `fmod` section in your `game.project`:
 
 ```
 [fmod]
