@@ -93,7 +93,7 @@ namespace FMODBridge {
         makeGetter(GetStringCount, int);
         int GetStringInfo(lua_State* L) {
             ensure(currentLib, makeFname(GetStringInfo), FMOD_RESULT, currentType*, int, FMOD_GUID*, char*, int, int*); \
-            int index = luaL_checknumber(L, 2);
+            int index = (int)luaL_checknumber(L, 2);
             int size;
             errCheck(makeFname(GetStringInfo)(instance, index, NULL, NULL, 0, &size));
             FMOD_GUID id;
