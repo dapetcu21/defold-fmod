@@ -93,16 +93,16 @@ namespace FMODBridge {
         makeGetter(GetStringCount, int);
         int GetStringInfo(lua_State* L) {
             ensure(currentLib, makeFname(GetStringInfo), FMOD_RESULT, currentType*, int, FMOD_GUID*, char*, int, int*); \
-            int index = luaL_checknumber(L, 2); \
-            int size; \
-            errCheck(makeFname(GetStringInfo)(instance, index, NULL, NULL, 0, &size)); \
-            FMOD_GUID id; \
-            char* path = new char[size]; \
-            errCheck(makeFname(GetStringInfo)(instance, index, &id, path, size, NULL)); \
+            int index = luaL_checknumber(L, 2);
+            int size;
+            errCheck(makeFname(GetStringInfo)(instance, index, NULL, NULL, 0, &size));
+            FMOD_GUID id;
+            char* path = new char[size];
+            errCheck(makeFname(GetStringInfo)(instance, index, &id, path, size, NULL));
             luabridge::Stack<FMOD_GUID>::push(L, id);
             lua_pushstring(L, path);
-            delete[] path; \
-            return 2; \
+            delete[] path;
+            return 2;
         }
         makeGetter(GetVCACount, int);
         makeListGetter(GetVCAList, StudioVCA, FMOD_STUDIO_VCA, GetVCACount);
@@ -197,6 +197,36 @@ namespace FMODBridge {
     #define currentType FMOD_STUDIO_COMMANDREPLAY
     public:
         makeProxyConstructor(StudioCommandReplay, FMOD_STUDIO_COMMANDREPLAY);
+        makeGetter1(GetCommandAtTime, int, float);
+        makeGetter(GetCommandCount, int);
+        makeGetter1(GetCommandInfo, FMOD_STUDIO_COMMAND_INFO, int);
+        std::string GetCommandString(int arg1, lua_State* L) {
+            ensure(currentLib, makeFname(GetCommandString), FMOD_RESULT, currentType*, int, const char*, int);
+            char* tmp = new char[512];
+            errCheck(makeFname(GetCommandString)(instance, arg1, tmp, 512));
+            std::string str(tmp);
+            delete[] tmp;
+            return str;
+        }
+        int GetCurrentCommand(lua_State* L) {
+            ensure(currentLib, makeFname(GetCurrentCommand), FMOD_RESULT, currentType*, int*, float*);
+            int commandIndex;
+            float currentTime;
+            errCheck(makeFname(GetCurrentCommand)(instance, &commandIndex, &currentTime));
+            lua_pushnumber(L, commandIndex);
+            lua_pushnumber(L, currentTime);
+            return 2;
+        }
+        makeGetter(GetLength, float);
+        makeCastGetter(GetPaused, bool, FMOD_BOOL);
+        makeGetter(GetPlaybackState, FMOD_STUDIO_PLAYBACK_STATE);
+        makeMethod1(SeekToCommand, int);
+        makeMethod1(SeekToTime, float);
+        makeMethod1(SetBankPath, const char*);
+        void SetPaused(bool arg1, lua_State* L) { // Need to cast bool to FMOD_BOOL
+            ensure(currentLib, makeFname(SetPaused), FMOD_RESULT, currentType*, FMOD_BOOL);
+            errCheck(makeFname(SetPaused)(instance, arg1));
+        }
         makeMethod(Start);
         makeMethod(Stop);
     #undef currentClass
@@ -373,6 +403,16 @@ void FMODBridge::registerClasses(lua_State *L) {
                     .addData("exinfo", &FMOD_STUDIO_SOUND_INFO::exinfo)
                     .addData("sub_sound_index", &FMOD_STUDIO_SOUND_INFO::subsoundindex)
                 .endClass()
+                .beginClass<FMOD_STUDIO_COMMAND_INFO>("COMMAND_INFO")
+                    .addData("command_name", &FMOD_STUDIO_COMMAND_INFO::commandname)
+                    .addData("parent_command_index", &FMOD_STUDIO_COMMAND_INFO::parentcommandindex)
+                    .addData("frame_number", &FMOD_STUDIO_COMMAND_INFO::framenumber)
+                    .addData("frame_time", &FMOD_STUDIO_COMMAND_INFO::frametime)
+                    .addData("instance_type", &FMOD_STUDIO_COMMAND_INFO::instancetype)
+                    .addData("output_type", &FMOD_STUDIO_COMMAND_INFO::outputtype)
+                    .addData("instance_handle", &FMOD_STUDIO_COMMAND_INFO::instancehandle)
+                    .addData("output_handle", &FMOD_STUDIO_COMMAND_INFO::outputhandle)
+                .endClass()
                 .beginClass<StudioBus>("Bus")
                     .addFunction("get_channel_group", &StudioBus::GetChannelGroup)
                     .addFunction("get_id", &StudioBus::GetID)
@@ -467,6 +507,18 @@ void FMODBridge::registerClasses(lua_State *L) {
                     .addFunction("set_volume", &StudioVCA::SetVolume)
                 .endClass()
                 .beginClass<StudioCommandReplay>("CommandReplay")
+                    .addFunction("get_command_at_time", &StudioCommandReplay::GetCommandAtTime)
+                    .addFunction("get_command_count", &StudioCommandReplay::GetCommandCount)
+                    .addFunction("get_command_info", &StudioCommandReplay::GetCommandInfo)
+                    .addFunction("get_command_string", &StudioCommandReplay::GetCommandString)
+                    .addCFunction("get_current_command", &StudioCommandReplay::GetCurrentCommand)
+                    .addFunction("get_length", &StudioCommandReplay::GetLength)
+                    .addFunction("get_paused", &StudioCommandReplay::GetPaused)
+                    .addFunction("get_playback_state", &StudioCommandReplay::GetPlaybackState)
+                    .addFunction("seek_to_command", &StudioCommandReplay::SeekToCommand)
+                    .addFunction("seek_to_time", &StudioCommandReplay::SeekToTime)
+                    .addFunction("set_bank_path", &StudioCommandReplay::SetBankPath)
+                    .addFunction("set_paused", &StudioCommandReplay::SetPaused)
                     .addFunction("start", &StudioCommandReplay::Start)
                     .addFunction("stop", &StudioCommandReplay::Stop)
                 .endClass()
