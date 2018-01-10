@@ -10,7 +10,7 @@ extern "C" {
 #include <fmod_studio.h>
 #include <fmod.h>
 
-#if defined(__APPLE__) || defined(__linux__)
+#if !defined(FMOD_FORCE_STATIC_LINK) && (defined(__APPLE__) || defined(__linux__))
 #define FMOD_BRIDGE_LOAD_DYNAMICALLY
 #include <stdlib.h>
 #include <dlfcn.h>

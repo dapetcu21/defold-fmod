@@ -55,8 +55,24 @@ namespace FMODBridge {
     #define currentType FMOD_STUDIO_BUS
     public:
         StudioBus(FMOD_STUDIO_BUS *instance): Proxy(instance) {}
+        makeCastGetter(GetChannelGroup, ChannelGroup, FMOD_CHANNELGROUP*);
         makeGetter(GetID, FMOD_GUID);
+        makeCastGetter(GetMute, bool, FMOD_BOOL);
         makeStringGetter(GetPath);
+        makeCastGetter(GetPaused, bool, FMOD_BOOL);
+        make2FloatGetter(GetVolume);
+        makeMethod(LockChannelGroup);
+        void SetMute(bool arg1, lua_State* L) {
+            ensure(currentLib, makeFname(SetMute), FMOD_RESULT, currentType*, FMOD_BOOL);
+            errCheck(makeFname(SetMute)(instance, arg1));
+        }
+        void SetPaused(bool arg1, lua_State* L) {
+            ensure(currentLib, makeFname(SetPaused), FMOD_RESULT, currentType*, FMOD_BOOL);
+            errCheck(makeFname(SetPaused)(instance, arg1));
+        }
+        makeMethod1(SetVolume, float);
+        makeMethod1(StopAllEvents, FMOD_STUDIO_STOP_MODE);
+        makeMethod(UnlockChannelGroup);
     #undef currentClass
     #undef currentType
     };
@@ -66,8 +82,30 @@ namespace FMODBridge {
     #define currentType FMOD_STUDIO_BANK
     public:
         StudioBank(FMOD_STUDIO_BANK *instance): Proxy(instance) {}
+        makeGetter(GetBusCount, int);
+        makeGetter(GetEventCount, int);
         makeGetter(GetID, FMOD_GUID);
+        makeGetter(GetLoadingState, FMOD_STUDIO_LOADING_STATE);
         makeStringGetter(GetPath);
+        makeGetter(GetSampleLoadingState, FMOD_STUDIO_LOADING_STATE);
+        makeGetter(GetStringCount, int);
+        int GetStringInfo(lua_State* L) {
+            ensure(currentLib, makeFname(GetStringInfo), FMOD_RESULT, currentType*, int, FMOD_GUID*, char*, int, int*); \
+            int index = luaL_checknumber(L, 2); \
+            int size; \
+            errCheck(makeFname(GetStringInfo)(instance, index, NULL, NULL, 0, &size)); \
+            FMOD_GUID id; \
+            char* path = new char[size]; \
+            errCheck(makeFname(GetStringInfo)(instance, index, &id, path, size, NULL)); \
+            luabridge::Stack<FMOD_GUID>::push(L, id);
+            lua_pushstring(L, path);
+            delete[] path; \
+            return 2; \
+        }
+        makeGetter(GetVCACount, int);
+        makeMethod(LoadSampleData);
+        makeMethod(Unload);
+        makeMethod(UnloadSampleData);
     #undef currentClass
     #undef currentType
     };
@@ -117,8 +155,29 @@ namespace FMODBridge {
     #define currentType FMOD_STUDIO_EVENTDESCRIPTION
     public:
         StudioEventDescription(FMOD_STUDIO_EVENTDESCRIPTION *instance): Proxy(instance) {};
-        makeStringGetter(GetPath);
         makeCastGetter(CreateInstance, StudioEventInstance, FMOD_STUDIO_EVENTINSTANCE*);
+        makeGetter(GetID, FMOD_GUID);
+        makeGetter(GetInstanceCount, int);
+        makeGetter(GetLength, int);
+        makeGetter(GetMaximumDistance, float);
+        makeGetter(GetMinimumDistance, float);
+        makeGetter1(GetParameter, FMOD_STUDIO_PARAMETER_DESCRIPTION, const char*);
+        makeGetter1(GetParameterByIndex, FMOD_STUDIO_PARAMETER_DESCRIPTION, int);
+        makeGetter(GetParameterCount, int);
+        makeStringGetter(GetPath);
+        makeGetter(GetSampleLoadingState, FMOD_STUDIO_LOADING_STATE);
+        makeGetter(GetSoundSize, float);
+        makeGetter1(GetUserProperty, FMOD_STUDIO_USER_PROPERTY, const char*);
+        makeGetter1(GetUserPropertyByIndex, FMOD_STUDIO_USER_PROPERTY, int);
+        makeGetter(GetUserPropertyCount, int);
+        makeCastGetter(HasCue, bool, FMOD_BOOL);
+        makeCastGetter(Is3D, bool, FMOD_BOOL);
+        makeCastGetter(IsOneshot, bool, FMOD_BOOL);
+        makeCastGetter(IsSnapshot, bool, FMOD_BOOL);
+        makeCastGetter(IsStream, bool, FMOD_BOOL);
+        makeMethod(LoadSampleData);
+        makeMethod(ReleaseAllInstances);
+        makeMethod(UnloadSampleData);
     #undef currentClass
     #undef currentType
     };
@@ -128,6 +187,17 @@ namespace FMODBridge {
     defineCastGetter(StudioEventInstance::GetDescription, GetDescription, StudioEventDescription, FMOD_STUDIO_EVENTDESCRIPTION*);
     #undef currentClass
     #undef currentType
+
+    class StudioCommandReplay: public RefCountedProxy<FMOD_STUDIO_COMMANDREPLAY> {
+    #define currentClass CommandReplay
+    #define currentType FMOD_STUDIO_COMMANDREPLAY
+    public:
+        makeProxyConstructor(StudioCommandReplay, FMOD_STUDIO_COMMANDREPLAY);
+        makeMethod(Start);
+        makeMethod(Stop);
+    #undef currentClass
+    #undef currentType
+    };
 
     class StudioSystem: public Proxy<FMOD_STUDIO_SYSTEM> {
     #define currentClass System
@@ -156,18 +226,41 @@ namespace FMODBridge {
             return result;
         }
 
+        makeMethod(FlushCommands);
+        makeMethod(FlushSampleLoading);
+        FMOD_STUDIO_ADVANCEDSETTINGS GetAdvancedSettings(lua_State *L) {
+            ensure(currentLib, makeFname(GetAdvancedSettings), FMOD_RESULT, currentType*, FMOD_STUDIO_ADVANCEDSETTINGS*);
+            FMOD_STUDIO_ADVANCEDSETTINGS result;
+            result.cbsize = sizeof(FMOD_STUDIO_ADVANCEDSETTINGS);
+            errCheck(makeFname(GetAdvancedSettings)(instance, &result));
+            return result;
+        }
         makeCastGetter1(GetBank, StudioBank, FMOD_STUDIO_BANK*, const char*);
         makeCastGetter1(GetBankByID, StudioBank, FMOD_STUDIO_BANK*, const FMOD_GUID*);
+        makeGetter(GetBankCount, int);
+        makeGetter(GetBufferUsage, FMOD_STUDIO_BUFFER_USAGE);
         makeCastGetter1(GetBus, StudioBus, FMOD_STUDIO_BUS*, const char*);
         makeCastGetter1(GetBusByID, StudioBus, FMOD_STUDIO_BUS*, const FMOD_GUID*);
+        makeGetter(GetCPUUsage, FMOD_STUDIO_CPU_USAGE);
         makeCastGetter1(GetEvent, StudioEventDescription, FMOD_STUDIO_EVENTDESCRIPTION*, const char*);
         makeCastGetter1(GetEventByID, StudioEventDescription, FMOD_STUDIO_EVENTDESCRIPTION*, const FMOD_GUID*);
         makeGetter1(GetListenerAttributes, FMOD_3D_ATTRIBUTES, int);
+        makeGetter1(GetListenerWeight, float, int);
+        makeGetter(GetNumListeners, int);
+        makeGetter1(GetSoundInfo, FMOD_STUDIO_SOUND_INFO, const char*)
         makeCastGetter1(GetVCA, StudioVCA, FMOD_STUDIO_VCA*, const char*);
         makeCastGetter1(GetVCAByID, StudioVCA, FMOD_STUDIO_VCA*, const FMOD_GUID*);
+        makeGetter2(LoadBankFile, FMOD_STUDIO_BANK*, const char*, FMOD_STUDIO_LOAD_BANK_FLAGS);
+        makeCastGetter2(LoadCommandReplay, StudioCommandReplay, FMOD_STUDIO_COMMANDREPLAY*, const char*, FMOD_STUDIO_COMMANDREPLAY_FLAGS);
         makeGetter1(LookupID, FMOD_GUID, const char*);
         makeStringGetter1(LookupPath, const FMOD_GUID*);
+        makeMethod(ResetBufferUsage);
         makeMethod2(SetListenerAttributes, int, FMOD_3D_ATTRIBUTES*);
+        makeMethod2(SetListenerWeight, int, float);
+        makeMethod1(SetNumListeners, int);
+        makeMethod2(StartCommandCapture, const char*, FMOD_STUDIO_COMMANDCAPTURE_FLAGS);
+        makeMethod(StopCommandCapture);
+        makeMethod(UnloadAll);
     #undef currentClass
     #undef currentType
     };
@@ -213,6 +306,8 @@ void FMODBridge::registerClasses(lua_State *L) {
             // Low-Level bindings
             .beginClass<FMOD_GUID>("GUID")
             .endClass()
+            .beginClass<FMOD_CREATESOUNDEXINFO>("CREATESOUNDEXINFO")
+            .endClass()
             .beginClass<FMOD_3D_ATTRIBUTES>("_3D_ATTRIBUTES")
                 .addConstructor<void (*)(void)>()
                 .addData("position", &FMOD_3D_ATTRIBUTES::position)
@@ -227,13 +322,79 @@ void FMODBridge::registerClasses(lua_State *L) {
             // Studio bindings
             .beginNamespace("studio")
                 .addFunction("parse_id", &parseID)
+                .beginClass<FMOD_STUDIO_PARAMETER_DESCRIPTION>("PARAMETER_DESCRIPTION")
+                    .addData("name", &FMOD_STUDIO_PARAMETER_DESCRIPTION::name)
+                    .addData("index", &FMOD_STUDIO_PARAMETER_DESCRIPTION::index)
+                    .addData("minimum", &FMOD_STUDIO_PARAMETER_DESCRIPTION::minimum)
+                    .addData("maximum", &FMOD_STUDIO_PARAMETER_DESCRIPTION::maximum)
+                    .addData("default_value", &FMOD_STUDIO_PARAMETER_DESCRIPTION::defaultvalue)
+                    .addData("type", &FMOD_STUDIO_PARAMETER_DESCRIPTION::type)
+                .endClass()
+                .beginClass<FMOD_STUDIO_USER_PROPERTY>("USER_PROPERTY")
+                    .addData("name", &FMOD_STUDIO_USER_PROPERTY::name)
+                    .addData("type", &FMOD_STUDIO_USER_PROPERTY::type)
+                    .addData("int_value", &FMOD_STUDIO_USER_PROPERTY::intvalue)
+                    .addData("bool_value", &FMOD_STUDIO_USER_PROPERTY::boolvalue)
+                    .addData("float_value", &FMOD_STUDIO_USER_PROPERTY::floatvalue)
+                    .addData("string_value", &FMOD_STUDIO_USER_PROPERTY::stringvalue)
+                .endClass()
+                .beginClass<FMOD_STUDIO_ADVANCEDSETTINGS>("ADVANCEDSETTINGS")
+                    .addData("command_queue_size", &FMOD_STUDIO_ADVANCEDSETTINGS::commandqueuesize)
+                    .addData("handle_initial_size", &FMOD_STUDIO_ADVANCEDSETTINGS::handleinitialsize)
+                    .addData("studio_update_period", &FMOD_STUDIO_ADVANCEDSETTINGS::studioupdateperiod)
+                    .addData("idle_sample_data_pool_size", &FMOD_STUDIO_ADVANCEDSETTINGS::idlesampledatapoolsize)
+                .endClass()
+                .beginClass<FMOD_STUDIO_BUFFER_INFO>("BUFFER_INFO")
+                    .addData("current_usage", &FMOD_STUDIO_BUFFER_INFO::currentusage)
+                    .addData("peak_usage", &FMOD_STUDIO_BUFFER_INFO::peakusage)
+                    .addData("capacity", &FMOD_STUDIO_BUFFER_INFO::capacity)
+                    .addData("stall_count", &FMOD_STUDIO_BUFFER_INFO::stallcount)
+                    .addData("stall_time", &FMOD_STUDIO_BUFFER_INFO::stalltime)
+                .endClass()
+                .beginClass<FMOD_STUDIO_BUFFER_USAGE>("BUFFER_USAGE")
+                    .addData("studio_command_queue", &FMOD_STUDIO_BUFFER_USAGE::studiocommandqueue)
+                    .addData("studio_handle", &FMOD_STUDIO_BUFFER_USAGE::studiohandle)
+                .endClass()
+                .beginClass<FMOD_STUDIO_CPU_USAGE>("CPU_USAGE")
+                    .addData("dsp_usage", &FMOD_STUDIO_CPU_USAGE::dspusage)
+                    .addData("stream_usage", &FMOD_STUDIO_CPU_USAGE::streamusage)
+                    .addData("geometry_usage", &FMOD_STUDIO_CPU_USAGE::geometryusage)
+                    .addData("update_usage", &FMOD_STUDIO_CPU_USAGE::updateusage)
+                    .addData("studio_usage", &FMOD_STUDIO_CPU_USAGE::studiousage)
+                .endClass()
+                .beginClass<FMOD_STUDIO_SOUND_INFO>("SOUND_INFO")
+                    .addData("name_or_data", &FMOD_STUDIO_SOUND_INFO::name_or_data)
+                    .addData("mode", &FMOD_STUDIO_SOUND_INFO::mode)
+                    .addData("exinfo", &FMOD_STUDIO_SOUND_INFO::exinfo)
+                    .addData("sub_sound_index", &FMOD_STUDIO_SOUND_INFO::subsoundindex)
+                .endClass()
                 .beginClass<StudioBus>("Bus")
+                    .addFunction("get_channel_group", &StudioBus::GetChannelGroup)
                     .addFunction("get_id", &StudioBus::GetID)
+                    .addFunction("get_mute", &StudioBus::GetMute)
                     .addFunction("get_path", &StudioBus::GetPath)
+                    .addFunction("get_paused", &StudioBus::GetPaused)
+                    .addCFunction("get_volume", &StudioBus::GetVolume)
+                    .addFunction("lock_channel_group", &StudioBus::LockChannelGroup)
+                    .addFunction("set_mute", &StudioBus::SetMute)
+                    .addFunction("set_paused", &StudioBus::SetPaused)
+                    .addFunction("set_volume", &StudioBus::SetVolume)
+                    .addFunction("stop_all_events", &StudioBus::StopAllEvents)
+                    .addFunction("unlock_channel_group", &StudioBus::UnlockChannelGroup)
                 .endClass()
                 .beginClass<StudioBank>("Bank")
+                    .addFunction("get_bus_count", &StudioBank::GetBusCount)
+                    .addFunction("get_event_count", &StudioBank::GetEventCount)
                     .addFunction("get_id", &StudioBank::GetID)
+                    .addFunction("get_loading_state", &StudioBank::GetLoadingState)
                     .addFunction("get_path", &StudioBank::GetPath)
+                    .addFunction("get_sample_loading_state", &StudioBank::GetSampleLoadingState)
+                    .addFunction("get_string_count", &StudioBank::GetStringCount)
+                    .addCFunction("get_string_info", &StudioBank::GetStringInfo)
+                    .addFunction("get_vca_count", &StudioBank::GetVCACount)
+                    .addFunction("load_sample_data", &StudioBank::LoadSampleData)
+                    .addFunction("unload", &StudioBank::Unload)
+                    .addFunction("unload_sample_data", &StudioBank::UnloadSampleData)
                 .endClass()
                 .beginClass<StudioEventInstance>("EventInstance")
                     .addFunction("get_3d_attributes", &StudioEventInstance::Get3DAttributes)
@@ -267,7 +428,28 @@ void FMODBridge::registerClasses(lua_State *L) {
                 .endClass()
                 .beginClass<StudioEventDescription>("EventDescription")
                     .addFunction("create_instance", &StudioEventDescription::CreateInstance)
+                    .addFunction("get_id", &StudioEventDescription::GetID)
+                    .addFunction("get_instance_count", &StudioEventDescription::GetInstanceCount)
+                    .addFunction("get_length", &StudioEventDescription::GetLength)
+                    .addFunction("get_maximum_distance", &StudioEventDescription::GetMaximumDistance)
+                    .addFunction("get_minimum_distance", &StudioEventDescription::GetMinimumDistance)
+                    .addFunction("get_parameter", &StudioEventDescription::GetParameter)
+                    .addFunction("get_parameter_by_index", &StudioEventDescription::GetParameterByIndex)
+                    .addFunction("get_parameter_count", &StudioEventDescription::GetParameterCount)
                     .addFunction("get_path", &StudioEventDescription::GetPath)
+                    .addFunction("get_sample_loading_state", &StudioEventDescription::GetSampleLoadingState)
+                    .addFunction("get_sound_size", &StudioEventDescription::GetSoundSize)
+                    .addFunction("get_user_property", &StudioEventDescription::GetUserProperty)
+                    .addFunction("get_user_property_by_index", &StudioEventDescription::GetUserPropertyByIndex)
+                    .addFunction("get_user_property_count", &StudioEventDescription::GetUserPropertyCount)
+                    .addFunction("has_cue", &StudioEventDescription::HasCue)
+                    .addFunction("is_3d", &StudioEventDescription::Is3D)
+                    .addFunction("is_oneshot", &StudioEventDescription::IsOneshot)
+                    .addFunction("is_snapshot", &StudioEventDescription::IsSnapshot)
+                    .addFunction("is_stream", &StudioEventDescription::IsStream)
+                    .addFunction("load_sample_data", &StudioEventDescription::LoadSampleData)
+                    .addFunction("release_all_instances", &StudioEventDescription::ReleaseAllInstances)
+                    .addFunction("unload_sample_data", &StudioEventDescription::UnloadSampleData)
                 .endClass()
                 .beginClass<StudioVCA>("VCA")
                     .addFunction("get_id", &StudioVCA::GetID)
@@ -275,20 +457,41 @@ void FMODBridge::registerClasses(lua_State *L) {
                     .addCFunction("get_volume", &StudioVCA::GetVolume)
                     .addFunction("set_volume", &StudioVCA::SetVolume)
                 .endClass()
+                .beginClass<StudioCommandReplay>("CommandReplay")
+                    .addFunction("start", &StudioCommandReplay::Start)
+                    .addFunction("stop", &StudioCommandReplay::Stop)
+                .endClass()
                 .beginClass<StudioSystem>("System")
+                    .addFunction("flush_commands", &StudioSystem::FlushCommands)
+                    .addFunction("flush_sample_loading", &StudioSystem::FlushSampleLoading)
+                    .addFunction("get_advanced_settings", &StudioSystem::GetAdvancedSettings)
                     .addFunction("get_bank", &StudioSystem::GetBank)
                     .addFunction("get_bank_by_id", &StudioSystem::GetBankByID)
+                    .addFunction("get_bank_count", &StudioSystem::GetBankCount)
+                    .addFunction("get_buffer_usage", &StudioSystem::GetBufferUsage)
                     .addFunction("get_bus", &StudioSystem::GetBus)
                     .addFunction("get_bus_by_id", &StudioSystem::GetBusByID)
+                    .addFunction("get_cpu_usage", &StudioSystem::GetCPUUsage)
                     .addFunction("get_event", &StudioSystem::GetEvent)
                     .addFunction("get_event_by_id", &StudioSystem::GetEventByID)
                     .addFunction("get_listener_attributes", &StudioSystem::GetListenerAttributes)
+                    .addFunction("get_listener_weight", &StudioSystem::GetListenerWeight)
+                    .addFunction("get_num_listeners", &StudioSystem::GetNumListeners)
+                    .addFunction("get_sound_info", &StudioSystem::GetSoundInfo)
                     .addFunction("get_vca", &StudioSystem::GetVCA)
                     .addFunction("get_vca_by_id", &StudioSystem::GetVCAByID)
                     .addFunction("load_bank_memory", &StudioSystem::LoadBankMemory)
+                    .addFunction("load_bank_file", &StudioSystem::LoadBankFile)
+                    .addFunction("load_command_replay", &StudioSystem::LoadCommandReplay)
                     .addFunction("lookup_id", &StudioSystem::LookupID)
                     .addFunction("lookup_path", &StudioSystem::LookupPath)
+                    .addFunction("reset_buffer_usage", &StudioSystem::ResetBufferUsage)
                     .addFunction("set_listener_attributes", &StudioSystem::SetListenerAttributes)
+                    .addFunction("set_listener_weight", &StudioSystem::SetListenerWeight)
+                    .addFunction("set_num_listeners", &StudioSystem::SetNumListeners)
+                    .addFunction("start_command_capture", &StudioSystem::StartCommandCapture)
+                    .addFunction("stop_command_capture", &StudioSystem::StopCommandCapture)
+                    .addFunction("unload_all", &StudioSystem::UnloadAll)
                 .endClass()
                 .addVariable("system", &FMODBridge::system, false)
             .endNamespace()
