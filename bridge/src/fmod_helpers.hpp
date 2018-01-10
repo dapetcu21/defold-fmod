@@ -61,6 +61,15 @@ namespace FMODBridge {
         Proxy(const Proxy<T>& other): instance(other.instance) {}
         operator T*() const { return instance; }
     };
+
+    template<typename RT, typename T>
+    void pushList(lua_State* L, T** list, int count) {
+        lua_createtable(L, count, 0);
+        for (int i = 0; i < count; i++) {
+            luabridge::Stack<RT>::push(L, RT(list[i]));
+            lua_rawseti(L, -2, i + 1);
+        }
+    }
 }
 
 #define errCheck(res) FMODBridge::errCheck_(res, L)
@@ -191,6 +200,20 @@ namespace FMODBridge {
 #define make2FloatGetter(fname) define2FloatGetter(fname, fname)
 #define make2FloatGetter1(fname, T1) define2FloatGetter1(fname, fname, T1)
 #define make2FloatGetter2(fname, T1, T2) define2FloatGetter2(fname, fname, T1, T2)
+
+#define defineListGetter(declname, fname, RT, T, GetCount) \
+    int declname(lua_State* L) { \
+        ensure(currentLib, makeFname(fname), FMOD_RESULT, currentType*, T**, int, int*); \
+        int capacity = GetCount(L); \
+        int count; \
+        T** array = new T*[capacity]; \
+        errCheck(makeFname(fname)(instance, array, capacity, &count)); \
+        FMODBridge::pushList<RT, T>(L, array, count); \
+        delete[] array; \
+        return 1; \
+    }
+
+#define makeListGetter(fname, RT, T, GetCount) defineListGetter(fname, fname, RT, T, GetCount)
 
 namespace luabridge {
     template <>

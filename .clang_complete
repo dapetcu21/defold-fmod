@@ -1,3 +1,4 @@
 -I./autocomplete
 -I./fmod/include
 -I./bridge/include
+-DFMOD_FORCE_STATIC_LINK

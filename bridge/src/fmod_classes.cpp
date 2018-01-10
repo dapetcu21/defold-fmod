@@ -83,7 +83,9 @@ namespace FMODBridge {
     public:
         StudioBank(FMOD_STUDIO_BANK *instance): Proxy(instance) {}
         makeGetter(GetBusCount, int);
+        makeListGetter(GetBusList, StudioBus, FMOD_STUDIO_BUS, GetBusCount);
         makeGetter(GetEventCount, int);
+        makeListGetter(GetEventList, StudioEventDescription, FMOD_STUDIO_EVENTDESCRIPTION, GetEventCount);
         makeGetter(GetID, FMOD_GUID);
         makeGetter(GetLoadingState, FMOD_STUDIO_LOADING_STATE);
         makeStringGetter(GetPath);
@@ -103,6 +105,7 @@ namespace FMODBridge {
             return 2; \
         }
         makeGetter(GetVCACount, int);
+        makeListGetter(GetVCAList, StudioVCA, FMOD_STUDIO_VCA, GetVCACount);
         makeMethod(LoadSampleData);
         makeMethod(Unload);
         makeMethod(UnloadSampleData);
@@ -158,6 +161,7 @@ namespace FMODBridge {
         makeCastGetter(CreateInstance, StudioEventInstance, FMOD_STUDIO_EVENTINSTANCE*);
         makeGetter(GetID, FMOD_GUID);
         makeGetter(GetInstanceCount, int);
+        makeListGetter(GetInstanceList, StudioEventInstance, FMOD_STUDIO_EVENTINSTANCE, GetInstanceCount);
         makeGetter(GetLength, int);
         makeGetter(GetMaximumDistance, float);
         makeGetter(GetMinimumDistance, float);
@@ -238,6 +242,7 @@ namespace FMODBridge {
         makeCastGetter1(GetBank, StudioBank, FMOD_STUDIO_BANK*, const char*);
         makeCastGetter1(GetBankByID, StudioBank, FMOD_STUDIO_BANK*, const FMOD_GUID*);
         makeGetter(GetBankCount, int);
+        makeListGetter(GetBankList, StudioBank, FMOD_STUDIO_BANK, GetBankCount);
         makeGetter(GetBufferUsage, FMOD_STUDIO_BUFFER_USAGE);
         makeCastGetter1(GetBus, StudioBus, FMOD_STUDIO_BUS*, const char*);
         makeCastGetter1(GetBusByID, StudioBus, FMOD_STUDIO_BUS*, const FMOD_GUID*);
@@ -384,7 +389,9 @@ void FMODBridge::registerClasses(lua_State *L) {
                 .endClass()
                 .beginClass<StudioBank>("Bank")
                     .addFunction("get_bus_count", &StudioBank::GetBusCount)
+                    .addCFunction("get_bus_list", &StudioBank::GetBusList)
                     .addFunction("get_event_count", &StudioBank::GetEventCount)
+                    .addCFunction("get_event_list", &StudioBank::GetEventList)
                     .addFunction("get_id", &StudioBank::GetID)
                     .addFunction("get_loading_state", &StudioBank::GetLoadingState)
                     .addFunction("get_path", &StudioBank::GetPath)
@@ -392,6 +399,7 @@ void FMODBridge::registerClasses(lua_State *L) {
                     .addFunction("get_string_count", &StudioBank::GetStringCount)
                     .addCFunction("get_string_info", &StudioBank::GetStringInfo)
                     .addFunction("get_vca_count", &StudioBank::GetVCACount)
+                    .addCFunction("get_vca_list", &StudioBank::GetVCAList)
                     .addFunction("load_sample_data", &StudioBank::LoadSampleData)
                     .addFunction("unload", &StudioBank::Unload)
                     .addFunction("unload_sample_data", &StudioBank::UnloadSampleData)
@@ -430,6 +438,7 @@ void FMODBridge::registerClasses(lua_State *L) {
                     .addFunction("create_instance", &StudioEventDescription::CreateInstance)
                     .addFunction("get_id", &StudioEventDescription::GetID)
                     .addFunction("get_instance_count", &StudioEventDescription::GetInstanceCount)
+                    .addCFunction("get_instance_list", &StudioEventDescription::GetInstanceCount)
                     .addFunction("get_length", &StudioEventDescription::GetLength)
                     .addFunction("get_maximum_distance", &StudioEventDescription::GetMaximumDistance)
                     .addFunction("get_minimum_distance", &StudioEventDescription::GetMinimumDistance)
@@ -468,6 +477,7 @@ void FMODBridge::registerClasses(lua_State *L) {
                     .addFunction("get_bank", &StudioSystem::GetBank)
                     .addFunction("get_bank_by_id", &StudioSystem::GetBankByID)
                     .addFunction("get_bank_count", &StudioSystem::GetBankCount)
+                    .addCFunction("get_bank_list", &StudioSystem::GetBankList)
                     .addFunction("get_buffer_usage", &StudioSystem::GetBufferUsage)
                     .addFunction("get_bus", &StudioSystem::GetBus)
                     .addFunction("get_bus_by_id", &StudioSystem::GetBusByID)
