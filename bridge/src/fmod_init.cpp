@@ -1,6 +1,7 @@
 #include "fmod_bridge.hpp"
 #include <fmod_errors.h>
 #include <LuaBridge/LuaBridge.h>
+#include <string.h>
 
 using namespace FMODBridge;
 using namespace luabridge;
