@@ -8,6 +8,15 @@ using namespace FMODBridge;
 
 std::map<void*, int> FMODBridge::refCounts;
 
+declareEnum(FMOD_STUDIO_EVENT_PROPERTY);
+declareEnum(FMOD_STUDIO_INSTANCETYPE);
+declareEnum(FMOD_STUDIO_LOADING_STATE);
+declareEnum(FMOD_STUDIO_LOAD_MEMORY_MODE);
+declareEnum(FMOD_STUDIO_PARAMETER_TYPE);
+declareEnum(FMOD_STUDIO_PLAYBACK_STATE);
+declareEnum(FMOD_STUDIO_STOP_MODE);
+declareEnum(FMOD_STUDIO_USER_PROPERTY_TYPE);
+
 namespace FMODBridge {
     // LOWLEVEL CLASSES
     #define currentLib LL

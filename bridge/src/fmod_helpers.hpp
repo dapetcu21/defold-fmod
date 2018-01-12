@@ -215,6 +215,17 @@ namespace FMODBridge {
 
 #define makeListGetter(fname, RT, T, GetCount) defineListGetter(fname, fname, RT, T, GetCount)
 
+#define declareEnum(EnumT) \
+template <> \
+struct luabridge::Stack <EnumT> { \
+  static void push(lua_State* L, EnumT value) { \
+      luabridge::Stack<int>::push(L, value); \
+  } \
+  static EnumT get(lua_State* L, int index) { \
+      return (EnumT)luabridge::Stack<int>::get(L, index); \
+  } \
+};
+
 namespace luabridge {
     template <>
     struct Stack <FMODBridge::LuaHBuffer*> {
