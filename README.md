@@ -105,6 +105,16 @@ local event = event_description:create_instance()
 event:start()
 ```
 
+## Studio Live Update
+
+Add the following setting to your `game.project` to enable the live update server
+used by FMOD Studio.
+
+```
+[fmod]
+live_update = 1
+```
+
 [example]: ./main/main.script
 [FMOD]: https://fmod.com
 [FMOD API Documentation]: https://www.fmod.com/resources/documentation-api

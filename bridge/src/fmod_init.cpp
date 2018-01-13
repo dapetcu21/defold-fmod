@@ -70,8 +70,13 @@ extern "C" void FMODBridge_init(lua_State *L) {
         }
     }
 
+    FMOD_STUDIO_INITFLAGS studioInitFlags = FMOD_STUDIO_INIT_NORMAL;
+    if (FMODBridge_dmConfigFile_GetInt("fmod.live_update", 0)) {
+        studioInitFlags |= FMOD_STUDIO_INIT_LIVEUPDATE;
+    }
+
     void* extraDriverData = NULL;
-    res = FMOD_Studio_System_Initialize(FMODBridge::system, 1024, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, extraDriverData);
+    res = FMOD_Studio_System_Initialize(FMODBridge::system, 1024, studioInitFlags, FMOD_INIT_NORMAL, extraDriverData);
     if (res != FMOD_OK) {
         printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
         FMOD_Studio_System_Release(FMODBridge::system);
