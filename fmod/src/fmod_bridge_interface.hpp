@@ -1,9 +1,6 @@
 #ifndef FMOD_BRIDGE_INTERFACE_H
 #define FMOD_BRIDGE_INTERFACE_H
 
-#define DLIB_LOG_DOMAIN "fmod"
-#include <dmsdk/sdk.h>
-
 // Using C symbol naming convention to reduce the chance of
 // C++ compilers mangling symbols differently
 

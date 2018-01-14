@@ -14,15 +14,15 @@ CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include -mmacosx-version-min=
 
 all: $(LIBPATH)
 
-OBJECTS = $(patsubst src/%.cpp,build/%.o,$(SOURCES))
+OBJECTS = $(patsubst src/%.cpp,build/osx-%.o,$(SOURCES))
 
-build/%.o: src/%.cpp $(HEADERS)
+build/osx-%.o: src/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(LIBPATH): $(OBJECTS)
 	libtool -static $^ -o $@
 
 clean:
-	rm -f $(LIBPATH) build/*.o
+	rm -f $(LIBPATH) build/osx-*.o
 
 .PHONY: all clean

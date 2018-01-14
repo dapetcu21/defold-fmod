@@ -16,13 +16,13 @@ LDFLAGS := -shared
 
 all: $(LIBPATH64) $(LIBPATH32)
 
-OBJECTS32 = $(patsubst src/%.cpp,build/32%.o,$(SOURCES))
-OBJECTS64 = $(patsubst src/%.cpp,build/64%.o,$(SOURCES))
+OBJECTS32 = $(patsubst src/%.cpp,build/linux32-%.o,$(SOURCES))
+OBJECTS64 = $(patsubst src/%.cpp,build/linux64-%.o,$(SOURCES))
 
-build/32%.o: src/%.cpp $(HEADERS)
+build/linux32-%.o: src/%.cpp $(HEADERS)
 	$(CXX) -m32 $(CXXFLAGS) -c $< -o $@
 
-build/64%.o: src/%.cpp $(HEADERS)
+build/linux64-%.o: src/%.cpp $(HEADERS)
 	$(CXX) -m64 $(CXXFLAGS) -c $< -o $@
 
 $(LIBPATH32): $(OBJECTS32)
@@ -32,6 +32,6 @@ $(LIBPATH64): $(OBJECTS64)
 	ar rcs $@ $^
 
 clean:
-	rm -f $(LIBPATH32) $(LIBPATH64) build/*.o
+	rm -f $(LIBPATH32) $(LIBPATH64) build/linux32-*.o build/linux64-*.o
 
 .PHONY: all clean

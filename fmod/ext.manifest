@@ -1,1 +1,9 @@
 name: "DefoldFMOD"
+platforms:
+  arm64-ios:
+    context:
+      frameworks: ["AVFoundation"]
+
+  armv7-ios:
+    context:
+      frameworks: ["AVFoundation"]

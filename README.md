@@ -2,7 +2,7 @@
 
 # FMOD extension for Defold
 
-> **Experimental** [FMOD] sound engine bindings for Defold. Supports macOS and Windows
+> **Experimental** [FMOD] sound engine bindings for Defold. Supports macOS, Windows, Linux, iOS
 
 ## Installation
 
@@ -44,6 +44,15 @@ a few extra steps are required for each platform:
   to `<stub>/res/x86-win32/`.
 8. Copy `api/lowlevel/lib/fmod64.dll` and `api/studio/lib/fmodstudio64.dll`
   to `<stub>/res/x86_64-win32/`.
+
+### iOS
+
+1. Download FMOD API 1.10.2 for iOS.
+2. Create a new directory somewhere in your project which we'll refer to as `<stub>`. If you already did this for Windows, skip to step 5.
+3. Create a file at `<stub>/ext.manifest` containing just `name: "DefoldFMODStub"`.
+4. Create an empty file at `<stub>/src/stub.cpp`.
+5. Copy the FMOD libraries from `api/lowlevel/lib/libfmodstudio_iphoneos.a` and
+  `api/studio/lib/libfmodstudio_iphoneos.a` to `<stub>/lib/ios/`.
 
 ## Setting speaker mode
 

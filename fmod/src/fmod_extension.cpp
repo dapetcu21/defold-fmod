@@ -1,7 +1,10 @@
 #define LIB_NAME "DefoldFMOD"
 #define MODULE_NAME "fmod"
 
-#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS) || defined(DM_PLATFORM_LINUX)
+#define DLIB_LOG_DOMAIN "fmod"
+#include <dmsdk/sdk.h>
+
+#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS) || defined(DM_PLATFORM_LINUX) || defined(DM_PLATFORM_IOS)
 
 #include "fmod_bridge_interface.hpp"
 

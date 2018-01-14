@@ -1,0 +1,29 @@
+LIBPATH := ../fmod/lib/ios/libfmodbridge.a
+
+SOURCES = \
+	src/fmod_init.cpp \
+	src/fmod_classes.cpp \
+	src/fmod_enums.cpp
+
+HEADERS = \
+	src/fmod_bridge.hpp \
+	src/fmod_helpers.hpp
+
+CXX := xcrun --sdk iphoneos c++ -isysroot `xcrun --sdk iphoneos --show-sdk-path` -arch arm64 -arch armv7s -arch armv7
+
+CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include -miphoneos-version-min=6.0
+
+all: $(LIBPATH)
+
+OBJECTS = $(patsubst src/%.cpp,build/ios-%.o,$(SOURCES))
+
+build/ios-%.o: src/%.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(LIBPATH): $(OBJECTS)
+	xcrun --sdk iphoneos libtool -static $^ -o $@
+
+clean:
+	rm -f $(LIBPATH) build/ios-*.o
+
+.PHONY: all clean
