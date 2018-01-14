@@ -22,4 +22,5 @@ Release
 /stub/lib/x86_64-win32/fmod*.lib
 /stub/lib/x86-win32/fmod*.lib
 /stub/res/x86_64-win32/fmod*.dll
+/stub/res/x86-win32/fmod*.dll
 /stub/lib/ios/libfmod*.a
