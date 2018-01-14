@@ -294,7 +294,7 @@ namespace FMODBridge {
         makeGetter1(GetSoundInfo, FMOD_STUDIO_SOUND_INFO, const char*)
         makeCastGetter1(GetVCA, StudioVCA, FMOD_STUDIO_VCA*, const char*);
         makeCastGetter1(GetVCAByID, StudioVCA, FMOD_STUDIO_VCA*, const FMOD_GUID*);
-        makeGetter2(LoadBankFile, FMOD_STUDIO_BANK*, const char*, FMOD_STUDIO_LOAD_BANK_FLAGS);
+        makeCastGetter2(LoadBankFile, StudioBank, FMOD_STUDIO_BANK*, const char*, FMOD_STUDIO_LOAD_BANK_FLAGS);
         makeCastGetter2(LoadCommandReplay, StudioCommandReplay, FMOD_STUDIO_COMMANDREPLAY*, const char*, FMOD_STUDIO_COMMANDREPLAY_FLAGS);
         makeGetter1(LookupID, FMOD_GUID, const char*);
         makeStringGetter1(LookupPath, const FMOD_GUID*);
