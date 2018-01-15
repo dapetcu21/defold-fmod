@@ -30,29 +30,37 @@ a few extra steps are required for each platform:
 4. Remove the version numbers from the filenames of the libraries you just copied,
   leaving just the `.so` extension.
 
+### Windows & iOS & HTML5
+
+1. Create a new directory somewhere in your project which we'll refer to as `<stub>`.
+2. Create a file at `<stub>/ext.manifest` containing just `name: "DefoldFMODStub"`.
+3. Create an empty file at `<stub>/src/stub.cpp`.
+
 ### Windows
 
 1. Download FMOD API 1.10.2 for Windows.
-2. Create a new directory somewhere in your project which we'll refer to as `<stub>`.
-3. Create a file at `<stub>/ext.manifest` containing just `name: "DefoldFMODStub"`.
-4. Create an empty file at `<stub>/src/stub.cpp`.
-5. Copy the FMOD libraries from `api/lowlevel/lib/fmod_vc.lib` and
+2. Copy the FMOD libraries from `api/lowlevel/lib/fmod_vc.lib` and
   `api/studio/lib/fmodstudio_vc.lib` to `<stub>/lib/x86-win32/`.
-6. Copy `api/lowlevel/lib/fmod64_vc.lib` and `api/studio/lib/fmodstudio64_vc.lib`
+3. Copy `api/lowlevel/lib/fmod64_vc.lib` and `api/studio/lib/fmodstudio64_vc.lib`
   to `<stub>/lib/x86_64-win32/`.
-7. Copy `api/lowlevel/lib/fmod.dll` and `api/studio/lib/fmodstudio.dll`
+4. Copy `api/lowlevel/lib/fmod.dll` and `api/studio/lib/fmodstudio.dll`
   to `<stub>/res/x86-win32/`.
-8. Copy `api/lowlevel/lib/fmod64.dll` and `api/studio/lib/fmodstudio64.dll`
+5. Copy `api/lowlevel/lib/fmod64.dll` and `api/studio/lib/fmodstudio64.dll`
   to `<stub>/res/x86_64-win32/`.
 
 ### iOS
 
 1. Download FMOD API 1.10.2 for iOS.
-2. Create a new directory somewhere in your project which we'll refer to as `<stub>`. If you already did this for Windows, skip to step 5.
-3. Create a file at `<stub>/ext.manifest` containing just `name: "DefoldFMODStub"`.
-4. Create an empty file at `<stub>/src/stub.cpp`.
-5. Copy the FMOD libraries from `api/lowlevel/lib/libfmodstudio_iphoneos.a` and
+2. Copy the FMOD libraries from `api/lowlevel/lib/libfmodstudio_iphoneos.a` and
   `api/studio/lib/libfmodstudio_iphoneos.a` to `<stub>/lib/ios/`.
+
+### HTML5
+
+1. Download FMOD API 1.10.2 for HTML5.
+2. [Download Emscripten SDK](https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html).
+3. [Activate Emscripten SDK 1.35.0](https://kripken.github.io/emscripten-site/docs/tools_reference/emsdk.html#emsdk-install-old-tools).
+4. Run `emar rcs libfmodstudio.a api/lowlevel/lib/fmod_reduced.bc api/studio/lib/fmodstudio.bc`.
+5. Copy `libfmodstudio.a` to `<stub>/lib/js-web/`.
 
 ## Setting speaker mode
 
