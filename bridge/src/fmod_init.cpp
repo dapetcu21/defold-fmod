@@ -54,8 +54,18 @@ extern "C" void FMODBridge_init(lua_State *L) {
         return;
     }
 
-    // TODO: Make this configurable somehow
-    int sampleRate = FMODBridge_dmConfigFile_GetInt("fmod.sample_rate", 0);
+    int defaultSampleRate = 0;
+    #ifdef __EMSCRIPTEN__
+    res = FMOD_System_GetDriverInfo(lowLevelSystem, 0, NULL, 0, NULL, &defaultSampleRate, NULL, NULL);
+    if (res != FMOD_OK) {
+        printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
+        FMOD_Studio_System_Release(FMODBridge::system);
+        FMODBridge::system = NULL;
+        return;
+    }
+    #endif
+
+    int sampleRate = FMODBridge_dmConfigFile_GetInt("fmod.sample_rate", defaultSampleRate);
     int numRawSpeakers = FMODBridge_dmConfigFile_GetInt("fmod.num_raw_speakers", 0);
     const char* speakerModeStr = FMODBridge_dmConfigFile_GetString("fmod.speaker_mode", "default");
     FMOD_SPEAKERMODE speakerMode = speakerModeFromString(speakerModeStr);

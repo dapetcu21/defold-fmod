@@ -24,3 +24,4 @@ Release
 /stub/res/x86_64-win32/fmod*.dll
 /stub/res/x86-win32/fmod*.dll
 /stub/lib/ios/libfmod*.a
+/stub/lib/js-web/libfmod*.a

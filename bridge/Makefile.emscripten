@@ -1,0 +1,30 @@
+LIBPATH := ../fmod/lib/js-web/libfmodbridge.a
+
+SOURCES = \
+	src/fmod_init.cpp \
+	src/fmod_classes.cpp \
+	src/fmod_enums.cpp
+
+HEADERS = \
+	src/fmod_bridge.hpp \
+	src/fmod_helpers.hpp
+
+CXX := em++
+AR := emar
+
+CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include
+
+all: $(LIBPATH)
+
+OBJECTS = $(patsubst src/%.cpp,build/js-%.bc,$(SOURCES))
+
+build/js-%.bc: src/%.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(LIBPATH): $(OBJECTS)
+	$(AR) rcs $@ $^
+
+clean:
+	rm -f $(LIBPATH) build/js-*.bc
+
+.PHONY: all clean
