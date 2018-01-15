@@ -2,7 +2,7 @@
 
 # FMOD extension for Defold
 
-> **Experimental** [FMOD] sound engine bindings for Defold. Supports macOS, Windows, Linux, iOS
+> **Experimental** [FMOD] sound engine bindings for Defold. Supports macOS, Windows, Linux, iOS, HTML5
 
 ## Installation
 
