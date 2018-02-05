@@ -4,6 +4,15 @@
 
 > **Experimental** [FMOD] sound engine bindings for Defold. Supports macOS, Windows, Linux, iOS, HTML5
 
+**Commercial usage of FMOD products may require a separate license directly with
+Firelight Technologies. For details refer to [fmod.com/resources/eula][fmod-license].**
+
+**According to the [FMOD license][fmod-license], you must credit FMOD in your
+project's documentation, or in an on screen format. The text should include at
+least the words "FMOD" (OR "FMOD STUDIO" IF APPLICABLE) AND "FIRELIGHT TECHNOLOGIES."**
+
+[fmod-license]: https://fmod.com/resources/eula
+
 ## Installation
 
 First, add `https://github.com/dapetcu21/defold-fmod/archive/master.zip` to

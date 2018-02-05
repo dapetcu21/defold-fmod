@@ -1,4 +1,4 @@
-MIT License
+MIT License with FMOD clauses
 
 Copyright (c) 2018 Marius Petcu
 
@@ -11,6 +11,13 @@ furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
+
+Commercial usage of FMOD products may require a separate license directly with
+Firelight Technologies. For details refer to fmod.com/resources/eula
+
+Copying, modification, merging, publishing, distribution, sublicensing and/or
+selling of FMOD products may require a separate license directly with
+Firelight Technologies. For details refer to fmod.com/resources/eula
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
