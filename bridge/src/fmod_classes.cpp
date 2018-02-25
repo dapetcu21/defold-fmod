@@ -3,11 +3,6 @@
 #include <LuaBridge/LuaBridge.h>
 #include <map>
 
-using namespace luabridge;
-using namespace FMODBridge;
-
-std::map<void*, int> FMODBridge::refCounts;
-
 declareEnum(FMOD_STUDIO_EVENT_PROPERTY);
 declareEnum(FMOD_STUDIO_INSTANCETYPE);
 declareEnum(FMOD_STUDIO_LOADING_STATE);
@@ -16,6 +11,11 @@ declareEnum(FMOD_STUDIO_PARAMETER_TYPE);
 declareEnum(FMOD_STUDIO_PLAYBACK_STATE);
 declareEnum(FMOD_STUDIO_STOP_MODE);
 declareEnum(FMOD_STUDIO_USER_PROPERTY_TYPE);
+
+using namespace luabridge;
+using namespace FMODBridge;
+
+std::map<void*, int> FMODBridge::refCounts;
 
 namespace FMODBridge {
     // LOWLEVEL CLASSES
