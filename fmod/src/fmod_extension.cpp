@@ -74,23 +74,3 @@ dmExtension::Result AppFinalizeDefoldFMOD(dmExtension::AppParams* params) {
 }
 
 DM_DECLARE_EXTENSION(DefoldFMOD, LIB_NAME, AppInitializeDefoldFMOD, AppFinalizeDefoldFMOD, InitializeDefoldFMOD, UpdateDefoldFMOD, 0, FinalizeDefoldFMOD)
-
-// Stub extension so the user can link to 3rd party libs
-
-dmExtension::Result InitializeDefoldFMODStub(dmExtension::Params* params) {
-    return dmExtension::RESULT_OK;
-}
-
-dmExtension::Result FinalizeDefoldFMODStub(dmExtension::Params* params) {
-    return dmExtension::RESULT_OK;
-}
-
-dmExtension::Result AppInitializeDefoldFMODStub(dmExtension::AppParams* params) {
-    return dmExtension::RESULT_OK;
-}
-
-dmExtension::Result AppFinalizeDefoldFMODStub(dmExtension::AppParams* params) {
-    return dmExtension::RESULT_OK;
-}
-
-DM_DECLARE_EXTENSION(DefoldFMODStub, "fmodstub", AppInitializeDefoldFMODStub, AppFinalizeDefoldFMODStub, InitializeDefoldFMODStub, 0, 0, FinalizeDefoldFMODStub)

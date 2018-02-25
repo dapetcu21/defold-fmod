@@ -2,7 +2,6 @@
 title = FMOD
 version = 0.1
 custom_resources = banks/
-bundle_resources = /resources
 
 [bootstrap]
 main_collection = /main/main.collectionc
@@ -25,5 +24,6 @@ shared_state = 1
 include_dirs = fmod
 
 [fmod]
+lib_path = fmod/res
 speaker_mode = 5.1
 

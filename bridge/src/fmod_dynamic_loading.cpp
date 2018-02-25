@@ -91,7 +91,11 @@ bool FMODBridge::linkLibraries() {
             printf("INFO:fmod: Running in the editor. Will attempt to load libraries from project\n");
 
             exePath = dirname(dirname(dirname(exePath)));
-            const char* resPath = FMODBridge_dmConfigFile_GetString("project.bundle_resources", "");
+            const char* resPath = FMODBridge_dmConfigFile_GetString("fmod.lib_path", "");
+
+            if (!resPath[0]) {
+                printf("WARNING:fmod: fmod.lib_path not found in game.project. See README for details\n");
+            }
 
             #ifdef __APPLE__
             #define FMB_LIB_PATH "/" FMB_ARCH "-" FMB_PLATFORM "/Contents/MacOS"
@@ -99,8 +103,9 @@ bool FMODBridge::linkLibraries() {
             #define FMB_LIB_PATH "/" FMB_ARCH "-" FMB_PLATFORM
             #endif
 
-            char* newPath = new char[strlen(exePath) + strlen(resPath) + strlen(FMB_LIB_PATH) + 1];
+            char* newPath = new char[strlen(exePath) + 1 + strlen(resPath) + strlen(FMB_LIB_PATH) + 1];
             strcpy(newPath, exePath);
+            if (resPath[0] != '/') { strcat(newPath, "/"); }
             strcat(newPath, resPath);
             strcat(newPath, FMB_LIB_PATH);
             if (mustFreeLibPath) { delete[] libPath; }
