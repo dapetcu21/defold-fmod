@@ -37,11 +37,14 @@ extern "C" {
     void FMODBridge_init(lua_State* L);
     void FMODBridge_update();
     void FMODBridge_finalize();
+    void FMODBridge_activateApp();
+    void FMODBridge_deactivateApp();
 }
 
 namespace FMODBridge {
     extern FMOD_STUDIO_SYSTEM* system;
     extern FMOD_SYSTEM* lowLevelSystem;
+    extern bool isPaused;
 
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
     extern void* dlHandleLL;

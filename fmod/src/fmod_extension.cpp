@@ -30,6 +30,21 @@ dmExtension::Result FinalizeDefoldFMOD(dmExtension::Params* params) {
     return dmExtension::RESULT_OK;
 }
 
+#ifdef DM_PLATFORM_HTML5
+void OnEventDefoldFMOD(dmExtension::Params* params, const dmExtension::Event* event) {
+    switch (event->m_Event) {
+        case dmExtension::EVENT_ID_ACTIVATEAPP:
+            FMODBridge_activateApp();
+            break;
+        case dmExtension::EVENT_ID_DEACTIVATEAPP:
+            FMODBridge_deactivateApp();
+            break;
+    }
+}
+#else
+#define OnEventDefoldFMOD 0
+#endif
+
 int FMODBridge_dmBuffer_GetBytes(FMODBridge_HBuffer buffer, void** bytes, uint32_t* size) {
     return dmBuffer::GetBytes((dmBuffer::HBuffer)buffer, bytes, size) != dmBuffer::RESULT_OK;
 }
@@ -57,20 +72,14 @@ dmExtension::Result InitializeDefoldFMOD(dmExtension::Params* params) {
     return dmExtension::RESULT_OK;
 }
 
-#define UpdateDefoldFMOD 0
-
 dmExtension::Result FinalizeDefoldFMOD(dmExtension::Params* params) {
     return dmExtension::RESULT_OK;
 }
 
-dmExtension::Result AppInitializeDefoldFMOD(dmExtension::AppParams* params) {
-    return dmExtension::RESULT_OK;
-}
+#define UpdateDefoldFMOD 0
+#define AppInitializeDefoldFMOD 0
+#define OnEventDefoldFMOD 0
 
 #endif
 
-dmExtension::Result AppFinalizeDefoldFMOD(dmExtension::AppParams* params) {
-    return dmExtension::RESULT_OK;
-}
-
-DM_DECLARE_EXTENSION(DefoldFMOD, LIB_NAME, AppInitializeDefoldFMOD, AppFinalizeDefoldFMOD, InitializeDefoldFMOD, UpdateDefoldFMOD, 0, FinalizeDefoldFMOD)
+DM_DECLARE_EXTENSION(DefoldFMOD, LIB_NAME, AppInitializeDefoldFMOD, 0, InitializeDefoldFMOD, UpdateDefoldFMOD, OnEventDefoldFMOD, FinalizeDefoldFMOD)

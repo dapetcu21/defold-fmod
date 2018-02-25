@@ -8,6 +8,7 @@ using namespace luabridge;
 
 FMOD_STUDIO_SYSTEM* FMODBridge::system = NULL;
 FMOD_SYSTEM* FMODBridge::lowLevelSystem = NULL;
+bool FMODBridge::isPaused = false;
 
 static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
     if (0 == strcmp(str, "default")) { return FMOD_SPEAKERMODE_DEFAULT; }
@@ -23,6 +24,16 @@ static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
     return FMOD_SPEAKERMODE_DEFAULT;
 }
 
+#define check(fcall) do { \
+    FMOD_RESULT res = fcall; \
+    if (res != FMOD_OK) { \
+        printf("ERROR:fmod: %s\n", FMOD_ErrorString(res)); \
+        FMOD_Studio_System_Release(FMODBridge::system); \
+        FMODBridge::system = NULL; \
+        return; \
+    } \
+} while(0)
+
 extern "C" void FMODBridge_init(lua_State *L) {
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
     if (!linkLibraries()) {
@@ -34,11 +45,11 @@ extern "C" void FMODBridge_init(lua_State *L) {
     ensure(ST, FMOD_Studio_System_Create, FMOD_RESULT, FMOD_STUDIO_SYSTEM**, unsigned int);
     ensure(ST, FMOD_Studio_System_GetLowLevelSystem, FMOD_RESULT, FMOD_STUDIO_SYSTEM*, FMOD_SYSTEM**);
     ensure(LL, FMOD_System_SetSoftwareFormat, FMOD_RESULT, FMOD_SYSTEM*, int, FMOD_SPEAKERMODE, int);
+    ensure(LL, FMOD_System_SetDSPBufferSize, FMOD_RESULT, FMOD_SYSTEM*, unsigned int, int);
     ensure(ST, FMOD_Studio_System_Initialize, FMOD_RESULT, FMOD_STUDIO_SYSTEM*, int, FMOD_STUDIO_INITFLAGS, FMOD_INITFLAGS, void*);
     ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
 
     FMOD_RESULT res;
-
     res = FMOD_Studio_System_Create(&FMODBridge::system, FMOD_VERSION);
     if (res != FMOD_OK) {
         printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
@@ -46,23 +57,12 @@ extern "C" void FMODBridge_init(lua_State *L) {
         return;
     }
 
-    res = FMOD_Studio_System_GetLowLevelSystem(FMODBridge::system, &lowLevelSystem);
-    if (res != FMOD_OK) {
-        printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
-        FMOD_Studio_System_Release(FMODBridge::system);
-        FMODBridge::system = NULL;
-        return;
-    }
+    check(FMOD_Studio_System_GetLowLevelSystem(FMODBridge::system, &lowLevelSystem));
 
     int defaultSampleRate = 0;
     #ifdef __EMSCRIPTEN__
-    res = FMOD_System_GetDriverInfo(lowLevelSystem, 0, NULL, 0, NULL, &defaultSampleRate, NULL, NULL);
-    if (res != FMOD_OK) {
-        printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
-        FMOD_Studio_System_Release(FMODBridge::system);
-        FMODBridge::system = NULL;
-        return;
-    }
+    check(FMOD_System_GetDriverInfo(lowLevelSystem, 0, NULL, 0, NULL, &defaultSampleRate, NULL, NULL));
+    check(FMOD_System_SetDSPBufferSize(lowLevelSystem, 2048, 2));
     #endif
 
     int sampleRate = FMODBridge_dmConfigFile_GetInt("fmod.sample_rate", defaultSampleRate);
@@ -71,13 +71,7 @@ extern "C" void FMODBridge_init(lua_State *L) {
     FMOD_SPEAKERMODE speakerMode = speakerModeFromString(speakerModeStr);
 
     if (sampleRate || numRawSpeakers || speakerMode != FMOD_SPEAKERMODE_DEFAULT) {
-        res = FMOD_System_SetSoftwareFormat(lowLevelSystem, sampleRate, speakerMode, numRawSpeakers);
-        if (res != FMOD_OK) {
-            printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
-            FMOD_Studio_System_Release(FMODBridge::system);
-            FMODBridge::system = NULL;
-            return;
-        }
+        check(FMOD_System_SetSoftwareFormat(lowLevelSystem, sampleRate, speakerMode, numRawSpeakers));
     }
 
     FMOD_STUDIO_INITFLAGS studioInitFlags = FMOD_STUDIO_INIT_NORMAL;
@@ -86,13 +80,9 @@ extern "C" void FMODBridge_init(lua_State *L) {
     }
 
     void* extraDriverData = NULL;
-    res = FMOD_Studio_System_Initialize(FMODBridge::system, 1024, studioInitFlags, FMOD_INIT_NORMAL, extraDriverData);
-    if (res != FMOD_OK) {
-        printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
-        FMOD_Studio_System_Release(FMODBridge::system);
-        FMODBridge::system = NULL;
-        return;
-    }
+    check(FMOD_Studio_System_Initialize(FMODBridge::system, 1024, studioInitFlags, FMOD_INIT_NORMAL, extraDriverData));
+
+    isPaused = false;
 
     registerEnums(L);
     registerClasses(L);
@@ -102,6 +92,8 @@ extern "C" void FMODBridge_update() {
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
     if (!FMODBridge::dlHandleLL || !FMODBridge::dlHandleST) { return; }
     #endif
+
+    if (FMODBridge::isPaused) { return; }
 
     ensure(ST, FMOD_Studio_System_Update, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
     ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
@@ -129,4 +121,24 @@ extern "C" void FMODBridge_finalize() {
         if (res != FMOD_OK) { printf("ERROR:fmod: %s\n", FMOD_ErrorString(res)); }
         FMODBridge::system = NULL;
     }
+}
+
+extern "C" void FMODBridge_activateApp() {
+    #ifdef __EMSCRIPTEN__
+    if (FMODBridge::system && FMODBridge::isPaused) {
+        ensure(LL, FMOD_System_MixerResume, FMOD_RESULT, FMOD_SYSTEM*);
+        check(FMOD_System_MixerResume(FMODBridge::lowLevelSystem));
+        FMODBridge::isPaused = false;
+    }
+    #endif
+}
+
+extern "C" void FMODBridge_deactivateApp() {
+    #ifdef __EMSCRIPTEN__
+    if (FMODBridge::system && !FMODBridge::isPaused) {
+        ensure(LL, FMOD_System_MixerSuspend, FMOD_RESULT, FMOD_SYSTEM*);
+        check(FMOD_System_MixerSuspend(FMODBridge::lowLevelSystem));
+        FMODBridge::isPaused = true;
+    }
+    #endif
 }

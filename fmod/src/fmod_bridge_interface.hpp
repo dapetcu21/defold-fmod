@@ -15,6 +15,8 @@ extern "C" {
     void FMODBridge_init(lua_State* L);
     void FMODBridge_update();
     void FMODBridge_finalize();
+    void FMODBridge_activateApp();
+    void FMODBridge_deactivateApp();
 }
 
 #endif
