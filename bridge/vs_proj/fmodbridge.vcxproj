@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\fmod_classes.cpp" />
+    <ClCompile Include="..\src\fmod_dynamic_loading.cpp" />
     <ClCompile Include="..\src\fmod_enums.cpp" />
     <ClCompile Include="..\src\fmod_init.cpp" />
   </ItemGroup>

@@ -1,8 +1,17 @@
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "fmod_bridge.hpp"
 #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
 
+#ifndef _WIN32
 #include <dlfcn.h>
 #include <libgen.h>
+#else
+#include <Shlwapi.h>
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #ifdef __APPLE__
@@ -12,25 +21,53 @@
 #include <unistd.h>
 #endif
 
-void* FMODBridge::dlHandleLL = NULL;
-void* FMODBridge::dlHandleST = NULL;
+dlModuleT FMODBridge::dlHandleLL = NULL;
+dlModuleT FMODBridge::dlHandleST = NULL;
+
+#if defined(_WIN32)
+    #define SEP "\\"
+    #define SEPCH '\\'
+#else
+    #define SEP "/"
+    #define SEPCH '/'
+#endif
+
+#ifdef _WIN32
+static char * dirname(char * path) {
+    size_t i = strlen(path);
+    do {
+        i -= 1;
+        if (path[i] == SEPCH) {
+            path[i] = 0;
+            break;
+        }
+    } while (i);
+    return path;
+}
+#endif
 
 bool FMODBridge::linkLibraries() {
     if (FMODBridge::dlHandleLL && FMODBridge::dlHandleST) {
         return true;
     }
 
+    #ifdef _WIN32
+    if (FMODBridge::dlHandleST) { FreeLibrary(dlHandleST); }
+    if (FMODBridge::dlHandleLL) { FreeLibrary(dlHandleLL); }
+    #else
     if (FMODBridge::dlHandleST) { dlclose(dlHandleST); }
     if (FMODBridge::dlHandleLL) { dlclose(dlHandleLL); }
+    #endif
 
     char *exePath = NULL;
     const char *libPath = ".";
     bool mustFreeLibPath = false;
 
-    #ifdef __linux__
-    char* env = secure_getenv("DEFOLD_FMOD_LIB_PATH");
-    #else
-    char* env = getenv("DEFOLD_FMOD_LIB_PATH");
+    char* env = NULL;
+    #if defined(__linux__)
+    env = secure_getenv("DEFOLD_FMOD_LIB_PATH");
+    #elif !defined(_WIN32)
+    env = getenv("DEFOLD_FMOD_LIB_PATH");
     #endif
 
     if (env && env[0]) {
@@ -66,6 +103,16 @@ bool FMODBridge::linkLibraries() {
         }
         #endif
 
+        #ifdef _WIN32
+        exePath = new char[MAX_PATH];
+        size_t ret = GetModuleFileNameA(GetModuleHandle(NULL), exePath, MAX_PATH);
+        if (ret > 0 && ret < MAX_PATH) {
+            dirname(exePath);
+        } else {
+            exePath[0] = 0;
+        }
+        #endif
+
         // Detect if the game is running in the editor
 
         #if defined(__APPLE__)
@@ -74,16 +121,19 @@ bool FMODBridge::linkLibraries() {
         #elif defined(__linux__)
         #define FMB_PLATFORM_BUILD "linux"
         #define FMB_PLATFORM "linux"
+        #elif defined(_WIN32)
+        #define FMB_PLATFORM_BUILD "win32"
+        #define FMB_PLATFORM "win32"
         #endif
 
-        #if defined(__x86_64__)
+        #if defined(__x86_64__) || defined(_M_X64)
         #define FMB_ARCH "x86_64"
-        #elif defined(__i386)
+        #elif defined(__i386) || defined(_M_IX86)
         #define FMB_ARCH "x86"
         #endif
 
         #if defined(FMB_PLATFORM) && defined(FMB_ARCH)
-        #define FMB_EDITOR_SUFFIX "/build/" FMB_ARCH "-" FMB_PLATFORM_BUILD "/dmengine"
+        #define FMB_EDITOR_SUFFIX SEP "build" SEP FMB_ARCH "-" FMB_PLATFORM_BUILD SEP "dmengine"
 
         static const size_t suffixLen = strlen(FMB_EDITOR_SUFFIX);
         size_t exePathLen = strlen(exePath);
@@ -98,16 +148,35 @@ bool FMODBridge::linkLibraries() {
             }
 
             #ifdef __APPLE__
-            #define FMB_LIB_PATH "/" FMB_ARCH "-" FMB_PLATFORM "/Contents/MacOS"
+            #define FMB_LIB_PATH SEP FMB_ARCH "-" FMB_PLATFORM SEP "Contents" SEP "MacOS"
             #else
-            #define FMB_LIB_PATH "/" FMB_ARCH "-" FMB_PLATFORM
+            #define FMB_LIB_PATH SEP FMB_ARCH "-" FMB_PLATFORM
             #endif
 
-            char* newPath = new char[strlen(exePath) + 1 + strlen(resPath) + strlen(FMB_LIB_PATH) + 1];
+            size_t exePathLen = strlen(exePath);
+            size_t resPathLen = strlen(resPath);
+            size_t libPathLen = strlen(FMB_LIB_PATH);
+            size_t len = 0;
+            char* newPath = new char[exePathLen + 1 + resPathLen + libPathLen + 1];
+
             strcpy(newPath, exePath);
-            if (resPath[0] != '/') { strcat(newPath, "/"); }
-            strcat(newPath, resPath);
-            strcat(newPath, FMB_LIB_PATH);
+            len += exePathLen;
+
+            if (resPath[0] != '/') {
+                strcat(newPath, SEP);
+                len += 1;
+            }
+
+            strcat(newPath + len, resPath);
+            #ifdef _WIN32
+            for (size_t i = len; i < len + resPathLen; i++) {
+                if (newPath[i] == '/') { newPath[i] = SEPCH; }
+            }
+            #endif
+            len += resPathLen;
+
+            strcat(newPath + len, FMB_LIB_PATH);
+
             if (mustFreeLibPath) { delete[] libPath; }
             libPath = newPath;
             mustFreeLibPath = true;
@@ -116,10 +185,30 @@ bool FMODBridge::linkLibraries() {
         #endif
     }
 
-    #ifdef __APPLE__
-    #define LIBEXT "dylib"
+    #if defined(__APPLE__)
+        #define LIBEXT "dylib"
+    #elif defined(_WIN32)
+        #define LIBEXT "dll"
     #else
-    #define LIBEXT "so"
+        #define LIBEXT "so"
+    #endif
+
+    #ifdef _WIN32
+        #define LIBPREFIX ""
+        #if defined(__x86_64__) || defined(_M_X64)
+            #define LIBPOSTFIX "64"
+        #else
+            #define LIBPOSTFIX ""
+        #endif
+        #define libOpen(var, path) \
+            var = LoadLibraryA(path); \
+            if (!var) { printf("WARNING:fmod: LoadLibrary(\"%s\") failed with error code %lu\n", path, GetLastError()); }
+    #else
+        #define LIBPREFIX "lib"
+        #define LIBPOSTFIX ""
+        #define libOpen(var, path) \
+            var = dlopen(path, RTLD_NOW | RTLD_GLOBAL); \
+            if (!var) { printf("WARNING:fmod: %s\n", dlerror()); }
     #endif
 
     if (exePath) { delete[] exePath; }
@@ -127,14 +216,12 @@ bool FMODBridge::linkLibraries() {
     exePath = new char[maxPathLen + 1];
 
     strcpy(exePath, libPath);
-    strncat(exePath, "/libfmod." LIBEXT, maxPathLen);
-    FMODBridge::dlHandleLL = dlopen(exePath, RTLD_NOW | RTLD_GLOBAL);
-    if (!FMODBridge::dlHandleLL) { printf("WARNING:fmod: %s\n", dlerror()); }
+    strncat(exePath, SEP LIBPREFIX "fmod" LIBPOSTFIX "." LIBEXT, maxPathLen);
+    libOpen(FMODBridge::dlHandleLL, exePath);
 
     strcpy(exePath, libPath);
-    strncat(exePath, "/libfmodstudio." LIBEXT, maxPathLen);
-    FMODBridge::dlHandleST = dlopen(exePath, RTLD_NOW | RTLD_GLOBAL);
-    if (!FMODBridge::dlHandleST) { printf("WARNING:fmod: %s\n", dlerror()); }
+    strncat(exePath, SEP LIBPREFIX "fmodstudio" LIBPOSTFIX "." LIBEXT, maxPathLen);
+    libOpen(FMODBridge::dlHandleST, exePath);
 
     if (mustFreeLibPath) { delete[] libPath; }
     delete[] exePath;

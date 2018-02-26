@@ -21,11 +21,7 @@ namespace FMODBridge {
     class RefCountedProxy {
     protected:
         T* instance;
-#ifdef WIN32
-        typedef FMOD_RESULT (__stdcall *ReleaseFunc)(T*);
-#else
-        typedef FMOD_RESULT(*ReleaseFunc)(T*);
-#endif
+        typedef FMOD_RESULT (F_CALL *ReleaseFunc)(T*);
         ReleaseFunc release;
     public:
         RefCountedProxy(T* instance_): instance(instance_), release(NULL) {

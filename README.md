@@ -38,13 +38,6 @@ If ever needed, you can also set `sample_rate` and `num_raw_speakers` in the sam
 The game will bundle fine, but in order for FMOD to be available when running
 from the editor, an extra step is required.
 
-#### Windows
-
-Copy `fmod64.dll` and `fmodstudio64.dll` to `C:\Windows\System32`. If you don't
-do this the game will crash at startup in the editor, silently and with no error.
-
-#### macOS & Linux
-
 Copy the `fmod/res` directory from this repo to a directory in your project
 and add the path to that directory to your `game.project`:
 

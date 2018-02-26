@@ -14,11 +14,20 @@ extern "C" {
     #include "TargetConditionals.h"
 #endif
 
-#if !defined(FMOD_FORCE_STATIC_LINK) && ((defined(__APPLE__) && !TARGET_OS_IPHONE) || defined(__linux__))
-#define FMOD_BRIDGE_LOAD_DYNAMICALLY
-#include <stdlib.h>
-#include <dlfcn.h>
-#include <stdio.h>
+#ifdef _WIN32
+    #include <Windows.h>
+#endif
+
+#if !defined(FMOD_FORCE_STATIC_LINK) && ((defined(__APPLE__) && !TARGET_OS_IPHONE) || defined(__linux__) || defined(_WIN32))
+    #define FMOD_BRIDGE_LOAD_DYNAMICALLY
+    #include <stdlib.h>
+    #include <stdio.h>
+    #ifndef _WIN32
+        #include <dlfcn.h>
+        #define dlModuleT void *
+    #else
+        #define dlModuleT HMODULE
+    #endif
 #endif
 
 #define STRINGIFY(x) #x
@@ -47,8 +56,8 @@ namespace FMODBridge {
     extern bool isPaused;
 
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
-    extern void* dlHandleLL;
-    extern void* dlHandleST;
+    extern dlModuleT dlHandleLL;
+    extern dlModuleT dlHandleST;
     bool linkLibraries();
     #endif
 
@@ -61,12 +70,19 @@ namespace FMODBridge {
 }
 
 #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
+#ifdef _WIN32
+#define getSymbol GetProcAddress
+#define getSymbolPrintError() printf("ERROR:fmod: GetProcAddress(\"%s\"): %lu\n", STRINGIFY(fname), GetLastError())
+#else
+#define getSymbol dlsym
+#define getSymbolPrintError() printf("ERROR:fmod: dlsym(\"%s\"): %s\n", STRINGIFY(fname), dlerror())
+#endif
 #define ensure(lib, fname, retType, ...) \
-    static retType (*fname)(__VA_ARGS__) = NULL; \
+    static retType (F_CALL *fname)(__VA_ARGS__) = NULL; \
     if (!fname) { \
-        fname = (retType (*)(__VA_ARGS__))dlsym(RESOLVE(CONCAT(FMODBridge::dlHandle, lib)), STRINGIFY(fname)); \
+        fname = (retType (F_CALL *)(__VA_ARGS__))getSymbol(RESOLVE(CONCAT(FMODBridge::dlHandle, lib)), STRINGIFY(fname)); \
         if (!fname) { \
-            printf("ERROR:fmod: dlsym(\"%s\"): %s\n", STRINGIFY(fname), dlerror()); \
+            getSymbolPrintError(); \
             abort(); \
         } \
     }
