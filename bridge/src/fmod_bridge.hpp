@@ -62,7 +62,9 @@ namespace FMODBridge {
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
     extern dlModuleT dlHandleLL;
     extern dlModuleT dlHandleST;
+    extern bool isLinked;
     bool linkLibraries();
+    void cleanupLibraries();
     #endif
 
     struct LuaHBuffer {

@@ -233,4 +233,8 @@ bool FMODBridge::linkLibraries() {
     return (FMODBridge::dlHandleLL && FMODBridge::dlHandleST);
 }
 
+void FMODBridge::cleanupLibraries() {
+}
+#endif
+
 #endif

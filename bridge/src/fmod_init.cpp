@@ -10,6 +10,10 @@ FMOD_STUDIO_SYSTEM* FMODBridge::system = NULL;
 FMOD_SYSTEM* FMODBridge::lowLevelSystem = NULL;
 bool FMODBridge::isPaused = false;
 
+#ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
+bool FMODBridge::isLinked = false;
+#endif
+
 static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
     if (0 == strcmp(str, "default")) { return FMOD_SPEAKERMODE_DEFAULT; }
     if (0 == strcmp(str, "stereo")) { return FMOD_SPEAKERMODE_STEREO; }
@@ -36,7 +40,8 @@ static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
 
 extern "C" void FMODBridge_init(lua_State *L) {
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
-    if (!linkLibraries()) {
+    isLinked = linkLibraries();
+    if (!isLinked) {
         LOGW("FMOD libraries could not be loaded. FMOD will be disabled for this session");
         return;
     }
@@ -104,13 +109,17 @@ extern "C" void FMODBridge_update() {
 }
 
 extern "C" void FMODBridge_finalize() {
-    if (!FMODBridge::system) { return; }
+    if (FMODBridge::system) {
+        ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
 
-    ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
+        FMOD_RESULT res = FMOD_Studio_System_Release(FMODBridge::system);
+        if (res != FMOD_OK) { LOGE("%s", FMOD_ErrorString(res)); }
+        FMODBridge::system = NULL;
+    }
 
-    FMOD_RESULT res = FMOD_Studio_System_Release(FMODBridge::system);
-    if (res != FMOD_OK) { LOGE("%s", FMOD_ErrorString(res)); }
-    FMODBridge::system = NULL;
+    #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
+    if (isLinked) { cleanupLibraries(); }
+    #endif
 }
 
 extern "C" void FMODBridge_activateApp() {
