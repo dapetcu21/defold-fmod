@@ -1,0 +1,32 @@
+LIBPATH := ../fmod/lib/armv7-android/libfmodbridge.a
+
+SOURCES = \
+	src/fmod_init.cpp \
+	src/fmod_classes.cpp \
+	src/fmod_enums.cpp \
+	src/fmod_dynamic_loading.cpp
+
+HEADERS = \
+	src/fmod_bridge.hpp \
+	src/fmod_helpers.hpp
+
+STANDALONE_NDK := /opt/android-ndk-standalone-arm
+CXX := $(STANDALONE_NDK)/bin/arm-linux-androideabi-g++
+AR := $(STANDALONE_NDK)/bin/arm-linux-androideabi-ar
+
+CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include -fpic -ffunction-sections -fstack-protector -Wno-psabi -march=armv7-a -mfloat-abi=softfp -mfpu=vfp -fomit-frame-pointer -fno-strict-aliasing -fno-exceptions -funwind-tables
+
+all: $(LIBPATH)
+
+OBJECTS = $(patsubst src/%.cpp,build/android-%.o,$(SOURCES))
+
+build/android-%.o: src/%.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(LIBPATH): $(OBJECTS)
+	$(AR) rcs $@ $^
+
+clean:
+	rm -f $(LIBPATH) build/android-*.o
+
+.PHONY: all clean

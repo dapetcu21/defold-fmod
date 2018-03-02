@@ -11,6 +11,10 @@ extern "C" {
     FMODBridge_HBuffer FMODBridge_dmScript_CheckBuffer(lua_State* L, int);
     const char* FMODBridge_dmConfigFile_GetString(const char*, const char*);
     int32_t FMODBridge_dmConfigFile_GetInt(const char*, int32_t);
+    #ifdef DM_PLATFORM_ANDROID
+    JavaVM* FMODBridge_dmGraphics_GetNativeAndroidJavaVM();
+    jobject FMODBridge_dmGraphics_GetNativeAndroidActivity();
+    #endif
 
     void FMODBridge_init(lua_State* L);
     void FMODBridge_update();

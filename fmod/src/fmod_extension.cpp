@@ -4,7 +4,7 @@
 #define DLIB_LOG_DOMAIN "fmod"
 #include <dmsdk/sdk.h>
 
-#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS) || defined(DM_PLATFORM_LINUX) || defined(DM_PLATFORM_IOS) || defined(DM_PLATFORM_HTML5)
+#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS) || defined(DM_PLATFORM_LINUX) || defined(DM_PLATFORM_IOS) || defined(DM_PLATFORM_HTML5) || defined(DM_PLATFORM_ANDROID)
 
 #include "fmod_bridge_interface.hpp"
 
@@ -65,6 +65,16 @@ const char* FMODBridge_dmConfigFile_GetString(const char* config, const char* de
 int32_t FMODBridge_dmConfigFile_GetInt(const char* config, int32_t defaultValue) {
     return dmConfigFile::GetInt(appConfig, config, defaultValue);
 }
+
+#ifdef DM_PLATFORM_ANDROID
+JavaVM* FMODBridge_dmGraphics_GetNativeAndroidJavaVM() {
+    return dmGraphics::GetNativeAndroidJavaVM();
+}
+
+jobject FMODBridge_dmGraphics_GetNativeAndroidActivity() {
+    return dmGraphics::GetNativeAndroidActivity();
+}
+#endif
 
 #else
 

@@ -46,6 +46,119 @@ static char * dirname(char * path) {
 }
 #endif
 
+#ifdef __ANDROID__
+JNIEnv* FMODBridge::attachJNI()
+{
+    JNIEnv* env;
+    JavaVM* vm = FMODBridge_dmGraphics_GetNativeAndroidJavaVM();
+    vm->AttachCurrentThread(&env, NULL);
+    return env;
+}
+
+bool FMODBridge::detachJNI(JNIEnv* env)
+{
+    bool exception = (bool) env->ExceptionCheck();
+    env->ExceptionClear();
+    JavaVM* vm = FMODBridge_dmGraphics_GetNativeAndroidJavaVM();
+    vm->DetachCurrentThread();
+    return !exception;
+}
+
+jclass FMODBridge::jniGetClass(JNIEnv* env, const char* classname) {
+    jclass activity_class = env->FindClass("android/app/NativeActivity");
+    jmethodID get_class_loader = env->GetMethodID(activity_class,"getClassLoader", "()Ljava/lang/ClassLoader;");
+    jobject cls = env->CallObjectMethod(FMODBridge_dmGraphics_GetNativeAndroidActivity(), get_class_loader);
+    jclass class_loader = env->FindClass("java/lang/ClassLoader");
+    jmethodID find_class = env->GetMethodID(class_loader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+
+    jstring str_class_name = env->NewStringUTF(classname);
+    jclass outcls = (jclass)env->CallObjectMethod(cls, find_class, str_class_name);
+    env->DeleteLocalRef(str_class_name);
+    return outcls;
+}
+
+static void jniLogException(JNIEnv* env) {
+    jthrowable e = env->ExceptionOccurred();
+    env->ExceptionClear();
+
+    jclass clazz = env->GetObjectClass(e);
+    jmethodID getMessage = env->GetMethodID(clazz, "getMessage", "()Ljava/lang/String;");
+    jstring message = (jstring)env->CallObjectMethod(e, getMessage);
+    const char *mstr = env->GetStringUTFChars(message, NULL);
+    LOGE("%s", mstr);
+    env->ReleaseStringUTFChars(message, mstr);
+    env->DeleteLocalRef(message);
+    env->DeleteLocalRef(clazz);
+    env->DeleteLocalRef(e);
+}
+
+bool FMODBridge::linkLibraries() {
+    FMODBridge::AttachScope jniScope;
+    JNIEnv* env = jniScope.env;
+
+    jclass fmodClass = jniGetClass(env, "org.fmod.FMOD");
+    jmethodID initMethod = env->GetStaticMethodID(fmodClass, "init", "(Landroid/content/Context;)V");
+    if (env->ExceptionCheck()) {
+        jniLogException(env);
+        return false;
+    }
+    env->CallStaticVoidMethod(fmodClass, initMethod, FMODBridge_dmGraphics_GetNativeAndroidActivity());
+
+    if (env->ExceptionCheck()) {
+        jniLogException(env);
+        return false;
+    }
+
+    jclass systemClass = jniGetClass(env, "java.lang.System");
+    jmethodID loadLibMethod = env->GetStaticMethodID(systemClass, "load", "(Ljava/lang/String;)V");
+
+    // TODO Derive this path
+    jstring fmodString = env->NewStringUTF("/data/data/com.example.todo/lib/libfmodL.so");
+    env->CallStaticVoidMethod(systemClass, loadLibMethod, fmodString);
+    env->DeleteLocalRef(fmodString);
+
+    if (env->ExceptionCheck()) {
+        jniLogException(env);
+        return false;
+    }
+
+    jstring fmodStudioString = env->NewStringUTF("/data/data/com.example.todo/lib/libfmodstudioL.so");
+    env->CallStaticVoidMethod(systemClass, loadLibMethod, fmodStudioString);
+    env->DeleteLocalRef(fmodStudioString);
+
+    if (env->ExceptionCheck()) {
+        jniLogException(env);
+        return false;
+    }
+
+    dlHandleLL = dlopen("/data/data/com.example.todo/lib/libfmodL.so", RTLD_NOW | RTLD_GLOBAL);
+    if (!dlHandleLL) { LOGW("%s", dlerror()); }
+
+    dlHandleST = dlopen("/data/data/com.example.todo/lib/libfmodstudioL.so", RTLD_NOW | RTLD_GLOBAL);
+    if (!dlHandleST) { LOGW("%s", dlerror()); }
+
+    bool result = dlHandleLL && dlHandleST;
+    if (!result) {
+        cleanupLibraries();
+    }
+
+    return result;
+}
+
+void FMODBridge::cleanupLibraries() {
+    FMODBridge::AttachScope jniScope;
+    JNIEnv* env = jniScope.env;
+
+    jclass fmodClass = jniGetClass(env, "org.fmod.FMOD");
+    jmethodID closeMethod = env->GetStaticMethodID(fmodClass, "close", "(V)V");
+    env->CallStaticVoidMethod(fmodClass, closeMethod);
+
+    if (env->ExceptionCheck()) {
+        jniLogException(env);
+    }
+}
+
+#else
 bool FMODBridge::linkLibraries() {
     if (FMODBridge::dlHandleLL && FMODBridge::dlHandleST) {
         return true;
