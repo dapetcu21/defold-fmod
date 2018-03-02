@@ -96,7 +96,7 @@ extern "C" void FMODBridge_update() {
 
     FMOD_RESULT res = FMOD_Studio_System_Update(FMODBridge::system);
     if (res != FMOD_OK) {
-        LOGW("%s", FMOD_ErrorString(res));
+        LOGE("%s", FMOD_ErrorString(res));
         FMOD_Studio_System_Release(FMODBridge::system);
         FMODBridge::system = NULL;
         return;
