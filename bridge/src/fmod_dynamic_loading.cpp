@@ -83,9 +83,8 @@ bool FMODBridge::linkLibraries() {
         strcpy(newPath, libPath);
         libPath = newPath;
         mustFreeLibPath = true;
-        #endif
 
-        #ifdef __linux__
+        #elif defined(__linux__)
         exePath = new char[PATH_MAX + 2];
         ssize_t ret = readlink("/proc/self/exe", exePath, PATH_MAX + 2);
         if (ret >= 0 && ret <= PATH_MAX + 1) {
@@ -101,9 +100,8 @@ bool FMODBridge::linkLibraries() {
         } else {
           exePath[0] = 0;
         }
-        #endif
 
-        #ifdef _WIN32
+        #elif defined(_WIN32)
         exePath = new char[MAX_PATH];
         size_t ret = GetModuleFileNameA(GetModuleHandle(NULL), exePath, MAX_PATH);
         if (ret > 0 && ret < MAX_PATH) {
