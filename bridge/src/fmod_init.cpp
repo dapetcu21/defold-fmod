@@ -89,38 +89,28 @@ extern "C" void FMODBridge_init(lua_State *L) {
 }
 
 extern "C" void FMODBridge_update() {
-    #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
-    if (!FMODBridge::dlHandleLL || !FMODBridge::dlHandleST) { return; }
-    #endif
-
-    if (FMODBridge::isPaused) { return; }
+    if (!FMODBridge::system || FMODBridge::isPaused) { return; }
 
     ensure(ST, FMOD_Studio_System_Update, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
     ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
 
-    if (FMODBridge::system) {
-        FMOD_RESULT res = FMOD_Studio_System_Update(FMODBridge::system);
-        if (res != FMOD_OK) {
-            LOGW("%s", FMOD_ErrorString(res));
-            FMOD_Studio_System_Release(FMODBridge::system);
-            FMODBridge::system = NULL;
-            return;
-        }
+    FMOD_RESULT res = FMOD_Studio_System_Update(FMODBridge::system);
+    if (res != FMOD_OK) {
+        LOGW("%s", FMOD_ErrorString(res));
+        FMOD_Studio_System_Release(FMODBridge::system);
+        FMODBridge::system = NULL;
+        return;
     }
 }
 
 extern "C" void FMODBridge_finalize() {
-    #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
-    if (!FMODBridge::dlHandleLL || !FMODBridge::dlHandleST) { return; }
-    #endif
+    if (!FMODBridge::system) { return; }
 
     ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
 
-    if (FMODBridge::system) {
-        FMOD_RESULT res = FMOD_Studio_System_Release(FMODBridge::system);
-        if (res != FMOD_OK) { LOGE("%s", FMOD_ErrorString(res)); }
-        FMODBridge::system = NULL;
-    }
+    FMOD_RESULT res = FMOD_Studio_System_Release(FMODBridge::system);
+    if (res != FMOD_OK) { LOGE("%s", FMOD_ErrorString(res)); }
+    FMODBridge::system = NULL;
 }
 
 extern "C" void FMODBridge_activateApp() {
