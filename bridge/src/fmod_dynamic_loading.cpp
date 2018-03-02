@@ -236,5 +236,3 @@ bool FMODBridge::linkLibraries() {
 void FMODBridge::cleanupLibraries() {
 }
 #endif
-
-#endif
