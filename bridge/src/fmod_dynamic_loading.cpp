@@ -145,13 +145,13 @@ bool FMODBridge::linkLibraries() {
         static const size_t suffixLen = strlen(FMB_EDITOR_SUFFIX);
         size_t exePathLen = strlen(exePath);
         if (exePathLen >= suffixLen && 0 == strcmp(FMB_EDITOR_SUFFIX, exePath + exePathLen - suffixLen)) {
-            printf("INFO:fmod: Running in the editor. Will attempt to load libraries from project\n");
+            LOGI("Running in the editor. Will attempt to load libraries from project");
 
             const char* projPath = dirname(dirname(dirname(exePath)));
             const char* resPath = FMODBridge_dmConfigFile_GetString("fmod.lib_path", "");
 
             if (!resPath[0]) {
-                printf("WARNING:fmod: fmod.lib_path not found in game.project. See README for details\n");
+                LOGW("fmod.lib_path not found in game.project. See README for details");
             }
 
             #ifdef __APPLE__
@@ -209,13 +209,13 @@ bool FMODBridge::linkLibraries() {
         #endif
         #define libOpen(var, path) \
             var = LoadLibraryA(path); \
-            if (!var) { printf("WARNING:fmod: LoadLibrary(\"%s\") failed with error code %lu\n", path, GetLastError()); }
+            if (!var) { LOGW("LoadLibrary(\"%s\") failed with error code %lu", path, GetLastError()); }
     #else
         #define LIBPREFIX "lib"
         #define LIBPOSTFIX ""
         #define libOpen(var, path) \
             var = dlopen(path, RTLD_NOW | RTLD_GLOBAL); \
-            if (!var) { printf("WARNING:fmod: %s\n", dlerror()); }
+            if (!var) { LOGW("%s", dlerror()); }
     #endif
 
     if (exePath) { delete[] exePath; }

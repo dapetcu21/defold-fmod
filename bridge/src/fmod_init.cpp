@@ -20,14 +20,14 @@ static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
     if (0 == strcmp(str, "surround")) { return FMOD_SPEAKERMODE_SURROUND; }
     if (0 == strcmp(str, "max")) { return FMOD_SPEAKERMODE_MAX; }
     if (0 == strcmp(str, "raw")) { return FMOD_SPEAKERMODE_RAW; }
-    printf("WARNING:fmod: Invalid value for speaker_mode: \"%s\". Using default\n", str);
+    LOGW("Invalid value for speaker_mode: \"%s\". Using default", str);
     return FMOD_SPEAKERMODE_DEFAULT;
 }
 
 #define check(fcall) do { \
     FMOD_RESULT res = fcall; \
     if (res != FMOD_OK) { \
-        printf("ERROR:fmod: %s\n", FMOD_ErrorString(res)); \
+        LOGE("%s", FMOD_ErrorString(res)); \
         FMOD_Studio_System_Release(FMODBridge::system); \
         FMODBridge::system = NULL; \
         return; \
@@ -37,7 +37,7 @@ static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
 extern "C" void FMODBridge_init(lua_State *L) {
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
     if (!linkLibraries()) {
-        printf("WARNING:fmod: FMOD libraries could not be loaded. FMOD will be disabled for this session\n");
+        LOGW("FMOD libraries could not be loaded. FMOD will be disabled for this session");
         return;
     }
     #endif
@@ -52,7 +52,7 @@ extern "C" void FMODBridge_init(lua_State *L) {
     FMOD_RESULT res;
     res = FMOD_Studio_System_Create(&FMODBridge::system, FMOD_VERSION);
     if (res != FMOD_OK) {
-        printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
+        LOGE("%s", FMOD_ErrorString(res));
         FMODBridge::system = NULL;
         return;
     }
@@ -101,7 +101,7 @@ extern "C" void FMODBridge_update() {
     if (FMODBridge::system) {
         FMOD_RESULT res = FMOD_Studio_System_Update(FMODBridge::system);
         if (res != FMOD_OK) {
-            printf("ERROR:fmod: %s\n", FMOD_ErrorString(res));
+            LOGW("%s", FMOD_ErrorString(res));
             FMOD_Studio_System_Release(FMODBridge::system);
             FMODBridge::system = NULL;
             return;
@@ -118,7 +118,7 @@ extern "C" void FMODBridge_finalize() {
 
     if (FMODBridge::system) {
         FMOD_RESULT res = FMOD_Studio_System_Release(FMODBridge::system);
-        if (res != FMOD_OK) { printf("ERROR:fmod: %s\n", FMOD_ErrorString(res)); }
+        if (res != FMOD_OK) { LOGE("%s", FMOD_ErrorString(res)); }
         FMODBridge::system = NULL;
     }
 }

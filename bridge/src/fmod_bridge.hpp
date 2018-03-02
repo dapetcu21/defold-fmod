@@ -30,6 +30,10 @@ extern "C" {
     #endif
 #endif
 
+#define LOGI(s, ...) ((void)printf("INFO:fmod: " s "\n", __VA_ARGS__))
+#define LOGE(s, ...) ((void)printf("ERROR:fmod: " s "\n", __VA_ARGS__))
+#define LOGW(s, ...) ((void)printf("WARNING:fmod: " s "\n", __VA_ARGS__))
+
 #define STRINGIFY(x) #x
 #define RESOLVE(x) x
 #define CONCAT_(a, b) a ## b
@@ -72,10 +76,10 @@ namespace FMODBridge {
 #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
 #ifdef _WIN32
 #define getSymbol GetProcAddress
-#define getSymbolPrintError() printf("ERROR:fmod: GetProcAddress(\"%s\"): %lu\n", STRINGIFY(fname), GetLastError())
+#define getSymbolPrintError() LOGE("GetProcAddress(\"%s\"): %lu", STRINGIFY(fname), GetLastError())
 #else
 #define getSymbol dlsym
-#define getSymbolPrintError() printf("ERROR:fmod: dlsym(\"%s\"): %s\n", STRINGIFY(fname), dlerror())
+#define getSymbolPrintError() LOGE("dlsym(\"%s\"): %s", STRINGIFY(fname), dlerror())
 #endif
 #define ensure(lib, fname, retType, ...) \
     static retType (F_CALL *fname)(__VA_ARGS__) = NULL; \
