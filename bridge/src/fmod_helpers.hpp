@@ -213,12 +213,12 @@ namespace FMODBridge {
 
 #define declareEnum(EnumT) \
 template <> \
-struct luabridge::Stack <EnumT> { \
+struct Stack <EnumT> { \
   static void push(lua_State* L, EnumT value) { \
-      luabridge::Stack<int>::push(L, value); \
+      Stack<int>::push(L, value); \
   } \
   static EnumT get(lua_State* L, int index) { \
-      return (EnumT)luabridge::Stack<int>::get(L, index); \
+      return (EnumT)Stack<int>::get(L, index); \
   } \
 };
 
