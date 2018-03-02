@@ -76,17 +76,17 @@ namespace FMODBridge {
 #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
 #ifdef _WIN32
 #define getSymbol GetProcAddress
-#define getSymbolPrintError() LOGE("GetProcAddress(\"%s\"): %lu", STRINGIFY(fname), GetLastError())
+#define getSymbolPrintError(fname) LOGE("GetProcAddress(\"%s\"): %lu", STRINGIFY(fname), GetLastError())
 #else
 #define getSymbol dlsym
-#define getSymbolPrintError() LOGE("dlsym(\"%s\"): %s", STRINGIFY(fname), dlerror())
+#define getSymbolPrintError(fname) LOGE("dlsym(\"%s\"): %s", STRINGIFY(fname), dlerror())
 #endif
 #define ensure(lib, fname, retType, ...) \
     static retType (F_CALL *fname)(__VA_ARGS__) = NULL; \
     if (!fname) { \
         fname = (retType (F_CALL *)(__VA_ARGS__))getSymbol(RESOLVE(CONCAT(FMODBridge::dlHandle, lib)), STRINGIFY(fname)); \
         if (!fname) { \
-            getSymbolPrintError(); \
+            getSymbolPrintError(fname); \
             abort(); \
         } \
     }
