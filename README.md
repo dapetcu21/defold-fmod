@@ -25,7 +25,7 @@ To set the speaker mode, create an `fmod` section in your `game.project`:
 
 ```
 [fmod]
-speaker_mode = 5.1
+speaker_mode = stereo
 ```
 
 Supported values for `speaker_mode` are: `default`, `raw`, `mono`, `stereo`,
