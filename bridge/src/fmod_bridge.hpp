@@ -30,9 +30,15 @@ extern "C" {
     #endif
 #endif
 
+#ifdef _MSC_VER
+#define LOGI(fmt, ...) ((void)printf("INFO:fmod: " fmt "\n", __VA_ARGS__))
+#define LOGE(fmt, ...) ((void)printf("ERROR:fmod: " fmt "\n", __VA_ARGS__))
+#define LOGW(fmt, ...) ((void)printf("WARNING:fmod: " fmt "\n", __VA_ARGS__))
+#else
 #define LOGI(...) ((void)printf("INFO:fmod: " FIRST(__VA_ARGS__) "\n" REST(__VA_ARGS__)))
 #define LOGE(...) ((void)printf("ERROR:fmod: " FIRST(__VA_ARGS__) "\n" REST(__VA_ARGS__)))
 #define LOGW(...) ((void)printf("WARNING:fmod: " FIRST(__VA_ARGS__) "\n" REST(__VA_ARGS__)))
+#endif
 
 #define STRINGIFY(x) #x
 #define RESOLVE(x) x
