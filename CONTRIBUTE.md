@@ -53,3 +53,12 @@ Then, to build the bridge:
 cd bridge
 make -f Makefile.android STANDALONE_NDK=/path/to/android-ndk-arm-standalone
 ```
+
+### HTML5
+
+Install and activate Emscripten 1.35, then:
+
+```bash
+cd bridge
+make -f Makefile.emscripten
+```
