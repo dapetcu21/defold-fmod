@@ -30,7 +30,7 @@ dmExtension::Result FinalizeDefoldFMOD(dmExtension::Params* params) {
     return dmExtension::RESULT_OK;
 }
 
-#ifdef DM_PLATFORM_HTML5
+#if defined(DM_PLATFORM_HTML5) || defined(DM_PLATFORM_ANDROID)
 void OnEventDefoldFMOD(dmExtension::Params* params, const dmExtension::Event* event) {
     switch (event->m_Event) {
         case dmExtension::EVENT_ID_ACTIVATEAPP:

@@ -123,8 +123,9 @@ extern "C" void FMODBridge_finalize() {
 }
 
 extern "C" void FMODBridge_activateApp() {
-    #ifdef __EMSCRIPTEN__
+    #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
     if (FMODBridge::system && FMODBridge::isPaused) {
+        ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
         ensure(LL, FMOD_System_MixerResume, FMOD_RESULT, FMOD_SYSTEM*);
         check(FMOD_System_MixerResume(FMODBridge::lowLevelSystem));
         FMODBridge::isPaused = false;
@@ -133,8 +134,9 @@ extern "C" void FMODBridge_activateApp() {
 }
 
 extern "C" void FMODBridge_deactivateApp() {
-    #ifdef __EMSCRIPTEN__
+    #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
     if (FMODBridge::system && !FMODBridge::isPaused) {
+        ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
         ensure(LL, FMOD_System_MixerSuspend, FMOD_RESULT, FMOD_SYSTEM*);
         check(FMOD_System_MixerSuspend(FMODBridge::lowLevelSystem));
         FMODBridge::isPaused = true;
