@@ -96,6 +96,19 @@ bool FMODBridge::linkLibraries() {
     FMODBridge::AttachScope jniScope;
     JNIEnv* env = jniScope.env;
 
+    // Load the FMOD Java Lib
+
+    jclass helperClass = jniGetClass(env, "me.petcu.fmodbridge.BridgeHelper");
+    jmethodID helperLoadMethod = env->GetStaticMethodID(helperClass, "loadFMOD", "()V");
+    env->CallStaticVoidMethod(helperClass, helperLoadMethod);
+
+    if (env->ExceptionCheck()) {
+        jniLogException(env);
+        return false;
+    }
+
+    // Initialize the FMOD Java lib
+
     jclass fmodClass = jniGetClass(env, "org.fmod.FMOD");
     jmethodID initMethod = env->GetStaticMethodID(fmodClass, "init", "(Landroid/content/Context;)V");
     if (env->ExceptionCheck()) {
@@ -109,33 +122,33 @@ bool FMODBridge::linkLibraries() {
         return false;
     }
 
+    // Get paths to libfmod.so and libfmodstudio.so
+
     jclass systemClass = jniGetClass(env, "java.lang.System");
-    jmethodID loadLibMethod = env->GetStaticMethodID(systemClass, "load", "(Ljava/lang/String;)V");
+    jmethodID mapLibMethod = env->GetStaticMethodID(systemClass, "mapLibraryName", "(Ljava/lang/String;)Ljava/lang/String;");
 
-    // TODO Derive this path
-    jstring fmodString = env->NewStringUTF("/data/data/com.example.todo/lib/libfmodL.so");
-    env->CallStaticVoidMethod(systemClass, loadLibMethod, fmodString);
+    jstring fmodString = env->NewStringUTF("fmod");
+    jstring fmodLibPath = (jstring)env->CallStaticObjectMethod(systemClass, mapLibMethod, fmodString);
     env->DeleteLocalRef(fmodString);
+    const char *fmodLibPathStr = env->GetStringUTFChars(fmodLibPath, NULL);
 
-    if (env->ExceptionCheck()) {
-        jniLogException(env);
-        return false;
-    }
-
-    jstring fmodStudioString = env->NewStringUTF("/data/data/com.example.todo/lib/libfmodstudioL.so");
-    env->CallStaticVoidMethod(systemClass, loadLibMethod, fmodStudioString);
+    jstring fmodStudioString = env->NewStringUTF("fmodstudio");
+    jstring fmodStudioLibPath = (jstring)env->CallStaticObjectMethod(systemClass, mapLibMethod, fmodStudioString);
     env->DeleteLocalRef(fmodStudioString);
+    const char *fmodStudioLibPathStr = env->GetStringUTFChars(fmodStudioLibPath, NULL);
 
-    if (env->ExceptionCheck()) {
-        jniLogException(env);
-        return false;
-    }
+    // Get dlopen handles to libfmod.so and libfmodstudio.so
 
-    dlHandleLL = dlopen("/data/data/com.example.todo/lib/libfmodL.so", RTLD_NOW | RTLD_GLOBAL);
+    dlHandleLL = dlopen(fmodLibPathStr, RTLD_NOW | RTLD_GLOBAL);
     if (!dlHandleLL) { LOGW("%s", dlerror()); }
 
-    dlHandleST = dlopen("/data/data/com.example.todo/lib/libfmodstudioL.so", RTLD_NOW | RTLD_GLOBAL);
+    dlHandleST = dlopen(fmodStudioLibPathStr, RTLD_NOW | RTLD_GLOBAL);
     if (!dlHandleST) { LOGW("%s", dlerror()); }
+
+    env->ReleaseStringUTFChars(fmodLibPath, fmodLibPathStr);
+    env->DeleteLocalRef(fmodLibPath);
+    env->ReleaseStringUTFChars(fmodStudioLibPath, fmodStudioLibPathStr);
+    env->DeleteLocalRef(fmodStudioLibPath);
 
     bool result = dlHandleLL && dlHandleST;
     if (!result) {

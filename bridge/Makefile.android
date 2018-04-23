@@ -1,4 +1,5 @@
 LIBPATH := ../fmod/lib/armv7-android/libfmodbridge.a
+JARPATH := ../fmod/lib/android/fmodbridge.jar
 
 SOURCES = \
 	src/fmod_init.cpp \
@@ -10,15 +11,26 @@ HEADERS = \
 	src/fmod_bridge.hpp \
 	src/fmod_helpers.hpp
 
+JAVA_FILES = \
+	src/me/petcu/fmodbridge/BridgeHelper.java
+
 STANDALONE_NDK := /opt/android-ndk-standalone-arm
 CXX := $(STANDALONE_NDK)/bin/arm-linux-androideabi-g++
 AR := $(STANDALONE_NDK)/bin/arm-linux-androideabi-ar
 
 CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include -fpic -ffunction-sections -fstack-protector -Wno-psabi -march=armv7-a -mfloat-abi=softfp -mfpu=vfp -fomit-frame-pointer -fno-strict-aliasing -fno-exceptions -funwind-tables
 
-all: $(LIBPATH)
+all: $(LIBPATH) $(JARPATH)
 
 OBJECTS = $(patsubst src/%.cpp,build/android-%.o,$(SOURCES))
+
+CLASSPATH = build/android-classes
+
+$(CLASSPATH)/me/petcu/fmodbridge/BridgeHelper.class: src/me/petcu/fmodbridge/BridgeHelper.java
+	mkdir -p $(CLASSPATH) && javac  -source 1.6 -target 1.6 -d $(CLASSPATH) $<
+
+$(JARPATH): $(CLASSPATH)/me/petcu/fmodbridge/BridgeHelper.class
+	jar cf $@ -C $(CLASSPATH) me
 
 build/android-%.o: src/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -27,6 +39,6 @@ $(LIBPATH): $(OBJECTS)
 	$(AR) rcs $@ $^
 
 clean:
-	rm -f $(LIBPATH) build/android-*.o
+	rm -rf $(LIBPATH) build/android-*.o $(CLASSPATH) $(JARPATH)
 
 .PHONY: all clean
