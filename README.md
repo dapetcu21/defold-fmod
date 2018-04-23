@@ -85,6 +85,10 @@ used by FMOD Studio.
 live_update = 1
 ```
 
+## Contributing
+
+See [CONTRIBUTE.md](./CONTRIBUTE.md) for details about how to contribute to this project.
+
 [example]: ./main/main.script
 [FMOD]: https://fmod.com
 [FMOD API Documentation]: https://www.fmod.com/resources/documentation-api
