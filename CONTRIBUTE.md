@@ -38,3 +38,18 @@ make -f Makefile.linux
 
 Install Visual Studio 2017, then open `bridge/vs_proj/fmodbridge.sln`. Build
 the `Release x86` and `Release x64` targets.
+
+### Android
+
+Install Android NDK and Java 8, then generate a standalone toolchain:
+
+```bash
+$ANDROID_NDK_HOME/build/tools/make_standalone_toolchain.py --arch arm --install-dir /path/to/android-ndk-arm-standalone
+```
+
+Then, to build the bridge:
+
+```bash
+cd bridge
+make -f Makefile.android STANDALONE_NDK=/path/to/android-ndk-arm-standalone
+```
