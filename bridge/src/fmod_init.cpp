@@ -89,6 +89,10 @@ extern "C" void FMODBridge_init(lua_State *L) {
 
     isPaused = false;
 
+    #if TARGET_OS_IPHONE
+    FMODBridge::initIOSInterruptionHandler();
+    #endif
+
     registerEnums(L);
     registerClasses(L);
 }
@@ -122,24 +126,32 @@ extern "C" void FMODBridge_finalize() {
     #endif
 }
 
-extern "C" void FMODBridge_activateApp() {
-    #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
+void FMODBridge::resumeMixer() {
     if (FMODBridge::system && FMODBridge::isPaused) {
         ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
         ensure(LL, FMOD_System_MixerResume, FMOD_RESULT, FMOD_SYSTEM*);
         check(FMOD_System_MixerResume(FMODBridge::lowLevelSystem));
         FMODBridge::isPaused = false;
     }
-    #endif
 }
 
-extern "C" void FMODBridge_deactivateApp() {
-    #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
+void FMODBridge::suspendMixer() {
     if (FMODBridge::system && !FMODBridge::isPaused) {
         ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
         ensure(LL, FMOD_System_MixerSuspend, FMOD_RESULT, FMOD_SYSTEM*);
         check(FMOD_System_MixerSuspend(FMODBridge::lowLevelSystem));
         FMODBridge::isPaused = true;
     }
+}
+
+extern "C" void FMODBridge_activateApp() {
+    #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
+    FMODBridge::resumeMixer();
+    #endif
+}
+
+extern "C" void FMODBridge_deactivateApp() {
+    #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
+    FMODBridge::suspendMixer();
     #endif
 }

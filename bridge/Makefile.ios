@@ -5,6 +5,9 @@ SOURCES = \
 	src/fmod_classes.cpp \
 	src/fmod_enums.cpp
 
+OBJCPP_SOURCES = \
+	src/fmod_ios.mm
+
 HEADERS = \
 	src/fmod_bridge.hpp \
 	src/fmod_helpers.hpp
@@ -15,12 +18,16 @@ CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include -miphoneos-version-mi
 
 all: $(LIBPATH)
 
-OBJECTS = $(patsubst src/%.cpp,build/ios-%.o,$(SOURCES))
+OBJECTS = $(patsubst src/%.cpp,build/ios-cpp-%.o,$(SOURCES))
+OBJCPP_OBJECTS = $(patsubst src/%.mm,build/ios-mm-%.o,$(OBJCPP_SOURCES))
 
-build/ios-%.o: src/%.cpp $(HEADERS)
+build/ios-cpp-%.o: src/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(LIBPATH): $(OBJECTS)
+build/ios-mm-%.o: src/%.mm $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(LIBPATH): $(OBJECTS) $(OBJCPP_OBJECTS)
 	xcrun --sdk iphoneos libtool -static $^ -o $@
 
 clean:

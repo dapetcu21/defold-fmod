@@ -102,6 +102,13 @@ namespace FMODBridge {
     void registerClasses(lua_State *L);
     void registerEnums(lua_State *L);
 
+    void suspendMixer();
+    void resumeMixer();
+
+    #if TARGET_OS_IPHONE
+    void initIOSInterruptionHandler();
+    #endif
+
     #ifdef __ANDROID__
     JNIEnv* attachJNI();
     bool detachJNI(JNIEnv* env);
