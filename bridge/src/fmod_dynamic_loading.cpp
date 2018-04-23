@@ -46,6 +46,132 @@ static char * dirname(char * path) {
 }
 #endif
 
+#ifdef __ANDROID__
+JNIEnv* FMODBridge::attachJNI()
+{
+    JNIEnv* env;
+    JavaVM* vm = FMODBridge_dmGraphics_GetNativeAndroidJavaVM();
+    vm->AttachCurrentThread(&env, NULL);
+    return env;
+}
+
+bool FMODBridge::detachJNI(JNIEnv* env)
+{
+    bool exception = (bool) env->ExceptionCheck();
+    env->ExceptionClear();
+    JavaVM* vm = FMODBridge_dmGraphics_GetNativeAndroidJavaVM();
+    vm->DetachCurrentThread();
+    return !exception;
+}
+
+jclass FMODBridge::jniGetClass(JNIEnv* env, const char* classname) {
+    jclass activity_class = env->FindClass("android/app/NativeActivity");
+    jmethodID get_class_loader = env->GetMethodID(activity_class,"getClassLoader", "()Ljava/lang/ClassLoader;");
+    jobject cls = env->CallObjectMethod(FMODBridge_dmGraphics_GetNativeAndroidActivity(), get_class_loader);
+    jclass class_loader = env->FindClass("java/lang/ClassLoader");
+    jmethodID find_class = env->GetMethodID(class_loader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+
+    jstring str_class_name = env->NewStringUTF(classname);
+    jclass outcls = (jclass)env->CallObjectMethod(cls, find_class, str_class_name);
+    env->DeleteLocalRef(str_class_name);
+    return outcls;
+}
+
+static void jniLogException(JNIEnv* env) {
+    jthrowable e = env->ExceptionOccurred();
+    env->ExceptionClear();
+
+    jclass clazz = env->GetObjectClass(e);
+    jmethodID getMessage = env->GetMethodID(clazz, "getMessage", "()Ljava/lang/String;");
+    jstring message = (jstring)env->CallObjectMethod(e, getMessage);
+    const char *mstr = env->GetStringUTFChars(message, NULL);
+    LOGE("%s", mstr);
+    env->ReleaseStringUTFChars(message, mstr);
+    env->DeleteLocalRef(message);
+    env->DeleteLocalRef(clazz);
+    env->DeleteLocalRef(e);
+}
+
+bool FMODBridge::linkLibraries() {
+    FMODBridge::AttachScope jniScope;
+    JNIEnv* env = jniScope.env;
+
+    // Load the FMOD Java Lib
+
+    jclass helperClass = jniGetClass(env, "me.petcu.fmodbridge.BridgeHelper");
+    jmethodID helperLoadMethod = env->GetStaticMethodID(helperClass, "loadFMOD", "()V");
+    env->CallStaticVoidMethod(helperClass, helperLoadMethod);
+
+    if (env->ExceptionCheck()) {
+        jniLogException(env);
+        return false;
+    }
+
+    // Initialize the FMOD Java lib
+
+    jclass fmodClass = jniGetClass(env, "org.fmod.FMOD");
+    jmethodID initMethod = env->GetStaticMethodID(fmodClass, "init", "(Landroid/content/Context;)V");
+    if (env->ExceptionCheck()) {
+        jniLogException(env);
+        return false;
+    }
+    env->CallStaticVoidMethod(fmodClass, initMethod, FMODBridge_dmGraphics_GetNativeAndroidActivity());
+
+    if (env->ExceptionCheck()) {
+        jniLogException(env);
+        return false;
+    }
+
+    // Get paths to libfmod.so and libfmodstudio.so
+
+    jclass systemClass = jniGetClass(env, "java.lang.System");
+    jmethodID mapLibMethod = env->GetStaticMethodID(systemClass, "mapLibraryName", "(Ljava/lang/String;)Ljava/lang/String;");
+
+    jstring fmodString = env->NewStringUTF("fmod");
+    jstring fmodLibPath = (jstring)env->CallStaticObjectMethod(systemClass, mapLibMethod, fmodString);
+    env->DeleteLocalRef(fmodString);
+    const char *fmodLibPathStr = env->GetStringUTFChars(fmodLibPath, NULL);
+
+    jstring fmodStudioString = env->NewStringUTF("fmodstudio");
+    jstring fmodStudioLibPath = (jstring)env->CallStaticObjectMethod(systemClass, mapLibMethod, fmodStudioString);
+    env->DeleteLocalRef(fmodStudioString);
+    const char *fmodStudioLibPathStr = env->GetStringUTFChars(fmodStudioLibPath, NULL);
+
+    // Get dlopen handles to libfmod.so and libfmodstudio.so
+
+    dlHandleLL = dlopen(fmodLibPathStr, RTLD_NOW | RTLD_GLOBAL);
+    if (!dlHandleLL) { LOGW("%s", dlerror()); }
+
+    dlHandleST = dlopen(fmodStudioLibPathStr, RTLD_NOW | RTLD_GLOBAL);
+    if (!dlHandleST) { LOGW("%s", dlerror()); }
+
+    env->ReleaseStringUTFChars(fmodLibPath, fmodLibPathStr);
+    env->DeleteLocalRef(fmodLibPath);
+    env->ReleaseStringUTFChars(fmodStudioLibPath, fmodStudioLibPathStr);
+    env->DeleteLocalRef(fmodStudioLibPath);
+
+    bool result = dlHandleLL && dlHandleST;
+    if (!result) {
+        cleanupLibraries();
+    }
+
+    return result;
+}
+
+void FMODBridge::cleanupLibraries() {
+    FMODBridge::AttachScope jniScope;
+    JNIEnv* env = jniScope.env;
+
+    jclass fmodClass = jniGetClass(env, "org.fmod.FMOD");
+    jmethodID closeMethod = env->GetStaticMethodID(fmodClass, "close", "(V)V");
+    env->CallStaticVoidMethod(fmodClass, closeMethod);
+
+    if (env->ExceptionCheck()) {
+        jniLogException(env);
+    }
+}
+
+#else
 bool FMODBridge::linkLibraries() {
     if (FMODBridge::dlHandleLL && FMODBridge::dlHandleST) {
         return true;
@@ -235,4 +361,5 @@ bool FMODBridge::linkLibraries() {
 
 void FMODBridge::cleanupLibraries() {
 }
+#endif
 #endif

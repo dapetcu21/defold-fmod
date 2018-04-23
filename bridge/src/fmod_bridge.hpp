@@ -18,7 +18,7 @@ extern "C" {
     #include <Windows.h>
 #endif
 
-#if !defined(FMOD_FORCE_STATIC_LINK) && ((defined(__APPLE__) && !TARGET_OS_IPHONE) || defined(__linux__) || defined(_WIN32))
+#if !defined(FMOD_FORCE_STATIC_LINK) && ((defined(__APPLE__) && !TARGET_OS_IPHONE) || (defined(__linux__) && !defined(__ANDROID__)) || defined(__ANDROID__) || defined(_WIN32))
     #define FMOD_BRIDGE_LOAD_DYNAMICALLY
     #include <stdlib.h>
     #include <stdio.h>
@@ -30,7 +30,13 @@ extern "C" {
     #endif
 #endif
 
-#ifdef _MSC_VER
+#ifdef __ANDROID__
+#include <android/log.h>
+#include <jni.h>
+#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "fmod", __VA_ARGS__))
+#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "fmod", __VA_ARGS__))
+#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "fmod", __VA_ARGS__))
+#elif defined(_MSC_VER)
 #define LOGI(fmt, ...) ((void)printf("INFO:fmod: " fmt "\n", __VA_ARGS__))
 #define LOGE(fmt, ...) ((void)printf("ERROR:fmod: " fmt "\n", __VA_ARGS__))
 #define LOGW(fmt, ...) ((void)printf("WARNING:fmod: " fmt "\n", __VA_ARGS__))
@@ -64,6 +70,10 @@ extern "C" {
     FMODBridge_HBuffer FMODBridge_dmScript_CheckBuffer(lua_State* L, int);
     const char* FMODBridge_dmConfigFile_GetString(const char*, const char*);
     int32_t FMODBridge_dmConfigFile_GetInt(const char*, int32_t);
+#ifdef __ANDROID__
+    JavaVM* FMODBridge_dmGraphics_GetNativeAndroidJavaVM();
+    jobject FMODBridge_dmGraphics_GetNativeAndroidActivity();
+#endif
 
     void FMODBridge_init(lua_State* L);
     void FMODBridge_update();
@@ -91,9 +101,21 @@ namespace FMODBridge {
 
     void registerClasses(lua_State *L);
     void registerEnums(lua_State *L);
+
+    #ifdef __ANDROID__
+    JNIEnv* attachJNI();
+    bool detachJNI(JNIEnv* env);
+    jclass jniGetClass(JNIEnv* env, const char* classname);
+    struct AttachScope {
+        JNIEnv* env;
+        AttachScope() : env(attachJNI()) {}
+        ~AttachScope() { detachJNI(env); }
+    };
+    #endif
 }
 
 #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
+
 #ifdef _WIN32
 #define getSymbol GetProcAddress
 #define getSymbolPrintError(fname) LOGE("GetProcAddress(\"%s\"): %lu", STRINGIFY(fname), GetLastError())
@@ -101,7 +123,8 @@ namespace FMODBridge {
 #define getSymbol dlsym
 #define getSymbolPrintError(fname) LOGE("dlsym(\"%s\"): %s", STRINGIFY(fname), dlerror())
 #endif
-#define ensure(lib, fname, retType, ...) \
+
+#define ensure_(lib, fname, retType, ...) \
     static retType (F_CALL *fname)(__VA_ARGS__) = NULL; \
     if (!fname) { \
         fname = (retType (F_CALL *)(__VA_ARGS__))getSymbol(RESOLVE(CONCAT(FMODBridge::dlHandle, lib)), STRINGIFY(fname)); \
@@ -110,6 +133,15 @@ namespace FMODBridge {
             abort(); \
         } \
     }
+
+#ifdef __ANDROID__
+#define ensure(lib, fname, retType, ...) \
+    FMODBridge::AttachScope CONCAT(fname, _AttachScope); \
+    ensure_(lib, fname, retType, __VA_ARGS__)
+#else
+#define ensure(lib, fname, retType, ...) ensure_(lib, fname, retType, __VA_ARGS__)
+#endif
+
 #else
 #define ensure(lib, fname, retType, ...)
 #endif
