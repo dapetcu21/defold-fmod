@@ -3,6 +3,10 @@
 #include <LuaBridge/LuaBridge.h>
 #include <string.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 using namespace FMODBridge;
 using namespace luabridge;
 
@@ -39,6 +43,10 @@ static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
 } while(0)
 
 extern "C" void FMODBridge_init(lua_State *L) {
+    #ifdef __EMSCRIPTEN__
+    EM_ASM(Module.cwrap = Module.cwrap || cwrap);
+    #endif
+
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
     isLinked = linkLibraries();
     if (!isLinked) {
@@ -89,6 +97,16 @@ extern "C" void FMODBridge_init(lua_State *L) {
 
     isPaused = false;
 
+    #ifdef __EMSCRIPTEN__
+    EM_ASM({
+        Module._FMODBridge_onClick = function () {
+            ccall('FMODBridge_unmuteAfterUserInteraction', null, [], []);
+            Module.canvas.removeEventListener('click', Module._FMODBridge_onClick);
+        };
+        Module.canvas.addEventListener('click', Module._FMODBridge_onClick, false);
+    });
+    #endif
+
     #if TARGET_OS_IPHONE
     FMODBridge::initIOSInterruptionHandler();
     #endif
@@ -121,6 +139,12 @@ extern "C" void FMODBridge_finalize() {
         FMODBridge::system = NULL;
     }
 
+    #ifdef __EMSCRIPTEN__
+    EM_ASM({
+        Module.canvas.removeEventListener('click', Module._FMODBridge_onClick);
+    });
+    #endif
+
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
     if (isLinked) { cleanupLibraries(); }
     #endif
@@ -143,6 +167,19 @@ void FMODBridge::suspendMixer() {
         FMODBridge::isPaused = true;
     }
 }
+
+#ifdef __EMSCRIPTEN__
+__attribute__((used))
+extern "C" void FMODBridge_unmuteAfterUserInteraction() {
+    if (FMODBridge::system && !FMODBridge::isPaused) {
+        ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
+        ensure(LL, FMOD_System_MixerSuspend, FMOD_RESULT, FMOD_SYSTEM*);
+        ensure(LL, FMOD_System_MixerResume, FMOD_RESULT, FMOD_SYSTEM*);
+        check(FMOD_System_MixerSuspend(FMODBridge::lowLevelSystem));
+        check(FMOD_System_MixerResume(FMODBridge::lowLevelSystem));
+    }
+}
+#endif
 
 extern "C" void FMODBridge_activateApp() {
     #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
