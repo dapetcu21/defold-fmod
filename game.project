@@ -13,6 +13,7 @@ use_accelerometer = 0
 [display]
 width = 1280
 height = 720
+high_dpi = 1
 
 [physics]
 scale = 0.02
