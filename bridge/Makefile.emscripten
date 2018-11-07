@@ -1,4 +1,4 @@
-LIBPATH := ../fmod/lib/js-web/libfmodbridge.a
+LIBPATH := ../fmod/lib/web/libfmodbridge.a
 
 SOURCES = \
 	src/fmod_init.cpp \
