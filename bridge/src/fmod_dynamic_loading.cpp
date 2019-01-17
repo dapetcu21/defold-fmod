@@ -172,6 +172,13 @@ void FMODBridge::cleanupLibraries() {
 }
 
 #else
+
+static bool endsIn(const char * haystack, const char * needle) {
+    size_t needleLen = strlen(needle);
+    size_t haystackLen = strlen(haystack);
+    return (haystackLen >= needleLen && 0 == strcmp(needle, haystack + haystackLen - needleLen));
+}
+
 bool FMODBridge::linkLibraries() {
     if (FMODBridge::dlHandleLL && FMODBridge::dlHandleST) {
         return true;
@@ -245,6 +252,7 @@ bool FMODBridge::linkLibraries() {
 
         #if defined(__APPLE__)
         #define FMB_PLATFORM "osx"
+        #define FMB_PLATFORM_ALT "darwin"
         #define FMB_EXT ""
         #elif defined(__linux__)
         #define FMB_PLATFORM "linux"
@@ -263,9 +271,12 @@ bool FMODBridge::linkLibraries() {
         #if defined(FMB_PLATFORM) && defined(FMB_ARCH)
         #define FMB_EDITOR_SUFFIX SEP "build" SEP FMB_ARCH "-" FMB_PLATFORM SEP "dmengine" FMB_EXT
 
-        static const size_t suffixLen = strlen(FMB_EDITOR_SUFFIX);
-        size_t exePathLen = strlen(exePath);
-        if (exePathLen >= suffixLen && 0 == strcmp(FMB_EDITOR_SUFFIX, exePath + exePathLen - suffixLen)) {
+        #ifdef FMB_PLATFORM_ALT
+        #define FMB_EDITOR_SUFFIX_ALT SEP "build" SEP FMB_ARCH "-" FMB_PLATFORM_ALT SEP "dmengine" FMB_EXT
+        if (endsIn(exePath, FMB_EDITOR_SUFFIX) || endsIn(exePath, FMB_EDITOR_SUFFIX_ALT)) {
+        #else
+        if (endsIn(exePath, FMB_EDITOR_SUFFIX)) {
+        #endif
             LOGI("Running in the editor. Will attempt to load libraries from project");
 
             const char* projPath = dirname(dirname(dirname(exePath)));
