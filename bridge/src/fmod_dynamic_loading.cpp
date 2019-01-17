@@ -244,15 +244,12 @@ bool FMODBridge::linkLibraries() {
         // Detect if the game is running in the editor
 
         #if defined(__APPLE__)
-        #define FMB_PLATFORM_BUILD "darwin"
         #define FMB_PLATFORM "osx"
         #define FMB_EXT ""
         #elif defined(__linux__)
-        #define FMB_PLATFORM_BUILD "linux"
         #define FMB_PLATFORM "linux"
         #define FMB_EXT ""
         #elif defined(_WIN32)
-        #define FMB_PLATFORM_BUILD "win32"
         #define FMB_PLATFORM "win32"
         #define FMB_EXT ".exe"
         #endif
@@ -264,7 +261,7 @@ bool FMODBridge::linkLibraries() {
         #endif
 
         #if defined(FMB_PLATFORM) && defined(FMB_ARCH)
-        #define FMB_EDITOR_SUFFIX SEP "build" SEP FMB_ARCH "-" FMB_PLATFORM_BUILD SEP "dmengine" FMB_EXT
+        #define FMB_EDITOR_SUFFIX SEP "build" SEP FMB_ARCH "-" FMB_PLATFORM SEP "dmengine" FMB_EXT
 
         static const size_t suffixLen = strlen(FMB_EDITOR_SUFFIX);
         size_t exePathLen = strlen(exePath);
