@@ -1,7 +1,9 @@
 #define LIB_NAME "DefoldFMOD"
 #define MODULE_NAME "fmod"
 
+#ifndef DLIB_LOG_DOMAIN
 #define DLIB_LOG_DOMAIN "fmod"
+#endif
 #include <dmsdk/sdk.h>
 
 #if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS) || defined(DM_PLATFORM_LINUX) || defined(DM_PLATFORM_IOS) || defined(DM_PLATFORM_HTML5) || defined(DM_PLATFORM_ANDROID)

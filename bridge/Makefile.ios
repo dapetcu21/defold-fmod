@@ -14,7 +14,7 @@ HEADERS = \
 
 CXX := xcrun --sdk iphoneos c++ -isysroot `xcrun --sdk iphoneos --show-sdk-path` -arch arm64 -arch armv7s -arch armv7
 
-CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include -miphoneos-version-min=6.0
+CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include -miphoneos-version-min=8.0
 
 all: $(LIBPATH)
 

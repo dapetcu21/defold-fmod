@@ -3,10 +3,12 @@ platforms:
   arm64-ios:
     context:
       frameworks: ["AVFoundation"]
+      libs:       ["c++"]
 
   armv7-ios:
     context:
       frameworks: ["AVFoundation"]
+      libs:       ["c++"]
 
   x86_64-osx:
     context:
