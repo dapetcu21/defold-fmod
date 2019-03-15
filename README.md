@@ -85,9 +85,14 @@ used by FMOD Studio.
 live_update = 1
 ```
 
-## Contributing
+## Lua Headers (EmmyLua)
+[EmmyLua](https://github.com/EmmyLua) is lua plugin for [IntelliJ IDEA](https://www.defold.com/community/projects/128566/) and VSCode.
 
-See [CONTRIBUTE.md](./CONTRIBUTE.md) for details about how to contribute to this project.
+Add fmod_headers.lua to your project and it will autocomplete fmod.
+
+## Contributing 
+
+See [CONTRIBUTE.md](./CONTRIBUTE.md) for details about how to contribute to this project.]
 
 [example]: ./main/main.script
 [FMOD]: https://fmod.com
