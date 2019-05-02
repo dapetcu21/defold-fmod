@@ -15,8 +15,8 @@ least the words "FMOD" (OR "FMOD STUDIO" IF APPLICABLE) AND "FIRELIGHT TECHNOLOG
 
 ## Installation
 
-First, add `https://github.com/dapetcu21/defold-fmod/archive/master.zip` to
-your dependencies in `game.project`.
+Go to the [Releases page](https://github.com/dapetcu21/defold-fmod/releases),
+copy a dependency URL, then add it to your dependencies in `game.project`.
 
 ### Set the speaker mode
 
@@ -53,15 +53,21 @@ method names are converted from `camelCase` to `snake_case`. Methods that
 returned a value through a last pointer argument now actually return the value and
 throw with an error string when their result is not `FMOD_OK`.
 
-Enums are exposed on the `fmod` table without the leading `FMOD_`. (eg.: `FMOD_STUDIO_PLAYBACK_PLAYING` is exposed as `fmod.STUDIO_PLAYBACK_PLAYING`)
+Enums are exposed on the `fmod` table without the leading `FMOD_`. 
+(eg.: `FMOD_STUDIO_PLAYBACK_PLAYING` is exposed as `fmod.STUDIO_PLAYBACK_PLAYING`)
 
-A fully initialised instance of `FMOD::Studio::System` is exposed to Lua as `fmod.studio.system` and the corresponding instance of `FMOD::System` (the low level system), is exposed as `fmod.system`.
+A fully initialised instance of `FMOD::Studio::System` is exposed to Lua as 
+`fmod.studio.system` and the corresponding instance of 
+`FMOD::System` (the low level system), is exposed as `fmod.system`.
 
 See an [example script][example] to get an idea.
 
 Refer to the [FMOD API Documentation] for details about the available APIs.
+**These bindings use the 1.10 version of FMOD, not the newer 2.0 one, so make
+sure to look at the correct documentation.**
 
-Not all APIs are exposed yet. For a full list of exposed functions, see [bridge/src/fmod_classes.cpp](bridge/src/fmod_classes.cpp).
+Not all APIs are exposed yet. For a full list of exposed functions, see 
+[bridge/src/fmod_classes.cpp](bridge/src/fmod_classes.cpp).
 
 Here's some sample code:
 
@@ -91,6 +97,6 @@ See [CONTRIBUTE.md](./CONTRIBUTE.md) for details about how to contribute to this
 
 [example]: ./main/main.script
 [FMOD]: https://fmod.com
-[FMOD API Documentation]: https://www.fmod.com/resources/documentation-api
+[FMOD API Documentation]: https://www.fmod.com/resources/documentation-api?version=1.10&page=content/generated/studio_api.html
 [bundle_resources]: https://www.defold.com/manuals/project-settings/#_project
 [set_software_format]: https://www.fmod.org/docs/content/generated/FMOD_System_SetSoftwareFormat.html
