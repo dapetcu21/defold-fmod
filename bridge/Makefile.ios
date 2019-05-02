@@ -1,4 +1,5 @@
 LIBPATH := ../fmod/lib/ios/libfmodbridge.a
+LIBPATH_SIM := ../fmod/lib/x86_64-ios/libfmodbridge_simulator.a
 
 SOURCES = \
 	src/fmod_init.cpp \
@@ -13,24 +14,37 @@ HEADERS = \
 	src/fmod_helpers.hpp
 
 CXX := xcrun --sdk iphoneos c++ -isysroot `xcrun --sdk iphoneos --show-sdk-path` -arch arm64 -arch armv7s -arch armv7
+CXX_SIM := xcrun --sdk iphoneos c++ -isysroot `xcrun --sdk iphonesimulator --show-sdk-path` -arch x86_64
 
 CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include -miphoneos-version-min=8.0
 
-all: $(LIBPATH)
+all: $(LIBPATH) $(LIBPATH_SIM)
 
 OBJECTS = $(patsubst src/%.cpp,build/ios-cpp-%.o,$(SOURCES))
-OBJCPP_OBJECTS = $(patsubst src/%.mm,build/ios-mm-%.o,$(OBJCPP_SOURCES))
+OBJECTS_OBJCPP = $(patsubst src/%.mm,build/ios-mm-%.o,$(OBJCPP_SOURCES))
+
+OBJECTS_SIM = $(patsubst src/%.cpp,build/iossim-cpp-%.o,$(SOURCES))
+OBJECTS_OBJCPP_SIM = $(patsubst src/%.mm,build/iossim-mm-%.o,$(OBJCPP_SOURCES))
 
 build/ios-cpp-%.o: src/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+build/iossim-cpp-%.o: src/%.cpp $(HEADERS)
+	$(CXX_SIM) $(CXXFLAGS) -c $< -o $@
+
 build/ios-mm-%.o: src/%.mm $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(LIBPATH): $(OBJECTS) $(OBJCPP_OBJECTS)
+build/iossim-mm-%.o: src/%.mm $(HEADERS)
+	$(CXX_SIM) $(CXXFLAGS) -c $< -o $@
+
+$(LIBPATH): $(OBJECTS) $(OBJECTS_OBJCPP)
 	xcrun --sdk iphoneos libtool -static $^ -o $@
 
+$(LIBPATH_SIM): $(OBJECTS_SIM) $(OBJECTS_OBJCPP_SIM)
+	xcrun --sdk iphonesimulator libtool -static $^ -o $@
+
 clean:
-	rm -f $(LIBPATH) build/ios-*.o
+	rm -f $(LIBPATH) build/ios-*.o build/iossim-*.o
 
 .PHONY: all clean
