@@ -15,7 +15,6 @@ Release
 *.sln.docstates
 *.suo
 
-/bridge/include/fmod*
 /resources/x86_64-osx/Contents/MacOS/libfmod*.dylib
 /resources/x86_64-linux/libfmod*.so*
 /resources/x86-linux/libfmod*.so*
