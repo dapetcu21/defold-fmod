@@ -57,7 +57,7 @@ extern "C" void FMODBridge_init(lua_State *L) {
     #endif
 
     ensure(ST, FMOD_Studio_System_Create, FMOD_RESULT, FMOD_STUDIO_SYSTEM**, unsigned int);
-    ensure(ST, FMOD_Studio_System_GetLowLevelSystem, FMOD_RESULT, FMOD_STUDIO_SYSTEM*, FMOD_SYSTEM**);
+    ensure(ST, FMOD_Studio_System_GetCoreSystem, FMOD_RESULT, FMOD_STUDIO_SYSTEM*, FMOD_SYSTEM**);
     ensure(LL, FMOD_System_SetSoftwareFormat, FMOD_RESULT, FMOD_SYSTEM*, int, FMOD_SPEAKERMODE, int);
     ensure(LL, FMOD_System_SetDSPBufferSize, FMOD_RESULT, FMOD_SYSTEM*, unsigned int, int);
     ensure(ST, FMOD_Studio_System_Initialize, FMOD_RESULT, FMOD_STUDIO_SYSTEM*, int, FMOD_STUDIO_INITFLAGS, FMOD_INITFLAGS, void*);
@@ -71,7 +71,7 @@ extern "C" void FMODBridge_init(lua_State *L) {
         return;
     }
 
-    check(FMOD_Studio_System_GetLowLevelSystem(FMODBridge_system, &FMODBridge_lowLevelSystem));
+    check(FMOD_Studio_System_GetCoreSystem(FMODBridge_system, &FMODBridge_lowLevelSystem));
 
     int defaultSampleRate = 0;
     #ifdef __EMSCRIPTEN__
