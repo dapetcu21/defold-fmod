@@ -58,7 +58,10 @@ def generate_bindings(ast):
     )
     template = env.get_template('fmod_generated_template.cpp')
 
-    output = template.render(enums=enums)
+    output = template.render(
+        enums = enums,
+        structs = list(structs.items()),
+    )
 
     with open('src/fmod_generated.cpp', 'w') as f:
         f.write(output)
