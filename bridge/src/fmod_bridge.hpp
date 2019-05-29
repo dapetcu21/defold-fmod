@@ -64,6 +64,7 @@ extern "C" {
 #define SELECT_10TH(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, ...) a10
 
 extern "C" {
+    // Extension API
     typedef unsigned int FMODBridge_HBuffer;
     int FMODBridge_dmBuffer_GetBytes(FMODBridge_HBuffer, void**, uint32_t*);
     void FMODBridge_dmScript_PushBuffer(lua_State* L, FMODBridge_HBuffer);
@@ -75,44 +76,41 @@ extern "C" {
     jobject FMODBridge_dmGraphics_GetNativeAndroidActivity();
 #endif
 
+    // Lifecycle functions
     void FMODBridge_init(lua_State* L);
     void FMODBridge_update();
     void FMODBridge_finalize();
     void FMODBridge_activateApp();
     void FMODBridge_deactivateApp();
+
+    // Internal functions and members
+    extern FMOD_STUDIO_SYSTEM* FMODBridge_system;
+    extern FMOD_SYSTEM* FMODBridge_lowLevelSystem;
+    extern bool FMODBridge_isPaused;
+
+    #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
+    extern dlModuleT FMODBridge_dlHandleLL;
+    extern dlModuleT FMODBridge_dlHandleST;
+    extern bool FMODBridge_isLinked;
+    bool FMODBridge_linkLibraries();
+    void FMODBridge_cleanupLibraries();
+    #endif
+
+    void FMODBridge_registerClasses(lua_State *L);
+    void FMODBridge_registerEnums(lua_State *L);
+
+    void FMODBridge_suspendMixer();
+    void FMODBridge_resumeMixer();
+
+    #if TARGET_OS_IPHONE
+    void FMODBridge_initIOSInterruptionHandler();
+    #endif
 }
 
 namespace FMODBridge {
-    extern FMOD_STUDIO_SYSTEM* system;
-    extern FMOD_SYSTEM* lowLevelSystem;
-    extern bool isPaused;
-
-    #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
-    extern dlModuleT dlHandleLL;
-    extern dlModuleT dlHandleST;
-    extern bool isLinked;
-    bool linkLibraries();
-    void cleanupLibraries();
-    #endif
-
-    struct LuaHBuffer {
-        FMODBridge_HBuffer handle;
-    };
-
-    void registerClasses(lua_State *L);
-    void registerEnums(lua_State *L);
-
-    void suspendMixer();
-    void resumeMixer();
-
-    #if TARGET_OS_IPHONE
-    void initIOSInterruptionHandler();
-    #endif
-
     #ifdef __ANDROID__
     JNIEnv* attachJNI();
     bool detachJNI(JNIEnv* env);
-    jclass jniGetClass(JNIEnv* env, const char* classname);
     struct AttachScope {
         JNIEnv* env;
         AttachScope() : env(attachJNI()) {}
@@ -134,7 +132,7 @@ namespace FMODBridge {
 #define ensure_(lib, fname, retType, ...) \
     static retType (F_CALL *fname)(__VA_ARGS__) = NULL; \
     if (!fname) { \
-        fname = (retType (F_CALL *)(__VA_ARGS__))getSymbol(RESOLVE(CONCAT(FMODBridge::dlHandle, lib)), STRINGIFY(fname)); \
+        fname = (retType (F_CALL *)(__VA_ARGS__))getSymbol(RESOLVE(CONCAT(FMODBridge_dlHandle, lib)), STRINGIFY(fname)); \
         if (!fname) { \
             getSymbolPrintError(fname); \
             abort(); \

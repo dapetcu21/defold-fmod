@@ -1,7 +1,7 @@
 #include "fmod_bridge.hpp"
 #include <LuaBridge/LuaBridge.h>
 
-void FMODBridge::registerEnums(lua_State *L) {
+extern "C" void FMODBridge_registerEnums(lua_State *L) {
     luabridge::Namespace ns = luabridge::getGlobalNamespace(L).beginNamespace("fmod");
     assert(lua_istable(L, -1));
 

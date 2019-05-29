@@ -34,7 +34,7 @@ namespace FMODBridge {
         ~RefCountedProxy() {
             int count = refCounts[instance];
             if (count <= 1) {
-                if (FMODBridge::system) { release(instance); }
+                if (FMODBridge_system) { release(instance); }
                 refCounts.erase(instance);
             } else {
                 refCounts[instance] = count - 1;
@@ -222,15 +222,19 @@ struct Stack <EnumT> { \
   } \
 };
 
+struct LuaHBuffer {
+    FMODBridge_HBuffer handle;
+};
+
 namespace luabridge {
     template <>
-    struct Stack <FMODBridge::LuaHBuffer*> {
-      static void push(lua_State* L, FMODBridge::LuaHBuffer* luaBuffer) {
+    struct Stack <LuaHBuffer*> {
+      static void push(lua_State* L, LuaHBuffer* luaBuffer) {
           FMODBridge_dmScript_PushBuffer(L, luaBuffer->handle);
       }
 
-      static FMODBridge::LuaHBuffer* get(lua_State* L, int index) {
-          static FMODBridge::LuaHBuffer wrapper;
+      static LuaHBuffer* get(lua_State* L, int index) {
+          static LuaHBuffer wrapper;
           wrapper.handle = FMODBridge_dmScript_CheckBuffer(L, index);
           return &wrapper;
       }
