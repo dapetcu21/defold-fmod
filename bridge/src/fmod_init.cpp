@@ -7,16 +7,17 @@
 #include <emscripten.h>
 #endif
 
-using namespace FMODBridge;
 using namespace luabridge;
 
-FMOD_STUDIO_SYSTEM* FMODBridge::system = NULL;
-FMOD_SYSTEM* FMODBridge::lowLevelSystem = NULL;
-bool FMODBridge::isPaused = false;
+extern "C" {
+FMOD_STUDIO_SYSTEM* FMODBridge_system = NULL;
+FMOD_SYSTEM* FMODBridge_lowLevelSystem = NULL;
+bool FMODBridge_isPaused = false;
 
 #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
-bool FMODBridge::isLinked = false;
+bool FMODBridge_isLinked = false;
 #endif
+}
 
 static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
     if (0 == strcmp(str, "default")) { return FMOD_SPEAKERMODE_DEFAULT; }
@@ -36,8 +37,8 @@ static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
     FMOD_RESULT res = fcall; \
     if (res != FMOD_OK) { \
         LOGE("%s", FMOD_ErrorString(res)); \
-        FMOD_Studio_System_Release(FMODBridge::system); \
-        FMODBridge::system = NULL; \
+        FMOD_Studio_System_Release(FMODBridge_system); \
+        FMODBridge_system = NULL; \
         return; \
     } \
 } while(0)
@@ -48,8 +49,8 @@ extern "C" void FMODBridge_init(lua_State *L) {
     #endif
 
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
-    isLinked = linkLibraries();
-    if (!isLinked) {
+    FMODBridge_isLinked = FMODBridge_linkLibraries();
+    if (!FMODBridge_isLinked) {
         LOGW("FMOD libraries could not be loaded. FMOD will be disabled for this session");
         return;
     }
@@ -63,19 +64,19 @@ extern "C" void FMODBridge_init(lua_State *L) {
     ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
 
     FMOD_RESULT res;
-    res = FMOD_Studio_System_Create(&FMODBridge::system, FMOD_VERSION);
+    res = FMOD_Studio_System_Create(&FMODBridge_system, FMOD_VERSION);
     if (res != FMOD_OK) {
         LOGE("%s", FMOD_ErrorString(res));
-        FMODBridge::system = NULL;
+        FMODBridge_system = NULL;
         return;
     }
 
-    check(FMOD_Studio_System_GetLowLevelSystem(FMODBridge::system, &lowLevelSystem));
+    check(FMOD_Studio_System_GetLowLevelSystem(FMODBridge_system, &FMODBridge_lowLevelSystem));
 
     int defaultSampleRate = 0;
     #ifdef __EMSCRIPTEN__
-    check(FMOD_System_GetDriverInfo(lowLevelSystem, 0, NULL, 0, NULL, &defaultSampleRate, NULL, NULL));
-    check(FMOD_System_SetDSPBufferSize(lowLevelSystem, 2048, 2));
+    check(FMOD_System_GetDriverInfo(FMODBridge_lowLevelSystem, 0, NULL, 0, NULL, &defaultSampleRate, NULL, NULL));
+    check(FMOD_System_SetDSPBufferSize(FMODBridge_lowLevelSystem, 2048, 2));
     #endif
 
     int sampleRate = FMODBridge_dmConfigFile_GetInt("fmod.sample_rate", defaultSampleRate);
@@ -84,7 +85,7 @@ extern "C" void FMODBridge_init(lua_State *L) {
     FMOD_SPEAKERMODE speakerMode = speakerModeFromString(speakerModeStr);
 
     if (sampleRate || numRawSpeakers || speakerMode != FMOD_SPEAKERMODE_DEFAULT) {
-        check(FMOD_System_SetSoftwareFormat(lowLevelSystem, sampleRate, speakerMode, numRawSpeakers));
+        check(FMOD_System_SetSoftwareFormat(FMODBridge_lowLevelSystem, sampleRate, speakerMode, numRawSpeakers));
     }
 
     FMOD_STUDIO_INITFLAGS studioInitFlags = FMOD_STUDIO_INIT_NORMAL;
@@ -93,9 +94,9 @@ extern "C" void FMODBridge_init(lua_State *L) {
     }
 
     void* extraDriverData = NULL;
-    check(FMOD_Studio_System_Initialize(FMODBridge::system, 1024, studioInitFlags, FMOD_INIT_NORMAL, extraDriverData));
+    check(FMOD_Studio_System_Initialize(FMODBridge_system, 1024, studioInitFlags, FMOD_INIT_NORMAL, extraDriverData));
 
-    isPaused = false;
+    FMODBridge_isPaused = false;
 
     #ifdef __EMSCRIPTEN__
     EM_ASM({
@@ -108,35 +109,35 @@ extern "C" void FMODBridge_init(lua_State *L) {
     #endif
 
     #if TARGET_OS_IPHONE
-    FMODBridge::initIOSInterruptionHandler();
+    FMODBridge_initIOSInterruptionHandler();
     #endif
 
-    registerEnums(L);
-    registerClasses(L);
+    FMODBridge_registerEnums(L);
+    FMODBridge_registerClasses(L);
 }
 
 extern "C" void FMODBridge_update() {
-    if (!FMODBridge::system || FMODBridge::isPaused) { return; }
+    if (!FMODBridge_system || FMODBridge_isPaused) { return; }
 
     ensure(ST, FMOD_Studio_System_Update, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
     ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
 
-    FMOD_RESULT res = FMOD_Studio_System_Update(FMODBridge::system);
+    FMOD_RESULT res = FMOD_Studio_System_Update(FMODBridge_system);
     if (res != FMOD_OK) {
         LOGE("%s", FMOD_ErrorString(res));
-        FMOD_Studio_System_Release(FMODBridge::system);
-        FMODBridge::system = NULL;
+        FMOD_Studio_System_Release(FMODBridge_system);
+        FMODBridge_system = NULL;
         return;
     }
 }
 
 extern "C" void FMODBridge_finalize() {
-    if (FMODBridge::system) {
+    if (FMODBridge_system) {
         ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
 
-        FMOD_RESULT res = FMOD_Studio_System_Release(FMODBridge::system);
+        FMOD_RESULT res = FMOD_Studio_System_Release(FMODBridge_system);
         if (res != FMOD_OK) { LOGE("%s", FMOD_ErrorString(res)); }
-        FMODBridge::system = NULL;
+        FMODBridge_system = NULL;
     }
 
     #ifdef __EMSCRIPTEN__
@@ -146,49 +147,49 @@ extern "C" void FMODBridge_finalize() {
     #endif
 
     #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
-    if (isLinked) { cleanupLibraries(); }
+    if (FMODBridge_isLinked) { FMODBridge_cleanupLibraries(); }
     #endif
 }
 
-void FMODBridge::resumeMixer() {
-    if (FMODBridge::system && FMODBridge::isPaused) {
+extern "C" void FMODBridge_resumeMixer() {
+    if (FMODBridge_system && FMODBridge_isPaused) {
         ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
         ensure(LL, FMOD_System_MixerResume, FMOD_RESULT, FMOD_SYSTEM*);
-        check(FMOD_System_MixerResume(FMODBridge::lowLevelSystem));
-        FMODBridge::isPaused = false;
+        check(FMOD_System_MixerResume(FMODBridge_lowLevelSystem));
+        FMODBridge_isPaused = false;
     }
 }
 
-void FMODBridge::suspendMixer() {
-    if (FMODBridge::system && !FMODBridge::isPaused) {
+extern "C" void FMODBridge_suspendMixer() {
+    if (FMODBridge_system && !FMODBridge_isPaused) {
         ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
         ensure(LL, FMOD_System_MixerSuspend, FMOD_RESULT, FMOD_SYSTEM*);
-        check(FMOD_System_MixerSuspend(FMODBridge::lowLevelSystem));
-        FMODBridge::isPaused = true;
+        check(FMOD_System_MixerSuspend(FMODBridge_lowLevelSystem));
+        FMODBridge_isPaused = true;
     }
 }
 
 #ifdef __EMSCRIPTEN__
 __attribute__((used))
 extern "C" void FMODBridge_unmuteAfterUserInteraction() {
-    if (FMODBridge::system && !FMODBridge::isPaused) {
+    if (FMODBridge_system && !FMODBridge_isPaused) {
         ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
         ensure(LL, FMOD_System_MixerSuspend, FMOD_RESULT, FMOD_SYSTEM*);
         ensure(LL, FMOD_System_MixerResume, FMOD_RESULT, FMOD_SYSTEM*);
-        check(FMOD_System_MixerSuspend(FMODBridge::lowLevelSystem));
-        check(FMOD_System_MixerResume(FMODBridge::lowLevelSystem));
+        check(FMOD_System_MixerSuspend(FMODBridge_lowLevelSystem));
+        check(FMOD_System_MixerResume(FMODBridge_lowLevelSystem));
     }
 }
 #endif
 
 extern "C" void FMODBridge_activateApp() {
     #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
-    FMODBridge::resumeMixer();
+    FMODBridge_resumeMixer();
     #endif
 }
 
 extern "C" void FMODBridge_deactivateApp() {
     #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
-    FMODBridge::suspendMixer();
+    FMODBridge_suspendMixer();
     #endif
 }

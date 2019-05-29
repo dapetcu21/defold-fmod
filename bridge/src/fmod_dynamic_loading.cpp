@@ -21,8 +21,10 @@
 #include <unistd.h>
 #endif
 
-dlModuleT FMODBridge::dlHandleLL = NULL;
-dlModuleT FMODBridge::dlHandleST = NULL;
+extern "C" {
+dlModuleT FMODBridge_dlHandleLL = NULL;
+dlModuleT FMODBridge_dlHandleST = NULL;
+}
 
 #if defined(_WIN32)
     #define SEP "\\"
@@ -64,7 +66,7 @@ bool FMODBridge::detachJNI(JNIEnv* env)
     return !exception;
 }
 
-jclass FMODBridge::jniGetClass(JNIEnv* env, const char* classname) {
+static jclass jniGetClass(JNIEnv* env, const char* classname) {
     jclass activity_class = env->FindClass("android/app/NativeActivity");
     jmethodID get_class_loader = env->GetMethodID(activity_class,"getClassLoader", "()Ljava/lang/ClassLoader;");
     jobject cls = env->CallObjectMethod(FMODBridge_dmGraphics_GetNativeAndroidActivity(), get_class_loader);
@@ -92,7 +94,7 @@ static void jniLogException(JNIEnv* env) {
     env->DeleteLocalRef(e);
 }
 
-bool FMODBridge::linkLibraries() {
+extern "C" bool FMODBridge_linkLibraries() {
     FMODBridge::AttachScope jniScope;
     JNIEnv* env = jniScope.env;
 
@@ -139,18 +141,18 @@ bool FMODBridge::linkLibraries() {
 
     // Get dlopen handles to libfmod.so and libfmodstudio.so
 
-    dlHandleLL = dlopen(fmodLibPathStr, RTLD_NOW | RTLD_GLOBAL);
-    if (!dlHandleLL) { LOGW("%s", dlerror()); }
+    FMODBridge_dlHandleLL = dlopen(fmodLibPathStr, RTLD_NOW | RTLD_GLOBAL);
+    if (!FMODBridge_dlHandleLL) { LOGW("%s", dlerror()); }
 
-    dlHandleST = dlopen(fmodStudioLibPathStr, RTLD_NOW | RTLD_GLOBAL);
-    if (!dlHandleST) { LOGW("%s", dlerror()); }
+    FMODBridge_dlHandleST = dlopen(fmodStudioLibPathStr, RTLD_NOW | RTLD_GLOBAL);
+    if (!FMODBridge_dlHandleST) { LOGW("%s", dlerror()); }
 
     env->ReleaseStringUTFChars(fmodLibPath, fmodLibPathStr);
     env->DeleteLocalRef(fmodLibPath);
     env->ReleaseStringUTFChars(fmodStudioLibPath, fmodStudioLibPathStr);
     env->DeleteLocalRef(fmodStudioLibPath);
 
-    bool result = dlHandleLL && dlHandleST;
+    bool result = FMODBridge_dlHandleLL && FMODBridge_dlHandleST;
     if (!result) {
         cleanupLibraries();
     }
@@ -158,7 +160,7 @@ bool FMODBridge::linkLibraries() {
     return result;
 }
 
-void FMODBridge::cleanupLibraries() {
+extern "C" void FMODBridge_cleanupLibraries() {
     FMODBridge::AttachScope jniScope;
     JNIEnv* env = jniScope.env;
 
@@ -179,17 +181,17 @@ static bool endsIn(const char * haystack, const char * needle) {
     return (haystackLen >= needleLen && 0 == strcmp(needle, haystack + haystackLen - needleLen));
 }
 
-bool FMODBridge::linkLibraries() {
-    if (FMODBridge::dlHandleLL && FMODBridge::dlHandleST) {
+extern "C" bool FMODBridge_linkLibraries() {
+    if (FMODBridge_dlHandleLL && FMODBridge_dlHandleST) {
         return true;
     }
 
     #ifdef _WIN32
-    if (FMODBridge::dlHandleST) { FreeLibrary(dlHandleST); }
-    if (FMODBridge::dlHandleLL) { FreeLibrary(dlHandleLL); }
+    if (FMODBridge_dlHandleST) { FreeLibrary(FMODBridge_dlHandleST); }
+    if (FMODBridge_dlHandleLL) { FreeLibrary(FMODBridge_dlHandleLL); }
     #else
-    if (FMODBridge::dlHandleST) { dlclose(dlHandleST); }
-    if (FMODBridge::dlHandleLL) { dlclose(dlHandleLL); }
+    if (FMODBridge_dlHandleST) { dlclose(FMODBridge_dlHandleST); }
+    if (FMODBridge_dlHandleLL) { dlclose(FMODBridge_dlHandleLL); }
     #endif
 
     char *exePath = NULL;
@@ -356,18 +358,18 @@ bool FMODBridge::linkLibraries() {
 
     strcpy(exePath, libPath);
     strncat(exePath, SEP LIBPREFIX "fmod" LIBPOSTFIX "." LIBEXT, maxPathLen);
-    libOpen(FMODBridge::dlHandleLL, exePath);
+    libOpen(FMODBridge_dlHandleLL, exePath);
 
     strcpy(exePath, libPath);
     strncat(exePath, SEP LIBPREFIX "fmodstudio" LIBPOSTFIX "." LIBEXT, maxPathLen);
-    libOpen(FMODBridge::dlHandleST, exePath);
+    libOpen(FMODBridge_dlHandleST, exePath);
 
     if (mustFreeLibPath) { delete[] libPath; }
     delete[] exePath;
-    return (FMODBridge::dlHandleLL && FMODBridge::dlHandleST);
+    return (FMODBridge_dlHandleLL && FMODBridge_dlHandleST);
 }
 
-void FMODBridge::cleanupLibraries() {
+extern "C" void FMODBridge_cleanupLibraries() {
 }
 #endif
 #endif

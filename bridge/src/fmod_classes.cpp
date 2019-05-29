@@ -346,7 +346,7 @@ namespace luabridge {
     };
 }
 
-void FMODBridge::registerClasses(lua_State *L) {
+extern "C" void FMODBridge_registerClasses(lua_State *L) {
     getGlobalNamespace(L)
         .beginNamespace("fmod")
             // Low-Level bindings
@@ -363,7 +363,7 @@ void FMODBridge::registerClasses(lua_State *L) {
             .endClass()
             .beginClass<System>("System")
             .endClass()
-            .addVariable("system", &FMODBridge::lowLevelSystem, false)
+            .addVariable("system", &FMODBridge_lowLevelSystem, false)
 
             // Studio bindings
             .beginNamespace("studio")
@@ -566,7 +566,7 @@ void FMODBridge::registerClasses(lua_State *L) {
                     .addFunction("stop_command_capture", &StudioSystem::StopCommandCapture)
                     .addFunction("unload_all", &StudioSystem::UnloadAll)
                 .endClass()
-                .addVariable("system", &FMODBridge::system, false)
+                .addVariable("system", &FMODBridge_system, false)
             .endNamespace()
         .endNamespace();
 }
