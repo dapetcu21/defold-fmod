@@ -18,7 +18,14 @@ def generate_bindings(ast):
                 types[struct.name] = TypeOpaqueStruct
         else:
             types[struct.name] = TypeStruct
-            structs[struct.name] = struct
+            displayName = struct.name
+            displayName = re.sub("^FMOD_STUDIO_", "", displayName)
+            constructorTable = -1
+            if displayName == struct.name:
+                constructorTable = -2
+                displayName = re.sub("^FMOD_", "", displayName)
+            displayName = re.sub("^([0-9])", r"_\1", displayName)
+            structs[struct.name] = (displayName, constructorTable, struct)
 
     for node in ast:
         if isinstance(node, c_ast.Typedef):
