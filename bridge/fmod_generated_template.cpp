@@ -2,31 +2,13 @@
 #include "fmod_bridge.hpp"
 #include <LuaBridge/LuaBridge.h>
 
-#define LIGHT_STRUCT (1 << 0)
-
-typedef struct StructUserdata {
-    int flags;
-    char data[];
-} StructUserdata;
-
 static void * pushStruct(lua_State *L, const void * structData, size_t structSize, int registryIndex) {
-    StructUserdata * userdata = (StructUserdata*)lua_newuserdata(L, sizeof(StructUserdata) + structSize);
-    userdata->flags = 0;
+    void * userdata = lua_newuserdata(L, structSize);
     if (structData) {
-        memcpy(userdata->data, structData, structSize);
+        memcpy(userdata, structData, structSize);
     } else {
-        memset(userdata->data, 0, structSize);
+        memset(userdata, 0, structSize);
     }
-
-    lua_rawgeti(L, LUA_REGISTRYINDEX, registryIndex);
-    lua_setmetatable(L, -2);
-    return userdata->data;
-}
-
-static void * pushStructLight(lua_State *L, void * structData, int registryIndex) {
-    StructUserdata * userdata = (StructUserdata*)lua_newuserdata(L, sizeof(StructUserdata) + sizeof(void*));
-    userdata->flags = LIGHT_STRUCT;
-    *((void**)(&(userdata->data[0]))) = structData;
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, registryIndex);
     lua_setmetatable(L, -2);
@@ -34,16 +16,13 @@ static void * pushStructLight(lua_State *L, void * structData, int registryIndex
 }
 
 static void * checkStruct(lua_State *L, int index, int registryIndex, const char * structName) {
-    StructUserdata * userdata = (StructUserdata*)lua_touserdata(L, index);
+    void * userdata = lua_touserdata(L, index);
     lua_rawgeti(L, LUA_REGISTRYINDEX, registryIndex);
     if (userdata == NULL || !lua_getmetatable(L, index) || !lua_rawequal(L, -1, -2)) {
         luaL_typerror(L, index, structName);
     }
     lua_pop(L, 2);
-    if (userdata->flags & LIGHT_STRUCT) {
-        return *((void**)(&(userdata->data[0])));
-    }
-    return userdata->data;
+    return userdata;
 }
 
 static int structConstructor(lua_State *L) {
@@ -57,9 +36,6 @@ static int structConstructor(lua_State *L) {
     static int CONCAT(FMODBridge_registry_, structName) = LUA_REFNIL; \
     static inline structName * CONCAT(FMODBridge_push_, structName)(lua_State *L, const structName * structData) { \
         return (structName*)pushStruct(L, structData, sizeof(structName), CONCAT(FMODBridge_registry_, structName)); \
-    } \
-    static inline structName * CONCAT(FMODBridge_pushLight_, structName)(lua_State *L, structName * structData) { \
-        return (structName*)pushStructLight(L, structData, CONCAT(FMODBridge_registry_, structName)); \
     } \
     static inline structName * CONCAT(FMODBridge_check_, structName)(lua_State *L, int index) { \
         return (structName*)checkStruct(L, index, CONCAT(FMODBridge_registry_, structName), STRINGIFY(structName)); \
