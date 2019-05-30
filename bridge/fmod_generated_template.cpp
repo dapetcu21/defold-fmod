@@ -90,18 +90,29 @@ extern "C" void FMODBridge_registerEnums(lua_State *L) {
         %}addEnum({{ enum }});
     {% endfor %}
 
-    #define addStruct(structName, name, containerIndex) \
+    #define beginStruct(structName) \
         lua_newtable(L); \
         lua_pushvalue(L, -1); \
-        CONCAT(FMODBridge_registry_, structName) = luaL_ref(L, LUA_REGISTRYINDEX); \
-        \
+        CONCAT(FMODBridge_registry_, structName) = luaL_ref(L, LUA_REGISTRYINDEX) \
+        lua_newtable(L); \
+        lua_pushvalue(L, -1); \
+        lua_setfield(L, -3, "_fieldget");
+        lua_newtable(L); \
+        lua_pushvalue(L, -1); \
+        lua_setfield(L, -4, "_fieldset")
+
+    #define endStruct() lua_pop(L, 3)
+
+    #define addStructConstructor(structName, name, containerIndex) \
         lua_pushnumber(L, CONCAT(FMODBridge_registry_, structName)); \
         lua_pushnumber(L, sizeof(structName)); \
         lua_pushcclosure(L, &structConstructor, 2); \
-        lua_setfield(L, containerIndex - 2, name)
+        lua_setfield(L, containerIndex - 4, name)
 
-    {% for struct in structs
-        %}addStruct({{ struct[0] }}, "{{ struct[1][0] }}", {{ struct[1][1] }}); lua_pop(L, 1);
+    {% for struct in structs %}
+        beginStruct({{ struct[0] }});
+        addStructConstructor({{ struct[0] }}, "{{ struct[1][0] }}", {{ struct[1][1] }});
+        endStruct();
     {% endfor %}
 
     lua_pop(L, 2);
