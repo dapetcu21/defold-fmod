@@ -24,7 +24,7 @@
 #define FMODBridge_push_double(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_double(L, index) ((double)luaL_checknumber(L, index))
 #define FMODBridge_push_FMOD_BOOL(L, x) lua_pushboolean(L, (x))
-#define FMODBridge_check_FMOD_BOOL(L, index) ((FMOD_BOOL)luaL_checkboolean(L, index))
+#define FMODBridge_check_FMOD_BOOL(L, index) (luaL_checktype(L, index, LUA_TBOOLEAN), (FMOD_BOOL)lua_toboolean(L, index))
 
 inline void _FMODBridge_push_ptr_char(lua_State *L, const char * x) {
     if (x) {
@@ -144,6 +144,7 @@ declarePropertySetter(float, float);
 declarePropertyGetter(double, double);
 declarePropertySetter(double, double);
 declarePropertyGetter(FMOD_BOOL, FMOD_BOOL);
+declarePropertySetter(FMOD_BOOL, FMOD_BOOL);
 declarePropertyGetter(ptr_char, char*);
 
 {% for struct in structs %}
@@ -156,6 +157,7 @@ declarePropertyGetter(ptr_char, char*);
     #ifdef FMODBridge_propertyOverride_{{ struct.name }}
     FMODBridge_propertyOverride_{{ struct.name }}
     #else
+    declarePropertyGetter(ptr_{{ struct.name }}, {{ struct.name }}*);
     declarePropertyGetterPtr({{ struct.name }}, {{ struct.name }});
     declarePropertySetterPtr({{ struct.name }}, {{ struct.name }});
     #endif
@@ -282,9 +284,9 @@ extern "C" void FMODBridge_registerEnums(lua_State *L) {
     {% for struct in structs %}
         beginStruct({{ struct.name }});
         addStructConstructor({{ struct.name }}, "{{ struct.constructor_name }}", {{ struct.constructor_table }});
-        {% for property in struct.properties %}
-            {% if property[1].readable %}addPropertyGetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});{% endif %}
-            {% if property[1].writeable %}addPropertySetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});{% endif %}
+        {% for property in struct.properties %}/* {{ property[1].c_type }} {{ property[0] }} */{% if property[1].readable %}
+        addPropertyGetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});{% endif %}{% if property[1].writeable %}
+        addPropertySetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});{% endif %}
         {% endfor %}
         #ifdef FMODBridge_extras_{{ struct.name }}
         FMODBridge_extras_{{ struct.name }}
