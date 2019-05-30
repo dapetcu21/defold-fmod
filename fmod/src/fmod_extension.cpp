@@ -60,6 +60,19 @@ FMODBridge_HBuffer FMODBridge_dmScript_CheckBuffer(lua_State* L, int index) {
     return dmScript::CheckBuffer(L, index)->m_Buffer;
 }
 
+void FMODBridge_dmScript_PushVector3(lua_State* L, float x, float y, float z) {
+    dmScript::PushVector3(L, Vectormath::Aos::Vector3(x, y, z));
+}
+
+void FMODBridge_dmScript_ToVector3(lua_State* L, int index, FMODBridge_Vector3 *out, int *ok) {
+    Vectormath::Aos::Vector3 * vec = dmScript::ToVector3(L, index);
+    if (!vec) { *ok = 0; return; }
+    *ok = 1;
+    out->x = vec->getX();
+    out->y = vec->getY();
+    out->z = vec->getZ();
+}
+
 const char* FMODBridge_dmConfigFile_GetString(const char* config, const char* defaultValue) {
     return dmConfigFile::GetString(appConfig, config, defaultValue);
 }
