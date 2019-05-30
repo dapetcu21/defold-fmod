@@ -69,6 +69,8 @@ extern "C" {
     int FMODBridge_dmBuffer_GetBytes(FMODBridge_HBuffer, void**, uint32_t*);
     void FMODBridge_dmScript_PushBuffer(lua_State* L, FMODBridge_HBuffer);
     FMODBridge_HBuffer FMODBridge_dmScript_CheckBuffer(lua_State* L, int);
+    void FMODBridge_dmScript_PushVector3(lua_State* L, float x, float y, float z);
+    void FMODBridge_dmScript_ToVector3(lua_State* L, int index, FMOD_VECTOR *out, int *ok);
     const char* FMODBridge_dmConfigFile_GetString(const char*, const char*);
     int32_t FMODBridge_dmConfigFile_GetInt(const char*, int32_t);
 #ifdef __ANDROID__
