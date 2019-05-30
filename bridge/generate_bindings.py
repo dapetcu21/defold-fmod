@@ -12,20 +12,46 @@ def generate_bindings(ast):
     enums = []
     structs = {}
 
+    class ParsedTypeDecl:
+        def __init__(self, decl):
+            self.name = 'int'
+            self.c_type = 'int'
+            self.readable = True
+            self.writeable = True
+
+
+    class ParsedStruct:
+        def __init__(self, struct):
+            self.name = struct.name
+
+            constructor_name = struct.name
+            constructor_name = re.sub("^FMOD_STUDIO_", "", constructor_name)
+            self.constructor_table = -1
+            if constructor_name == struct.name:
+                self.constructor_table = -2
+                constructor_name = re.sub("^FMOD_", "", constructor_name)
+            constructor_name = re.sub("^([0-9])", r"_\1", constructor_name)
+            self.constructor_name = constructor_name
+
+            properties = []
+            self.properties = properties
+
+            class StructVisitor(c_ast.NodeVisitor):
+                def visit_Decl(self, node):
+                    if node.name != None:
+                        type_decl = ParsedTypeDecl(node.type)
+                        properties.append((node.name, type_decl))
+
+            StructVisitor().visit(struct)
+
+
     def parse_struct(struct):
         if struct.decls == None:
             if struct.name in types and types[struct.name] != TypeStruct:
                 types[struct.name] = TypeOpaqueStruct
         else:
             types[struct.name] = TypeStruct
-            displayName = struct.name
-            displayName = re.sub("^FMOD_STUDIO_", "", displayName)
-            constructorTable = -1
-            if displayName == struct.name:
-                constructorTable = -2
-                displayName = re.sub("^FMOD_", "", displayName)
-            displayName = re.sub("^([0-9])", r"_\1", displayName)
-            structs[struct.name] = (displayName, constructorTable, struct)
+            structs[struct.name] = ParsedStruct(struct)
 
     for node in ast:
         if isinstance(node, c_ast.Typedef):
@@ -67,7 +93,7 @@ def generate_bindings(ast):
 
     output = template.render(
         enums = enums,
-        structs = list(structs.items()),
+        structs = list(structs.values()),
     )
 
     with open('src/fmod_generated.cpp', 'w') as f:
