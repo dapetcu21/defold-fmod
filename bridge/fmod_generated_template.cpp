@@ -59,7 +59,7 @@ static void * checkStruct(lua_State *L, int index, int registryIndex, const char
 }
 
 {% for struct in structs
-    %}static int FMODBridge_registry_{{ struct[0] }} = LUA_REFNIL;
+    %}static int FMODBridge_registry_{{ struct.name }} = LUA_REFNIL;
 {% endfor %}
 
 static FMOD_VECTOR _FMODBridge_check_FMOD_VECTOR(lua_State *L, int index) {
@@ -84,17 +84,8 @@ static int FMODBridge_convertVector(lua_State *L) {
     declarePropertySetter(FMOD_VECTOR, FMOD_VECTOR);
 
 #define FMODBridge_extras_FMOD_VECTOR \
-    addProperty(FMOD_VECTOR, x, float); \
-    addProperty(FMOD_VECTOR, y, float); \
-    addProperty(FMOD_VECTOR, z, float); \
     lua_pushcfunction(L, &FMODBridge_convertVector); \
     lua_setfield(L, -3, "vector3");
-
-#define FMODBridge_extras_FMOD_3D_ATTRIBUTES \
-    addProperty(FMOD_3D_ATTRIBUTES, position, FMOD_VECTOR); \
-    addProperty(FMOD_3D_ATTRIBUTES, velocity, FMOD_VECTOR); \
-    addProperty(FMOD_3D_ATTRIBUTES, forward, FMOD_VECTOR); \
-    addProperty(FMOD_3D_ATTRIBUTES, up, FMOD_VECTOR);
 
 #define declarePropertyGetter(typename, type) \
     static int CONCAT(FMODBridge_propertyGet_, typename)(lua_State *L) { \
@@ -156,17 +147,17 @@ declarePropertyGetter(FMOD_BOOL, FMOD_BOOL);
 declarePropertyGetter(ptr_char, char*);
 
 {% for struct in structs %}
-    #ifndef FMODBridge_push_ptr_{{ struct[0] }}
-    #define FMODBridge_push_ptr_{{ struct[0] }}(L, structData) (({{ struct[0] }}*)pushStruct(L, structData, sizeof({{ struct[0] }}), FMODBridge_registry_{{ struct[0] }}))
+    #ifndef FMODBridge_push_ptr_{{ struct.name }}
+    #define FMODBridge_push_ptr_{{ struct.name }}(L, structData) (({{ struct.name }}*)pushStruct(L, structData, sizeof({{ struct.name }}), FMODBridge_registry_{{ struct.name }}))
     #endif
-    #ifndef FMODBridge_check_ptr_{{ struct[0] }}
-    #define FMODBridge_check_ptr_{{ struct[0] }}(L, index) (({{ struct[0] }}*)checkStruct(L, index, FMODBridge_registry_{{ struct[0] }}, "{{ struct[0] }}"))
+    #ifndef FMODBridge_check_ptr_{{ struct.name }}
+    #define FMODBridge_check_ptr_{{ struct.name }}(L, index) (({{ struct.name }}*)checkStruct(L, index, FMODBridge_registry_{{ struct.name }}, "{{ struct.name }}"))
     #endif
-    #ifdef FMODBridge_propertyOverride_{{ struct[0] }}
-    FMODBridge_propertyOverride_{{ struct[0] }}
+    #ifdef FMODBridge_propertyOverride_{{ struct.name }}
+    FMODBridge_propertyOverride_{{ struct.name }}
     #else
-    declarePropertyGetterPtr({{ struct[0] }}, {{ struct[0] }});
-    declarePropertySetterPtr({{ struct[0] }}, {{ struct[0] }});
+    declarePropertyGetterPtr({{ struct.name }}, {{ struct.name }});
+    declarePropertySetterPtr({{ struct.name }}, {{ struct.name }});
     #endif
 {% endfor %}
 
@@ -289,10 +280,14 @@ extern "C" void FMODBridge_registerEnums(lua_State *L) {
         addPropertySetter(structName, name, typename)
 
     {% for struct in structs %}
-        beginStruct({{ struct[0] }});
-        addStructConstructor({{ struct[0] }}, "{{ struct[1][0] }}", {{ struct[1][1] }});
-        #ifdef FMODBridge_extras_{{ struct[0] }}
-        FMODBridge_extras_{{ struct[0] }}
+        beginStruct({{ struct.name }});
+        addStructConstructor({{ struct.name }}, "{{ struct.constructor_name }}", {{ struct.constructor_table }});
+        {% for property in struct.properties %}
+            {% if property[1].readable %}addPropertyGetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});{% endif %}
+            {% if property[1].writeable %}addPropertySetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});{% endif %}
+        {% endfor %}
+        #ifdef FMODBridge_extras_{{ struct.name }}
+        FMODBridge_extras_{{ struct.name }}
         #endif
         endStruct();
     {% endfor %}
