@@ -129,8 +129,13 @@ def generate_bindings(ast):
                 elif isinstance(node.type.type, c_ast.Struct):
                     parse_struct(node.type.type)
 
-                else:
-                    node.show()
+                elif node.name not in basic_types:
+                    parsed_type = ParsedTypeDecl(node=node.type)
+                    if parsed_type.name in basic_types:
+                        basic_types[node.name] = basic_types[parsed_type.name]
+                        types[node.name] = TypeBasic
+                    else:
+                        node.show()
 
         elif isinstance(node, c_ast.Decl):
             if isinstance(node.type, c_ast.Struct):
@@ -146,7 +151,6 @@ def generate_bindings(ast):
             node.show()
 
     print('Types:', types)
-    print('Structs:', structs.keys())
 
     env = Environment(
         loader = FileSystemLoader('.'),
