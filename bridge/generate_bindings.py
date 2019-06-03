@@ -5,13 +5,28 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 TypeBasic = 1
 TypeStruct = 2
-TypeOpaqueStruct = 3
+TypeClass = 3
 TypePointer = 4
 TypeUnknown = 5
+
+exclusions = {}
+
+valid = re.compile(r"^_*(IDs|[A-Z][a-z]+|[A-Z0-9]+(?![a-z]))")
+def to_snake_case(s):
+    components = []
+    while True:
+        match = valid.match(s)
+        if match == None:
+            break
+        components.append(match.group(1).lower())
+        s = s[match.end():]
+    return "_".join(components)
 
 def generate_bindings(ast):
     types = {}
     enums = []
+    functions = []
+    global_functions = []
     structs = {}
     basic_types = {}
 
@@ -25,7 +40,7 @@ def generate_bindings(ast):
                     self.type = TypePointer
 
                     base_type = types[child.name] if child.name in types else TypeUnknown
-                    self.readable = base_type == TypeStruct or base_type == TypeOpaqueStruct or child.c_type == "char"
+                    self.readable = base_type == TypeStruct or base_type == TypeClass or child.c_type == "char"
                     self.writeable = False
 
                     self.child = child
@@ -65,37 +80,76 @@ def generate_bindings(ast):
                 self.writeable = writeable
 
     class ParsedStruct:
-        def __init__(self, struct):
-            self.name = struct.name
+        def __init__(self):
+            self.methods = []
+            self.properties = []
 
-            constructor_name = struct.name
+        def parse_struct(self, node):
+            self.name = node.name
+            self.is_class = False
+
+            constructor_name = node.name
             constructor_name = re.sub("^FMOD_STUDIO_", "", constructor_name)
             self.constructor_table = -1
-            if constructor_name == struct.name:
+            if constructor_name == node.name:
                 self.constructor_table = -2
                 constructor_name = re.sub("^FMOD_", "", constructor_name)
             constructor_name = re.sub("^([0-9])", r"_\1", constructor_name)
             self.constructor_name = constructor_name
 
-            properties = []
-            self.properties = properties
-
+            properties = self.properties
             class StructVisitor(c_ast.NodeVisitor):
                 def visit_Decl(self, node):
                     if node.name != None:
                         type_decl = ParsedTypeDecl(node=node.type)
                         properties.append((node.name, type_decl))
 
-            StructVisitor().visit(struct)
+            StructVisitor().visit(node)
 
+        def make_class(self, name):
+            self.name = name
+            self.is_class = True
+
+    class ParsedMethod:
+        def __init__(self, node):
+            self.node = node
+            self.name = node.name
+
+        def detect_scope(self):
+            caps_name = self.name.upper()
+            for type_name in types:
+                type = types[type_name]
+                if type == TypeClass and caps_name.startswith(type_name + "_"):
+                    method_name = self.name[len(type_name) + 1:]
+                    structs[type_name].methods.append((to_snake_case(method_name), self))
+                    return
+
+            method_name = self.name
+            table_index = -2
+            if caps_name.startswith("FMOD_STUDIO_"):
+                table_index = -1
+                method_name = self.name[len("FMOD_STUDIO_"):]
+            elif caps_name.startswith("FMOD_"):
+                method_name = self.name[len("FMOD_"):]
+            global_functions.append((table_index, to_snake_case(method_name), self))
+
+        def parse(self):
+            self.detect_scope()
 
     def parse_struct(struct):
+        if struct.name in exclusions:
+            return
         if struct.decls == None:
-            if struct.name in types and types[struct.name] != TypeStruct:
-                types[struct.name] = TypeOpaqueStruct
+            if struct.name not in structs:
+                types[struct.name] = TypeClass
+                parsed_class = ParsedStruct()
+                parsed_class.make_class(struct.name)
+                structs[struct.name] = parsed_class
         else:
             types[struct.name] = TypeStruct
-            structs[struct.name] = ParsedStruct(struct)
+            parsed_struct = structs[struct.name] if struct.name in structs else ParsedStruct()
+            parsed_struct.parse_struct(struct)
+            structs[struct.name] = parsed_struct
 
     basic_types["char"] = ParsedTypeDecl(c_type="char")
     basic_types["short"] = ParsedTypeDecl(c_type="short")
@@ -135,6 +189,7 @@ def generate_bindings(ast):
                         basic_types[node.name] = basic_types[parsed_type.name]
                         types[node.name] = TypeBasic
                     else:
+                        print("Unknown typedef")
                         node.show()
 
         elif isinstance(node, c_ast.Decl):
@@ -142,15 +197,17 @@ def generate_bindings(ast):
                 parse_struct(node.type)
 
             elif isinstance(node.type, c_ast.FuncDecl):
-                print('FuncDecl: %s' % (node.name))
+                functions.append(ParsedMethod(node))
 
             else:
+                print("Unknown declaration")
                 node.show()
 
         else:
             node.show()
 
-    print('Types:', types)
+    for function in functions:
+        function.parse()
 
     env = Environment(
         loader = FileSystemLoader('.'),
@@ -161,6 +218,8 @@ def generate_bindings(ast):
     output = template.render(
         enums = enums,
         structs = list(structs.values()),
+        functions = functions,
+        global_functions = global_functions,
     )
 
     with open('src/fmod_generated.cpp', 'w') as f:

@@ -1,7 +1,15 @@
 #include <string.h>
 #include <stddef.h>
 #include "fmod_bridge.hpp"
-#include <LuaBridge/LuaBridge.h>
+#include "fmod_errors.h"
+
+inline static void errCheck_(FMOD_RESULT res, lua_State* L) {
+    if (res != FMOD_OK) {
+        lua_pushstring(L, FMOD_ErrorString(res));
+        lua_error(L);
+    }
+}
+#define errCheck(res) errCheck_(res, L)
 
 #define FMODBridge_push_char(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_char(L, index) ((char)luaL_checknumber(L, index))
@@ -57,6 +65,17 @@ static void * checkStruct(lua_State *L, int index, int registryIndex, const char
     lua_pop(L, 2);
     return userdata;
 }
+
+static void * pushClass(lua_State *L, void * instance, int registryIndex) {
+    void ** userdata = (void**)lua_newuserdata(L, sizeof(void*));
+    *userdata = instance;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, registryIndex);
+    lua_setmetatable(L, -2);
+    return instance;
+}
+
+#define checkClass(L, index, registryIndex, structName) (*((void**)checkStruct(L, index, registryIndex, structName)))
 
 {% for struct in structs
     %}static int FMODBridge_registry_{{ struct.name }} = LUA_REFNIL;
@@ -148,18 +167,25 @@ declarePropertySetter(FMOD_BOOL, FMOD_BOOL);
 declarePropertyGetter(ptr_char, char*);
 
 {% for struct in structs %}
-    #ifndef FMODBridge_push_ptr_{{ struct.name }}
+    #ifndef FMODBridge_push_ptr_{{ struct.name }}{% if struct.is_class %}
+    #define FMODBridge_push_ptr_{{ struct.name }}(L, instance) (({{ struct.name }}*)pushClass(L, instance, FMODBridge_registry_{{ struct.name }}))
+    {% else %}
     #define FMODBridge_push_ptr_{{ struct.name }}(L, structData) (({{ struct.name }}*)pushStruct(L, structData, sizeof({{ struct.name }}), FMODBridge_registry_{{ struct.name }}))
+    {% endif %}
     #endif
-    #ifndef FMODBridge_check_ptr_{{ struct.name }}
+    #ifndef FMODBridge_check_ptr_{{ struct.name }}{% if struct.is_class %}
+    #define FMODBridge_check_ptr_{{ struct.name }}(L, index) (({{ struct.name }}*)checkClass(L, index, FMODBridge_registry_{{ struct.name }}, "{{ struct.name }}"))
+    {% else %}
     #define FMODBridge_check_ptr_{{ struct.name }}(L, index) (({{ struct.name }}*)checkStruct(L, index, FMODBridge_registry_{{ struct.name }}, "{{ struct.name }}"))
+    {% endif %}
     #endif
     #ifdef FMODBridge_propertyOverride_{{ struct.name }}
     FMODBridge_propertyOverride_{{ struct.name }}
     #else
-    declarePropertyGetter(ptr_{{ struct.name }}, {{ struct.name }}*);
+    declarePropertyGetter(ptr_{{ struct.name }}, {{ struct.name }}*);{% if not struct.is_class %}
     declarePropertyGetterPtr({{ struct.name }}, {{ struct.name }});
     declarePropertySetterPtr({{ struct.name }}, {{ struct.name }});
+    {% endif %}
     #endif
 {% endfor %}
 
@@ -216,6 +242,37 @@ static int structNewIndexMetamethod(lua_State *L) {
     lua_call(L, 2, 0);
     return 0;
 }
+
+void * FMODBridge_check_ptr_void_size(lua_State *L, int index, size_t *length) {
+    if (lua_type(L, index) == LUA_TSTRING) {
+        return (char*)lua_tolstring(L, index, length);
+    }
+    FMODBridge_HBuffer buffer = FMODBridge_dmScript_CheckBuffer(L, index);
+    void *data;
+    uint32_t size;
+    if (FMODBridge_dmBuffer_GetBytes(buffer, &data, &size)) {
+        luaL_error(L, "dmBuffer::GetBytes failed");
+    }
+    *length = size;
+    return data;
+}
+
+#define FMODBridge_func_FMOD_Studio_System_LoadBankMemory _FMODBridge_func_FMOD_Studio_System_LoadBankMemory
+static int _FMODBridge_func_FMOD_Studio_System_LoadBankMemory(lua_State *L) {
+    FMOD_STUDIO_SYSTEM *system = FMODBridge_check_ptr_FMOD_STUDIO_SYSTEM(L, 1);
+    size_t length;
+    const char *buffer = (const char*)FMODBridge_check_ptr_void_size(L, 2, &length);
+    FMOD_STUDIO_LOAD_BANK_FLAGS flags = FMODBridge_check_unsigned_int(L, 3);
+
+    FMOD_STUDIO_BANK *bank;
+
+    ensure(ST, FMOD_Studio_System_LoadBankMemory, FMOD_RESULT, FMOD_STUDIO_SYSTEM *system, const char *buffer, int length, FMOD_STUDIO_LOAD_MEMORY_MODE mode, FMOD_STUDIO_LOAD_BANK_FLAGS flags, FMOD_STUDIO_BANK **bank);
+    errCheck(FMOD_Studio_System_LoadBankMemory(system, buffer, (int)length, FMOD_STUDIO_LOAD_MEMORY, flags, &bank));
+
+    FMODBridge_push_ptr_FMOD_STUDIO_BANK(L, bank);
+    return 1;
+}
+
 
 extern "C" void FMODBridge_registerClasses(lua_State *L) {
 }
@@ -281,18 +338,33 @@ extern "C" void FMODBridge_registerEnums(lua_State *L) {
         addPropertyGetter(structName, name, typename); \
         addPropertySetter(structName, name, typename)
 
-    {% for struct in structs %}
-        beginStruct({{ struct.name }});
-        addStructConstructor({{ struct.name }}, "{{ struct.constructor_name }}", {{ struct.constructor_table }});
-        {% for property in struct.properties %}/* {{ property[1].c_type }} {{ property[0] }} */{% if property[1].readable %}
-        addPropertyGetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});{% endif %}{% if property[1].writeable %}
-        addPropertySetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});{% endif %}
-        {% endfor %}
-        #ifdef FMODBridge_extras_{{ struct.name }}
+    {% for struct in structs %}beginStruct({{ struct.name }});
+        {% if not struct.is_class %}addStructConstructor({{ struct.name }}, "{{ struct.constructor_name }}", {{ struct.constructor_table }});
+        {% endif %}{% for property in struct.properties %}/* {{ property[1].c_type }} {{ property[0] }} */
+        {% if property[1].readable %}addPropertyGetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});
+        {% endif %}{% if property[1].writeable %}addPropertySetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});
+        {% endif %}{% endfor %}{% for f in struct.methods %}#ifdef FMODBridge_func_{{ f[1].name }}
+        lua_pushcfunction(L, &FMODBridge_func_{{ f[1].name }});
+        lua_setfield(L, -4, "{{ f[0] }}");
+        #endif
+        {% endfor %}#ifdef FMODBridge_extras_{{ struct.name }}
         FMODBridge_extras_{{ struct.name }}
         #endif
-        endStruct();
+    endStruct();
     {% endfor %}
+
+    {% for f in global_functions %}
+        #ifdef FMODBridge_func_{{ f[2].name }}
+        lua_pushcfunction(L, &FMODBridge_func_{{ f[2].name }});
+        lua_setfield(L, {{ f[0] }} - 1, "{{ f[1] }}");
+        #endif
+    {% endfor %}
+
+    FMODBridge_push_ptr_FMOD_STUDIO_SYSTEM(L, FMODBridge_system);
+    lua_setfield(L, -2, "system");
+
+    FMODBridge_push_ptr_FMOD_SYSTEM(L, FMODBridge_lowLevelSystem);
+    lua_setfield(L, -3, "system");
 
     lua_pop(L, 2);
 }
