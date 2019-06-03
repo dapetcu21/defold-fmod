@@ -64,13 +64,14 @@ void FMODBridge_dmScript_PushVector3(lua_State* L, float x, float y, float z) {
     dmScript::PushVector3(L, Vectormath::Aos::Vector3(x, y, z));
 }
 
-void FMODBridge_dmScript_ToVector3(lua_State* L, int index, FMODBridge_Vector3 *out, int *ok) {
-    Vectormath::Aos::Vector3 * vec = dmScript::ToVector3(L, index);
-    if (!vec) { *ok = 0; return; }
-    *ok = 1;
-    out->x = vec->getX();
-    out->y = vec->getY();
-    out->z = vec->getZ();
+FMODBridge_Vector3 FMODBridge_dmScript_CheckVector3(lua_State* L, int index) {
+    Vectormath::Aos::Vector3 * vec = dmScript::CheckVector3(L, index);
+    FMODBridge_Vector3 result = {
+        .x = vec->getX(),
+        .y = vec->getY(),
+        .z = vec->getZ(),
+    };
+    return result;
 }
 
 const char* FMODBridge_dmConfigFile_GetString(const char* config, const char* defaultValue) {

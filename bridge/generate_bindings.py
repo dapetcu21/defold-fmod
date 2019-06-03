@@ -9,7 +9,9 @@ TypeClass = 3
 TypePointer = 4
 TypeUnknown = 5
 
-exclusions = {}
+exclusions = {
+    "FMOD_VECTOR": True,
+}
 
 valid = re.compile(r"^_*(IDs|[A-Z][a-z]+|[A-Z0-9]+(?![a-z]))")
 def to_snake_case(s):
@@ -191,6 +193,7 @@ def generate_bindings(ast):
     basic_types["float"] = ParsedTypeDecl(c_type="float")
     basic_types["double"] = ParsedTypeDecl(c_type="double")
     basic_types["ptr_char"] = ParsedTypeDecl(name="ptr_char", c_type="char*", writeable=False, type=TypePointer)
+    basic_types["FMOD_VECTOR"] = ParsedTypeDecl(c_type="FMOD_VECTOR")
 
     for key in basic_types.keys():
         types[key] = TypeBasic
