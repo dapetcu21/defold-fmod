@@ -34,6 +34,7 @@ inline static void errCheck_(FMOD_RESULT res, lua_State* L) {
 #define FMODBridge_push_FMOD_BOOL(L, x) lua_pushboolean(L, (x))
 #define FMODBridge_check_FMOD_BOOL(L, index) (luaL_checktype(L, index, LUA_TBOOLEAN), (FMOD_BOOL)lua_toboolean(L, index))
 
+#define FMODBridge_push_ptr_char _FMODBridge_push_ptr_char
 inline void _FMODBridge_push_ptr_char(lua_State *L, const char * x) {
     if (x) {
         lua_pushstring(L, x);
@@ -41,7 +42,17 @@ inline void _FMODBridge_push_ptr_char(lua_State *L, const char * x) {
         lua_pushnil(L);
     }
 }
-#define FMODBridge_push_ptr_char _FMODBridge_push_ptr_char
+#define FMODBridge_check_ptr_char(L, index) luaL_checkstring(L, index)
+
+#define FMODBridge_check_FMOD_VECTOR FMODBridge_dmScript_CheckVector3
+#define FMODBridge_push_FMOD_VECTOR _FMODBridge_push_FMOD_VECTOR
+inline void _FMODBridge_push_FMOD_VECTOR(lua_State *L, FMOD_VECTOR vec) {
+    FMODBridge_dmScript_PushVector3(L, vec.x, vec.y, vec.z);
+}
+#define FMODBridge_push_ptr_FMOD_VECTOR _FMODBridge_push_ptr_FMOD_VECTOR
+inline void _FMODBridge_push_ptr_FMOD_VECTOR(lua_State *L, const FMOD_VECTOR * vec) {
+    FMODBridge_dmScript_PushVector3(L, vec->x, vec->y, vec->z);
+}
 
 static void * pushStruct(lua_State *L, const void * structData, size_t structSize, int registryIndex) {
     void * userdata = lua_newuserdata(L, structSize);
@@ -80,31 +91,6 @@ static void * pushClass(lua_State *L, void * instance, int registryIndex) {
 {% for struct in structs
     %}static int FMODBridge_registry_{{ struct.name }} = LUA_REFNIL;
 {% endfor %}
-
-static FMOD_VECTOR _FMODBridge_check_FMOD_VECTOR(lua_State *L, int index) {
-    FMOD_VECTOR result;
-    int ok;
-    FMODBridge_dmScript_ToVector3(L, index, &result, &ok);
-    if (ok) { return result; }
-
-    result = *((FMOD_VECTOR*)checkStruct(L, index, FMODBridge_registry_FMOD_VECTOR, "FMOD_VECTOR"));
-    return result;
-}
-#define FMODBridge_check_FMOD_VECTOR _FMODBridge_check_FMOD_VECTOR
-
-static int FMODBridge_convertVector(lua_State *L) {
-    FMOD_VECTOR *vec = (FMOD_VECTOR*)lua_touserdata(L, 1);
-    FMODBridge_dmScript_PushVector3(L, vec->x, vec->y, vec->z);
-    return 1;
-}
-
-#define FMODBridge_propertyOverride_FMOD_VECTOR \
-    declarePropertyGetterPtr(FMOD_VECTOR, FMOD_VECTOR); \
-    declarePropertySetter(FMOD_VECTOR, FMOD_VECTOR);
-
-#define FMODBridge_extras_FMOD_VECTOR \
-    lua_pushcfunction(L, &FMODBridge_convertVector); \
-    lua_setfield(L, -3, "vector3");
 
 #define declarePropertyGetter(typename, type) \
     static int CONCAT(FMODBridge_propertyGet_, typename)(lua_State *L) { \
@@ -165,6 +151,8 @@ declarePropertySetter(double, double);
 declarePropertyGetter(FMOD_BOOL, FMOD_BOOL);
 declarePropertySetter(FMOD_BOOL, FMOD_BOOL);
 declarePropertyGetter(ptr_char, char*);
+declarePropertyGetterPtr(FMOD_VECTOR, FMOD_VECTOR);
+declarePropertySetter(FMOD_VECTOR, FMOD_VECTOR);
 
 {% for struct in structs %}
     #ifndef FMODBridge_push_ptr_{{ struct.name }}{% if struct.is_class %}
