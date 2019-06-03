@@ -50,24 +50,22 @@ lib_path = path/to/fmod/res
 
 Structs and classes are exposed on the `fmod` and `fmod.studio` namespaces. All
 method names are converted from `camelCase` to `snake_case`. Methods that
-returned a value through a last pointer argument now actually return the value and
+returned values through pointer arguments now actually return the values and
 throw with an error string when their result is not `FMOD_OK`.
 
-Enums are exposed on the `fmod` table without the leading `FMOD_`. 
+Enums are exposed on the `fmod` table without the leading `FMOD_`.
 (eg.: `FMOD_STUDIO_PLAYBACK_PLAYING` is exposed as `fmod.STUDIO_PLAYBACK_PLAYING`)
 
-A fully initialised instance of `FMOD::Studio::System` is exposed to Lua as 
-`fmod.studio.system` and the corresponding instance of 
+A fully initialised instance of `FMOD::Studio::System` is exposed to Lua as
+`fmod.studio.system` and the corresponding instance of
 `FMOD::System` (the low level system), is exposed as `fmod.system`.
+
+You can use `vmath.vector3` instead of FMOD's `FMOD_VECTOR` struct. Conversion
+is being done seamlessly.
 
 See an [example script][example] to get an idea.
 
 Refer to the [FMOD API Documentation] for details about the available APIs.
-**These bindings use the 1.10 version of FMOD, not the newer 2.0 one, so make
-sure to look at the correct documentation.**
-
-Not all APIs are exposed yet. For a full list of exposed functions, see 
-[bridge/src/fmod_classes.cpp](bridge/src/fmod_classes.cpp).
 
 Here's some sample code:
 
@@ -79,6 +77,29 @@ fmod.studio.system:load_bank_memory(resource.load("/banks/Vehicles.bank"), fmod.
 local event_description = fmod.studio.system:get_event("event:/Vehicles/Basic Engine")
 local event = event_description:create_instance()
 event:start()
+```
+
+## Memory management
+
+The following FMOD classes are automatically garbage collected by Lua and
+you don't need to call `release()` manually:
+`FMOD_STUDIO_EVENTINSTANCE`
+
+**Anything else is not memory managed and you need to call `instance:release()`
+manually.**
+
+## 64-bit values
+
+Since Lua 5.1 doesn't have a 64-bit type, you can use `fmod.s64()` and `fmod.u64()`
+to create 64-bit values.
+
+```lua
+x = fmod.s64(num) -- Converts a Lua number (up to 52bits of integer precision) to a 64-bit value
+x = fmod.s64(low, high) -- Creates a 64-bit value from two 32-bit integers
+x.value -- Does the best-effort conversion to a Lua number (accurate within 52 bits of precision)
+x.low -- Gets the lowest 32-bits as an unsigned int value
+x.high -- Gets the lowest 32-bits as an unsigned int value
+tostring(x) -- Converts the value to a numeric string
 ```
 
 ## Studio Live Update
@@ -97,6 +118,6 @@ See [CONTRIBUTE.md](./CONTRIBUTE.md) for details about how to contribute to this
 
 [example]: ./main/main.script
 [FMOD]: https://fmod.com
-[FMOD API Documentation]: https://www.fmod.com/resources/documentation-api?version=1.10&page=content/generated/studio_api.html
+[FMOD API Documentation]: https://www.fmod.com/resources/documentation-api?version=2.0&page=content/generated/studio_api.html
 [bundle_resources]: https://www.defold.com/manuals/project-settings/#_project
 [set_software_format]: https://www.fmod.org/docs/content/generated/FMOD_System_SetSoftwareFormat.html

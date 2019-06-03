@@ -10,6 +10,15 @@ Most of the extension is implemented in a separately-compiled bridge library.
 When changing something, the bridge library must be recompiled for all the
 platforms affected by the change.
 
+The implementation of this library is generated from the FMOD headers by a
+Python script. You'll need Python 3 with the `pycparser` and `jinja2` packages
+installed from PiP.
+
+```
+cd bridge
+python generate_bindings.py
+```
+
 The bridge library comes with compilation scripts for each platform:
 
 ### macOS & iOS
