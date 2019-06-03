@@ -125,19 +125,31 @@ def generate_bindings(ast):
             self.name = name
             self.is_class = True
 
+    class MethodArgument:
+        def __init__(self, node):
+            self.name = node.name
+            self.type = ParsedTypeDecl(node=node.type)
+
     class ParsedMethod:
         def __init__(self, node):
             self.node = node
             self.name = node.name
+            self.args = []
+
+        def parse_arguments(self):
+            for param in self.node.type.args.params:
+                self.args.append(MethodArgument(param))
 
         def detect_scope(self):
-            caps_name = self.name.upper()
-            for type_name in types:
-                type = types[type_name]
-                if type == TypeClass and caps_name.startswith(type_name + "_"):
-                    method_name = self.name[len(type_name) + 1:]
-                    structs[type_name].methods.append((to_snake_case(method_name), self))
-                    return
+            first_arg = self.args[0]
+            if first_arg != None:
+                caps_name = self.name.upper()
+                if first_arg.type.type == TypePointer and first_arg.type.child.type == TypeClass:
+                    type_name = first_arg.type.child.name
+                    if caps_name.startswith(type_name + "_"):
+                        method_name = self.name[len(type_name) + 1:]
+                        structs[type_name].methods.append((to_snake_case(method_name), self))
+                        return
 
             method_name = self.name
             table_index = -2
@@ -149,6 +161,7 @@ def generate_bindings(ast):
             global_functions.append((table_index, to_snake_case(method_name), self))
 
         def parse(self):
+            self.parse_arguments()
             self.detect_scope()
 
     def parse_struct(struct):
