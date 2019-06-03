@@ -155,26 +155,21 @@ declarePropertyGetterPtr(FMOD_VECTOR, FMOD_VECTOR);
 declarePropertySetter(FMOD_VECTOR, FMOD_VECTOR);
 
 {% for struct in structs %}
-    #ifndef FMODBridge_push_ptr_{{ struct.name }}{% if struct.is_class %}
-    #define FMODBridge_push_ptr_{{ struct.name }}(L, instance) (({{ struct.name }}*)pushClass(L, instance, FMODBridge_registry_{{ struct.name }}))
-    {% else %}
-    #define FMODBridge_push_ptr_{{ struct.name }}(L, structData) (({{ struct.name }}*)pushStruct(L, structData, sizeof({{ struct.name }}), FMODBridge_registry_{{ struct.name }}))
-    {% endif %}
-    #endif
-    #ifndef FMODBridge_check_ptr_{{ struct.name }}{% if struct.is_class %}
-    #define FMODBridge_check_ptr_{{ struct.name }}(L, index) (({{ struct.name }}*)checkClass(L, index, FMODBridge_registry_{{ struct.name }}, "{{ struct.name }}"))
-    {% else %}
-    #define FMODBridge_check_ptr_{{ struct.name }}(L, index) (({{ struct.name }}*)checkStruct(L, index, FMODBridge_registry_{{ struct.name }}, "{{ struct.name }}"))
-    {% endif %}
-    #endif
-    #ifdef FMODBridge_propertyOverride_{{ struct.name }}
-    FMODBridge_propertyOverride_{{ struct.name }}
-    #else
-    declarePropertyGetter(ptr_{{ struct.name }}, {{ struct.name }}*);{% if not struct.is_class %}
-    declarePropertyGetterPtr({{ struct.name }}, {{ struct.name }});
-    declarePropertySetterPtr({{ struct.name }}, {{ struct.name }});
-    {% endif %}
-    #endif
+#ifndef FMODBridge_push_ptr_{{ struct.name }}
+{% if struct.is_class %}#define FMODBridge_push_ptr_{{ struct.name }}(L, instance) (({{ struct.name }}*)pushClass(L, instance, FMODBridge_registry_{{ struct.name }}))
+{% else %}#define FMODBridge_push_ptr_{{ struct.name }}(L, structData) (({{ struct.name }}*)pushStruct(L, structData, sizeof({{ struct.name }}), FMODBridge_registry_{{ struct.name }}))
+{% endif %}#endif
+#ifndef FMODBridge_check_ptr_{{ struct.name }}
+{% if struct.is_class %}#define FMODBridge_check_ptr_{{ struct.name }}(L, index) (({{ struct.name }}*)checkClass(L, index, FMODBridge_registry_{{ struct.name }}, "{{ struct.name }}"))
+{% else %}#define FMODBridge_check_ptr_{{ struct.name }}(L, index) (({{ struct.name }}*)checkStruct(L, index, FMODBridge_registry_{{ struct.name }}, "{{ struct.name }}"))
+{% endif %}#endif
+#ifdef FMODBridge_propertyOverride_{{ struct.name }}
+FMODBridge_propertyOverride_{{ struct.name }}
+#else
+declarePropertyGetter(ptr_{{ struct.name }}, {{ struct.name }}*);
+{% if not struct.is_class %}declarePropertyGetterPtr({{ struct.name }}, {{ struct.name }});
+declarePropertySetterPtr({{ struct.name }}, {{ struct.name }});
+{% endif %}#endif
 {% endfor %}
 
 static int structConstructor(lua_State *L) {
@@ -261,6 +256,75 @@ static int _FMODBridge_func_FMOD_Studio_System_LoadBankMemory(lua_State *L) {
     return 1;
 }
 
+#define FMODBridge_func_FMOD_Studio_System_SetListenerAttributes _FMODBridge_func_FMOD_Studio_System_SetListenerAttributes
+static int _FMODBridge_func_FMOD_Studio_System_SetListenerAttributes(lua_State *L) {
+    FMOD_STUDIO_SYSTEM* system = FMODBridge_check_ptr_FMOD_STUDIO_SYSTEM(L, 1);
+    int index = FMODBridge_check_int(L, 2);
+    FMOD_3D_ATTRIBUTES* attributes = FMODBridge_check_ptr_FMOD_3D_ATTRIBUTES(L, 3);
+    ensure(ST, FMOD_Studio_System_SetListenerAttributes, FMOD_RESULT, FMOD_STUDIO_SYSTEM*, int, FMOD_3D_ATTRIBUTES*);
+    errCheck(FMOD_Studio_System_SetListenerAttributes(system, index, attributes));
+    return 0;
+}
+
+#define FMODBridge_func_FMOD_Studio_EventInstance_Set3DAttributes _FMODBridge_func_FMOD_Studio_EventInstance_Set3DAttributes
+static int _FMODBridge_func_FMOD_Studio_EventInstance_Set3DAttributes(lua_State *L) {
+    FMOD_STUDIO_EVENTINSTANCE* eventinstance = FMODBridge_check_ptr_FMOD_STUDIO_EVENTINSTANCE(L, 1);
+    FMOD_3D_ATTRIBUTES* attributes = FMODBridge_check_ptr_FMOD_3D_ATTRIBUTES(L, 2);
+    ensure(ST, FMOD_Studio_EventInstance_Set3DAttributes, FMOD_RESULT, FMOD_STUDIO_EVENTINSTANCE*, FMOD_3D_ATTRIBUTES*);
+    errCheck(FMOD_Studio_EventInstance_Set3DAttributes(eventinstance, attributes));
+    return 0;
+}
+
+// TODO: FMOD_Sound_Set3DCustomRolloff
+// TODO: FMOD_Sound_Get3DCustomRolloff
+// TODO: FMOD_Channel_Set3DCustomRolloff
+// TODO: FMOD_Channel_Get3DCustomRolloff
+// TODO: FMOD_ChannelGroup_Set3DCustomRolloff
+// TODO: FMOD_ChannelGroup_Get3DCustomRolloff
+
+// TODO: FMOD_DSP_ShowConfigDialog
+
+// TODO: FMOD_DSP_GetParameterFloat
+// TODO: FMOD_DSP_GetParameterInt
+// TODO: FMOD_DSP_GetParameterBool
+
+// TODO: FMOD_System_GetDriverInfo
+// TODO: FMOD_System_GetPluginInfo
+// TODO: FMOD_System_GetRecordDriverInfo
+// TODO: FMOD_System_GetNetworkProxy
+// TODO: FMOD_Sound_GetName
+// TODO: FMOD_Sound_GetSyncPointInfo
+// TODO: FMOD_ChannelGroup_GetName
+// TODO: FMOD_SoundGroup_GetName
+// TODO: FMOD_DSP_GetInfo
+// TODO: FMOD_Studio_System_LookupPath
+// TODO: FMOD_Studio_EventDescription_GetPath
+// TODO: FMOD_Studio_Bus_GetPath
+// TODO: FMOD_Studio_VCA_GetPath
+// TODO: FMOD_Studio_Bank_GetPath
+// TODO: FMOD_Studio_Bank_GetStringInfo
+// TODO: FMOD_Studio_CommandReplay_GetCommandString
+
+// Do something with long long values
+
+{% for f in functions %}
+/* {{ f.name }}({% for arg in f.args %}{{ arg.usage }} {{ arg.type.c_type }} {{ arg.name }}, {% endfor %}) */
+{% if f.generated %}#ifndef FMODBridge_func_{{ f.name }}
+#define FMODBridge_func_{{ f.name }} _FMODBridge_func_{{ f.name }}
+static int _FMODBridge_func_{{ f.name }}(lua_State *L) {
+    {% for arg in f.args %}{% if arg.usage == "input" %}{{ arg.type.c_type }} {{ arg.name }} = FMODBridge_check_{{ arg.type.name }}(L, {{ arg.arg_index }});
+    {% elif arg.usage == "input_deref" %}{{ arg.type.c_type }}* {{ arg.name }} = FMODBridge_check_ptr_{{ arg.type.name }}(L, {{ arg.arg_index }});
+    {% elif arg.usage == "input_ptr" %}{{ arg.type.child.c_type }} {{ arg.name }} = FMODBridge_check_{{ arg.type.child.name }}(L, {{ arg.arg_index }});
+    {% elif arg.usage == "output" %}{{ arg.type.child.c_type }} {{ arg.name }};
+    {% elif arg.usage == "output_ptr" %}{{ arg.type.c_type }} {{ arg.name }} = FMODBridge_push_{{ arg.type.name }}(L, NULL);
+    {% endif %}{% endfor %}ensure({{ f.library }}, {{ f.name }}, FMOD_RESULT{% for arg in f.args %}, {{ arg.type.c_type }}{% endfor %});
+    errCheck({{ f.name }}({% for arg in f.args %}{% if not loop.first %}, {% endif %}{{ arg.accessor }}{{ arg.name }}{% endfor %}));
+    {% for arg in f.args %}{% if arg.usage == "output" %}FMODBridge_push_{{ arg.type.child.name }}(L, {{ arg.name }});
+    {% endif %}{% endfor %}return {{ f.return_count }};
+}
+#endif
+{% endif %}
+{% endfor %}
 
 extern "C" void FMODBridge_registerClasses(lua_State *L) {
 }

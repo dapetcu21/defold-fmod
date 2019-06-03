@@ -32,7 +32,7 @@ function init(self)
   source_attr.up = vmath.vector3(0.0, 0.0, -1.0)
   event:set_3d_attributes(source_attr)
 
-  event:set_parameter_value("RPM", 650.0)
+  event:set_parameter_by_name("RPM", 650.0, false)
   event:start()
 end
 

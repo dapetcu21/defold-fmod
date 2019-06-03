@@ -13,6 +13,12 @@ exclusions = {
     "FMOD_VECTOR": True,
 }
 
+accessors = {
+    "input_deref": "*",
+    "input_ptr": "&",
+    "output": "&",
+}
+
 valid = re.compile(r"^_*(IDs|[A-Z][a-z]+|[A-Z0-9]+(?![a-z]))")
 def to_snake_case(s):
     components = []
@@ -54,7 +60,11 @@ def generate_bindings(ast):
                     child = ParsedTypeDecl(node=node.type)
                     self.name = "ptr_" + child.name
                     self.c_type = child.c_type + "*"
+                    self.const = "const" in node.quals
                     self.type = TypePointer
+
+                    if self.const:
+                        self.c_type = self.c_type + " const"
 
                     base_type = types[child.name] if child.name in types else TypeUnknown
                     self.readable = base_type == TypeStruct or base_type == TypeClass or child.c_type == "char"
@@ -66,18 +76,27 @@ def generate_bindings(ast):
                 if isinstance(node, c_ast.TypeDecl) and isinstance(node.type, c_ast.IdentifierType):
                     name = "_".join(node.type.names)
                     c_type = " ".join(node.type.names)
+                    const = ("const" in node.quals)
+
+                    if const:
+                        c_type = "const " + c_type
+
+                    self.name = name
+                    self.c_type = c_type
+                    self.const = const
 
                     if name in basic_types:
                         other = basic_types[name]
                         self.name = other.name
                         self.c_type = other.c_type
+                        self.const = const
+                        if const and not other.const:
+                            self.c_type = "const " + self.c_type
                         self.readable = other.readable
                         self.writeable = other.writeable
                         self.type = other.type
                         return
 
-                    self.name = name
-                    self.c_type = c_type
                     self.type = types[name] if name in types else TypeUnknown
                     self.readable = self.type == TypeStruct
                     self.writeable = self.type == TypeStruct
@@ -85,6 +104,7 @@ def generate_bindings(ast):
 
                 self.name = '__UNKNOWN__'
                 self.c_type = '__UNKNOWN__'
+                self.const = False
                 self.type = TypeUnknown
                 self.readable = False
                 self.writable = False
@@ -92,6 +112,7 @@ def generate_bindings(ast):
             else:
                 self.c_type = c_type
                 self.name = name if name != None else re.sub(" ", "_", c_type)
+                self.const = False
                 self.type = type
                 self.readable = readable
                 self.writeable = writeable
@@ -130,13 +151,34 @@ def generate_bindings(ast):
     class MethodArgument:
         def __init__(self, node):
             self.name = node.name
-            self.type = ParsedTypeDecl(node=node.type)
+            self.arg_index = 0
+            type = ParsedTypeDecl(node=node.type)
+            self.type = type
+            self.usage = "unknown"
+            if type.name in basic_types and not (type.type == TypePointer and not type.child.const):
+                self.usage = "input"
+            elif type.type == TypeStruct:
+                self.usage = "input_deref"
+            elif type.type == TypePointer:
+                if type.child.type == TypeClass:
+                    self.usage = "input"
+                elif (type.child.type == TypeStruct and type.child.const):
+                    self.usage = "input"
+                elif (type.child.type == TypeBasic and type.child.const):
+                    self.usage = "input_ptr"
+                elif not type.child.const:
+                    child = type.child
+                    if child.type == TypeStruct:
+                        self.usage = "output_ptr"
+                    if (child.name in basic_types and child.name != "char") or (child.type == TypePointer and (child.child.type == TypeClass or child.child.type == TypeStruct)):
+                        self.usage = "output"
 
     class ParsedMethod:
         def __init__(self, node):
             self.node = node
             self.name = node.name
             self.args = []
+            self.library = "UK"
 
         def parse_arguments(self):
             for param in self.node.type.args.params:
@@ -144,27 +186,52 @@ def generate_bindings(ast):
 
         def detect_scope(self):
             first_arg = self.args[0]
+            caps_name = self.name.upper()
             if first_arg != None:
-                caps_name = self.name.upper()
                 if first_arg.type.type == TypePointer and first_arg.type.child.type == TypeClass:
                     type_name = first_arg.type.child.name
                     if caps_name.startswith(type_name + "_"):
                         method_name = self.name[len(type_name) + 1:]
-                        structs[type_name].methods.append((to_snake_case(method_name), self))
+                        struct = structs[type_name]
+                        struct.methods.append((to_snake_case(method_name), self))
+                        if caps_name.startswith("FMOD_STUDIO_"):
+                            self.library = "ST"
+                        elif caps_name.startswith("FMOD_"):
+                            self.library = "LL"
                         return
 
             method_name = self.name
             table_index = -2
             if caps_name.startswith("FMOD_STUDIO_"):
                 table_index = -1
+                self.library = "ST"
                 method_name = self.name[len("FMOD_STUDIO_"):]
             elif caps_name.startswith("FMOD_"):
+                self.library = "LL"
                 method_name = self.name[len("FMOD_"):]
             global_functions.append((table_index, to_snake_case(method_name), self))
+
+        def derive_template_data(self):
+            self.generated = True
+            arg_index = 1
+            return_count = 0
+            for arg in self.args:
+                if arg.usage == "unknown":
+                    self.generated = False
+                if arg.usage == "input" or arg.usage == "input_ptr" or arg.usage == "input_deref":
+                    arg.arg_index = arg_index
+                    arg_index = arg_index + 1
+                if arg.usage == "output" or arg.usage == "output_ptr":
+                    return_count = return_count + 1
+                arg.accessor = accessors[arg.usage] if arg.usage in accessors else ""
+            self.return_count = return_count
+            if not self.generated:
+                print("Cannot auto-generate: " + self.name)
 
         def parse(self):
             self.parse_arguments()
             self.detect_scope()
+            self.derive_template_data()
 
     def parse_struct(struct):
         if struct.name in exclusions:
