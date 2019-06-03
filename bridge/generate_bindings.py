@@ -22,6 +22,21 @@ def to_snake_case(s):
         s = s[match.end():]
     return "_".join(components)
 
+enum_re = re.compile(r"^\s*#define FMOD_([a-zA-Z0-9_]+)")
+enum_exceptions = {"STUDIO_COMMON_H": True, "STUDIO_H": True}
+def add_defined_enums(enums):
+    headers = ["include/fmod_common.h", "include/fmod_studio_common.h"]
+    for filename in headers:
+        with open(filename, "r") as f:
+            line = f.readline()
+            while line:
+                match = enum_re.match(line)
+                if match != None:
+                    enum = match.group(1)
+                    if not enum.startswith("PRESET_") and not enum in enum_exceptions:
+                        enums.append(enum)
+                line = f.readline()
+
 def generate_bindings(ast):
     types = {}
     enums = []
@@ -205,6 +220,8 @@ def generate_bindings(ast):
 
         else:
             node.show()
+
+    add_defined_enums(enums)
 
     for function in functions:
         function.parse()
