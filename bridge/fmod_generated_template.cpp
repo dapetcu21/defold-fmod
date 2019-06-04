@@ -18,6 +18,8 @@ inline static void errCheck_(FMOD_RESULT res, lua_State* L) {
     }
 }
 #define errCheck(res) errCheck_(res, L)
+#define errCheckBegin(expr) do { FMOD_RESULT res = (expr); if (res != FMOD_OK) {
+#define errCheckEnd errCheck_(res, L); } } while (0)
 
 /* Basic types */
 
@@ -381,28 +383,223 @@ static int _FMODBridge_func_FMOD_Studio_EventInstance_Set3DAttributes(lua_State 
 // TODO: FMOD_ChannelGroup_Set3DCustomRolloff
 // TODO: FMOD_ChannelGroup_Get3DCustomRolloff
 
-// TODO: FMOD_DSP_ShowConfigDialog
+#define FMODBridge_func_FMOD_DSP_GetParameterFloat _FMODBridge_func_FMOD_DSP_GetParameterFloat
+static int _FMODBridge_func_FMOD_DSP_GetParameterFloat(lua_State *L) {
+    FMOD_DSP* dsp = FMODBridge_check_ptr_FMOD_DSP(L, 1);
+    int index = FMODBridge_check_int(L, 2);
+    float value;
+    char valuestr[FMOD_DSP_GETPARAM_VALUESTR_LENGTH];
+    ensure(LL, FMOD_DSP_GetParameterFloat, FMOD_RESULT, FMOD_DSP*, int, float*, char*, int);
+    errCheck(FMOD_DSP_GetParameterFloat(dsp, index, &value, valuestr, FMOD_DSP_GETPARAM_VALUESTR_LENGTH));
+    FMODBridge_push_float(L, value);
+    FMODBridge_push_ptr_char(L, valuestr);
+    return 2;
+}
 
-// TODO: FMOD_DSP_GetParameterFloat
-// TODO: FMOD_DSP_GetParameterInt
-// TODO: FMOD_DSP_GetParameterBool
+#define FMODBridge_func_FMOD_DSP_GetParameterInt _FMODBridge_func_FMOD_DSP_GetParameterInt
+static int _FMODBridge_func_FMOD_DSP_GetParameterInt(lua_State *L) {
+    FMOD_DSP* dsp = FMODBridge_check_ptr_FMOD_DSP(L, 1);
+    int index = FMODBridge_check_int(L, 2);
+    int value;
+    char valuestr[FMOD_DSP_GETPARAM_VALUESTR_LENGTH];
+    ensure(LL, FMOD_DSP_GetParameterInt, FMOD_RESULT, FMOD_DSP*, int, int*, char*, int);
+    errCheck(FMOD_DSP_GetParameterInt(dsp, index, &value, valuestr, FMOD_DSP_GETPARAM_VALUESTR_LENGTH));
+    FMODBridge_push_int(L, value);
+    FMODBridge_push_ptr_char(L, valuestr);
+    return 2;
+}
 
-// TODO: FMOD_System_GetDriverInfo
-// TODO: FMOD_System_GetPluginInfo
-// TODO: FMOD_System_GetRecordDriverInfo
-// TODO: FMOD_System_GetNetworkProxy
-// TODO: FMOD_Sound_GetName
-// TODO: FMOD_Sound_GetSyncPointInfo
-// TODO: FMOD_ChannelGroup_GetName
-// TODO: FMOD_SoundGroup_GetName
-// TODO: FMOD_DSP_GetInfo
-// TODO: FMOD_Studio_System_LookupPath
-// TODO: FMOD_Studio_EventDescription_GetPath
-// TODO: FMOD_Studio_Bus_GetPath
-// TODO: FMOD_Studio_VCA_GetPath
-// TODO: FMOD_Studio_Bank_GetPath
-// TODO: FMOD_Studio_Bank_GetStringInfo
-// TODO: FMOD_Studio_CommandReplay_GetCommandString
+
+#define FMODBridge_func_FMOD_DSP_GetParameterBool _FMODBridge_func_FMOD_DSP_GetParameterBool
+static int _FMODBridge_func_FMOD_DSP_GetParameterBool(lua_State *L) {
+    FMOD_DSP* dsp = FMODBridge_check_ptr_FMOD_DSP(L, 1);
+    int index = FMODBridge_check_int(L, 2);
+    FMOD_BOOL value;
+    char valuestr[FMOD_DSP_GETPARAM_VALUESTR_LENGTH];
+    ensure(LL, FMOD_DSP_GetParameterBool, FMOD_RESULT, FMOD_DSP*, int, FMOD_BOOL*, char*, int);
+    errCheck(FMOD_DSP_GetParameterBool(dsp, index, &value, valuestr, FMOD_DSP_GETPARAM_VALUESTR_LENGTH));
+    FMODBridge_push_FMOD_BOOL(L, value);
+    FMODBridge_push_ptr_char(L, valuestr);
+    return 2;
+}
+
+#define FMODBridge_func_FMOD_System_GetDriverInfo _FMODBridge_func_FMOD_System_GetDriverInfo
+static int _FMODBridge_func_FMOD_System_GetDriverInfo(lua_State *L) {
+    FMOD_SYSTEM* system = FMODBridge_check_ptr_FMOD_SYSTEM(L, 1);
+    int id = FMODBridge_check_int(L, 2);
+    char name[256];
+    FMOD_GUID* guid = FMODBridge_push_ptr_FMOD_GUID(L, NULL);
+    int systemrate;
+    int speakermode;
+    int speakermodechannels;
+    ensure(LL, FMOD_System_GetDriverInfo, FMOD_RESULT, FMOD_SYSTEM*, int, char*, int, FMOD_GUID*, int*, int*, int*);
+    errCheck(FMOD_System_GetDriverInfo(system, id, name, 256, guid, &systemrate, &speakermode, &speakermodechannels));
+    lua_pushstring(L, name);
+    lua_pushvalue(L, -2);
+    FMODBridge_push_int(L, systemrate);
+    FMODBridge_push_int(L, speakermode);
+    FMODBridge_push_int(L, speakermodechannels);
+    return 5;
+}
+
+#define FMODBridge_func_FMOD_System_GetPluginInfo _FMODBridge_func_FMOD_System_GetPluginInfo
+static int _FMODBridge_func_FMOD_System_GetPluginInfo(lua_State *L) {
+    FMOD_SYSTEM* system = FMODBridge_check_ptr_FMOD_SYSTEM(L, 1);
+    unsigned int handle = FMODBridge_check_unsigned_int(L, 2);
+    int plugintype;
+    char name[256];
+    unsigned int version;
+    ensure(LL, FMOD_System_GetPluginInfo, FMOD_RESULT, FMOD_SYSTEM*, unsigned int, int*, char*, int, unsigned int*);
+    errCheck(FMOD_System_GetPluginInfo(system, handle, &plugintype, name, 256, &version));
+    FMODBridge_push_int(L, plugintype);
+    lua_pushstring(L, name);
+    FMODBridge_push_unsigned_int(L, version);
+    return 3;
+}
+
+#define FMODBridge_func_FMOD_System_GetRecordDriverInfo _FMODBridge_func_FMOD_System_GetRecordDriverInfo
+static int _FMODBridge_func_FMOD_System_GetRecordDriverInfo(lua_State *L) {
+    FMOD_SYSTEM* system = FMODBridge_check_ptr_FMOD_SYSTEM(L, 1);
+    int id = FMODBridge_check_int(L, 2);
+    char name[256];
+    FMOD_GUID* guid = FMODBridge_push_ptr_FMOD_GUID(L, NULL);
+    int systemrate;
+    int speakermode;
+    int speakermodechannels;
+    unsigned int state;
+    ensure(LL, FMOD_System_GetRecordDriverInfo, FMOD_RESULT, FMOD_SYSTEM*, int, char*, int, FMOD_GUID*, int*, int*, int*, unsigned int*);
+    errCheck(FMOD_System_GetRecordDriverInfo(system, id, name, 256, guid, &systemrate, &speakermode, &speakermodechannels, &state));
+    lua_pushstring(L, name);
+    lua_pushvalue(L, -2);
+    FMODBridge_push_int(L, systemrate);
+    FMODBridge_push_int(L, speakermode);
+    FMODBridge_push_int(L, speakermodechannels);
+    FMODBridge_push_unsigned_int(L, state);
+    return 6;
+}
+
+#define nameGetter(fname, type1, size) static int CONCAT(_FMODBridge_func_, fname)(lua_State *L) { \
+    type1* arg1 = CONCAT(FMODBridge_check_ptr_, type1)(L, 1); \
+    char name[size]; \
+    ensure(LL, fname, FMOD_RESULT, type1*, char*, int); \
+    errCheck(fname(arg1, name, size)); \
+    lua_pushstring(L, name); \
+    return 1; \
+}
+
+#define FMODBridge_func_FMOD_System_GetNetworkProxy _FMODBridge_func_FMOD_System_GetNetworkProxy
+nameGetter(FMOD_System_GetNetworkProxy, FMOD_SYSTEM, 512);
+
+#define FMODBridge_func_FMOD_Sound_GetName _FMODBridge_func_FMOD_Sound_GetName
+nameGetter(FMOD_Sound_GetName, FMOD_SOUND, 256);
+
+#define FMODBridge_func_FMOD_Sound_GetSyncPointInfo _FMODBridge_func_FMOD_Sound_GetSyncPointInfo
+static int _FMODBridge_func_FMOD_Sound_GetSyncPointInfo(lua_State *L) {
+    FMOD_SOUND* sound = FMODBridge_check_ptr_FMOD_SOUND(L, 1);
+    FMOD_SYNCPOINT* point = FMODBridge_check_ptr_FMOD_SYNCPOINT(L, 2);
+    char name[256];
+    unsigned int offset;
+    unsigned int offsettype = FMODBridge_check_unsigned_int(L, 4);
+    ensure(LL, FMOD_Sound_GetSyncPointInfo, FMOD_RESULT, FMOD_SOUND*, FMOD_SYNCPOINT*, char*, int, unsigned int*, unsigned int);
+    errCheck(FMOD_Sound_GetSyncPointInfo(sound, point, name, 256, &offset, offsettype));
+    lua_pushstring(L, name);
+    FMODBridge_push_unsigned_int(L, offset);
+    return 2;
+}
+
+#define FMODBridge_func_FMOD_ChannelGroup_GetName _FMODBridge_func_FMOD_ChannelGroup_GetName
+nameGetter(FMOD_ChannelGroup_GetName, FMOD_CHANNELGROUP, 256);
+
+#define FMODBridge_func_FMOD_SoundGroup_GetName _FMODBridge_func_FMOD_SoundGroup_GetName
+nameGetter(FMOD_SoundGroup_GetName, FMOD_SOUNDGROUP, 256);
+
+#define FMODBridge_func_FMOD_DSP_GetInfo _FMODBridge_func_FMOD_DSP_GetInfo
+static int _FMODBridge_func_FMOD_DSP_GetInfo(lua_State *L) {
+    FMOD_DSP* dsp = FMODBridge_check_ptr_FMOD_DSP(L, 1);
+    char name[32];
+    unsigned int version;
+    int channels;
+    int configwidth;
+    int configheight;
+    ensure(LL, FMOD_DSP_GetInfo, FMOD_RESULT, FMOD_DSP*, char*, unsigned int*, int*, int*, int*);
+    errCheck(FMOD_DSP_GetInfo(dsp, name, &version, &channels, &configwidth, &configheight));
+    lua_pushstring(L, name);
+    FMODBridge_push_unsigned_int(L, version);
+    FMODBridge_push_int(L, channels);
+    FMODBridge_push_int(L, configwidth);
+    FMODBridge_push_int(L, configheight);
+    return 5;
+}
+
+#define FMODBridge_func_FMOD_Studio_System_LookupPath _FMODBridge_func_FMOD_Studio_System_LookupPath
+static int _FMODBridge_func_FMOD_Studio_System_LookupPath(lua_State *L) {
+    FMOD_STUDIO_SYSTEM* system = FMODBridge_check_ptr_FMOD_STUDIO_SYSTEM(L, 1);
+    const FMOD_GUID* id = FMODBridge_check_ptr_FMOD_GUID(L, 2);
+    int retrieved;
+    ensure(ST, FMOD_Studio_System_LookupPath, FMOD_RESULT, FMOD_STUDIO_SYSTEM*, const FMOD_GUID*, char*, int, int*);
+    errCheck(FMOD_Studio_System_LookupPath(system, id, NULL, 0, &retrieved));
+    char *path = (char*)malloc(retrieved);
+    errCheckBegin(FMOD_Studio_System_LookupPath(system, id, path, retrieved, &retrieved)) {
+        free(path);
+    } errCheckEnd;
+    lua_pushstring(L, path);
+    free(path);
+    return 1;
+}
+
+#define pathGetter(fname, type1) static int CONCAT(_FMODBridge_func_, fname)(lua_State *L) { \
+    type1* arg1 = CONCAT(FMODBridge_check_ptr_, type1)(L, 1); \
+    int retrieved; \
+    ensure(ST, fname, FMOD_RESULT, type1*, char*, int, int*); \
+    errCheck(fname(arg1, NULL, 0, &retrieved)); \
+    char *path = (char*)malloc(retrieved); \
+    errCheckBegin(fname(arg1, path, retrieved, &retrieved)) { \
+        free(path); \
+    } errCheckEnd; \
+    lua_pushstring(L, path); \
+    free(path); \
+    return 1; \
+}
+
+#define FMODBridge_func_FMOD_Studio_EventDescription_GetPath _FMODBridge_func_FMOD_Studio_EventDescription_GetPath
+pathGetter(FMOD_Studio_EventDescription_GetPath, FMOD_STUDIO_EVENTDESCRIPTION)
+
+#define FMODBridge_func_FMOD_Studio_Bus_GetPath _FMODBridge_func_FMOD_Studio_Bus_GetPath
+pathGetter(FMOD_Studio_Bus_GetPath, FMOD_STUDIO_BUS)
+
+#define FMODBridge_func_FMOD_Studio_VCA_GetPath _FMODBridge_func_FMOD_Studio_VCA_GetPath
+pathGetter(FMOD_Studio_VCA_GetPath, FMOD_STUDIO_VCA)
+
+#define FMODBridge_func_FMOD_Studio_Bank_GetPath _FMODBridge_func_FMOD_Studio_Bank_GetPath
+pathGetter(FMOD_Studio_Bank_GetPath, FMOD_STUDIO_BANK)
+
+#define FMODBridge_func_FMOD_Studio_Bank_GetStringInfo _FMODBridge_func_FMOD_Studio_Bank_GetStringInfo
+static int _FMODBridge_func_FMOD_Studio_Bank_GetStringInfo(lua_State *L) {
+    FMOD_STUDIO_BANK* bank = FMODBridge_check_ptr_FMOD_STUDIO_BANK(L, 1);
+    int index = FMODBridge_check_int(L, 2);
+    FMOD_GUID* id = FMODBridge_push_ptr_FMOD_GUID(L, NULL);
+    int retrieved;
+    ensure(ST, FMOD_Studio_Bank_GetStringInfo, FMOD_RESULT, FMOD_STUDIO_BANK*, int, FMOD_GUID*, char*, int, int*);
+    errCheck(FMOD_Studio_Bank_GetStringInfo(bank, index, id, NULL, 0, &retrieved));
+    char *path = (char*)malloc(retrieved);
+    errCheckBegin(FMOD_Studio_Bank_GetStringInfo(bank, index, id, path, retrieved, &retrieved)) {
+        free(path);
+    } errCheckEnd;
+    lua_pushstring(L, path);
+    free(path);
+    return 2;
+}
+
+#define FMODBridge_func_FMOD_Studio_CommandReplay_GetCommandString _FMODBridge_func_FMOD_Studio_CommandReplay_GetCommandString
+static int _FMODBridge_func_FMOD_Studio_CommandReplay_GetCommandString(lua_State *L) {
+    FMOD_STUDIO_COMMANDREPLAY* replay = FMODBridge_check_ptr_FMOD_STUDIO_COMMANDREPLAY(L, 1);
+    int commandindex = FMODBridge_check_int(L, 2);
+    char buffer[512];
+    ensure(ST, FMOD_Studio_CommandReplay_GetCommandString, FMOD_RESULT, FMOD_STUDIO_COMMANDREPLAY*, int, char*, int);
+    errCheck(FMOD_Studio_CommandReplay_GetCommandString(replay, commandindex, buffer, 512));
+    lua_pushstring(L, buffer);
+    return 1;
+}
 
 /* Generated function definitions */
 
