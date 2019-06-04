@@ -215,16 +215,23 @@ def generate_bindings(ast):
             self.generated = True
             arg_index = 1
             return_count = 0
+            output_ptr_count = 0
             for arg in self.args:
                 if arg.usage == "unknown":
                     self.generated = False
                 if arg.usage == "input" or arg.usage == "input_ptr" or arg.usage == "input_deref":
                     arg.arg_index = arg_index
                     arg_index = arg_index + 1
-                if arg.usage == "output" or arg.usage == "output_ptr":
+                if arg.usage == "output":
                     return_count = return_count + 1
+                if arg.usage == "output_ptr":
+                    arg.output_ptr_index = output_ptr_count
+                    arg.output_index = return_count
+                    return_count = return_count + 1
+                    output_ptr_count = output_ptr_count + 1
                 arg.accessor = accessors[arg.usage] if arg.usage in accessors else ""
             self.return_count = return_count
+            self.output_ptr_count = output_ptr_count
             if not self.generated:
                 print("Cannot auto-generate: " + self.name)
 
