@@ -3,6 +3,8 @@
 #include "fmod_bridge.hpp"
 #include "fmod_errors.h"
 
+/* Error handling */
+
 static int FMODBridge_registry_FMOD_RESULT = LUA_REFNIL;
 inline static void errCheck_(FMOD_RESULT res, lua_State* L) {
     if (res != FMOD_OK) {
@@ -17,22 +19,20 @@ inline static void errCheck_(FMOD_RESULT res, lua_State* L) {
 }
 #define errCheck(res) errCheck_(res, L)
 
+/* Basic types */
+
 #define FMODBridge_push_char(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_char(L, index) ((char)luaL_checknumber(L, index))
 #define FMODBridge_push_short(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_short(L, index) ((short)luaL_checknumber(L, index))
 #define FMODBridge_push_int(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_int(L, index) ((int)luaL_checknumber(L, index))
-#define FMODBridge_push_long(L, x) lua_pushnumber(L, (lua_Number)(x))
-#define FMODBridge_check_long(L, index) ((long)luaL_checknumber(L, index))
 #define FMODBridge_push_unsigned_char(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_unsigned_char(L, index) ((unsigned char)luaL_checknumber(L, index))
 #define FMODBridge_push_unsigned_short(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_unsigned_short(L, index) ((unsigned short)luaL_checknumber(L, index))
 #define FMODBridge_push_unsigned_int(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_unsigned_int(L, index) ((unsigned int)luaL_checknumber(L, index))
-#define FMODBridge_push_unsigned_long(L, x) lua_pushnumber(L, (lua_Number)(x))
-#define FMODBridge_check_unsigned_long(L, index) ((unsigned long)luaL_checknumber(L, index))
 #define FMODBridge_push_float(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_float(L, index) ((float)luaL_checknumber(L, index))
 #define FMODBridge_push_double(L, x) lua_pushnumber(L, (lua_Number)(x))
@@ -59,6 +59,8 @@ inline void _FMODBridge_push_FMOD_VECTOR(lua_State *L, FMOD_VECTOR vec) {
 inline void _FMODBridge_push_ptr_FMOD_VECTOR(lua_State *L, const FMOD_VECTOR * vec) {
     FMODBridge_dmScript_PushVector3(L, vec->x, vec->y, vec->z);
 }
+
+/* Structs and Classes */
 
 static void * pushStruct(lua_State *L, const void * structData, size_t structSize, int registryIndex) {
     void * userdata = lua_newuserdata(L, structSize);
@@ -97,6 +99,95 @@ static void * pushClass(lua_State *L, void * instance, int registryIndex) {
 {% for struct in structs
     %}static int FMODBridge_registry_{{ struct.name }} = LUA_REFNIL;
 {% endfor %}
+
+/* 64-bit values */
+
+static int FMODBridge_registry_long_long = LUA_REFNIL;
+static int FMODBridge_registry_unsigned_long_long = LUA_REFNIL;
+
+#define FMODBridge_check_long_long(L, index) checkLongLong(L, index, FMODBridge_registry_long_long, "s64")
+#define FMODBridge_check_unsigned_long_long(L, index) ((unsigned long long)checkLongLong(L, index, FMODBridge_registry_unsigned_long_long, "u64"))
+#define FMODBridge_push_long_long(L, x) pushLongLong(L, (long long)(x), FMODBridge_registry_long_long)
+#define FMODBridge_push_unsigned_long_long(L, x) pushLongLong(L, (long long)(x), FMODBridge_registry_unsigned_long_long)
+
+long long checkLongLong(lua_State *L, int index, int registryIndex, const char * structName) {
+    if (lua_type(L, index) == LUA_TNUMBER) {
+        return (long long)lua_tonumber(L, index);
+    }
+    return *((long long*)checkStruct(L, index, registryIndex, structName));
+}
+
+static void pushLongLong(lua_State *L, long long value, int registryIndex) {
+    long long* userdata = (long long*)lua_newuserdata(L, sizeof(long long));
+    *userdata = value;
+    lua_rawgeti(L, LUA_REGISTRYINDEX, registryIndex);
+    lua_setmetatable(L, -2);
+}
+
+static int longLongConstructor(lua_State *L) {
+    long long value;
+    lua_Number arg1 = luaL_checknumber(L, 1);
+    if (lua_isnoneornil(L, 2)) {
+        value = (long long)arg1;
+    } else {
+        lua_Number arg2 = luaL_checknumber(L, 2);
+        value = ((long long)((long)arg1)) | (((long long)((long)arg2)) << 32);
+    }
+    pushLongLong(L, value, (int)lua_tonumber(L, lua_upvalueindex(1)));
+    return 1;
+}
+
+static int longLongGetValue(lua_State *L) {
+    long long value = FMODBridge_check_long_long(L, 1);
+    lua_pushnumber(L, (lua_Number)value);
+    return 1;
+}
+
+static int unsignedLongLongGetValue(lua_State *L) {
+    unsigned long long value = FMODBridge_check_unsigned_long_long(L, 1);
+    lua_pushnumber(L, (lua_Number)value);
+    return 1;
+}
+
+static int longLongGetLow(lua_State *L) {
+    unsigned long long value = (unsigned long long)FMODBridge_check_long_long(L, 1);
+    lua_pushnumber(L, (unsigned int)value);
+    return 1;
+}
+
+static int unsignedLongLongGetLow(lua_State *L) {
+    unsigned long long value = (unsigned long long)FMODBridge_check_unsigned_long_long(L, 1);
+    lua_pushnumber(L, (unsigned int)value);
+    return 1;
+}
+
+static int longLongGetHigh(lua_State *L) {
+    unsigned long long value = (unsigned long long)FMODBridge_check_long_long(L, 1);
+    lua_pushnumber(L, (unsigned int)(value >> 32));
+    return 1;
+}
+
+static int unsignedLongLongGetHigh(lua_State *L) {
+    unsigned long long value = (unsigned long long)FMODBridge_check_unsigned_long_long(L, 1);
+    lua_pushnumber(L, (unsigned int)(value >> 32));
+    return 1;
+}
+
+static int longLongToString(lua_State *L) {
+    char s[22];
+    sprintf(s, "%lld", FMODBridge_check_long_long(L, 1));
+    lua_pushstring(L, s);
+    return 1;
+}
+
+static int unsignedLongLongToString(lua_State *L) {
+    char s[22];
+    sprintf(s, "%llu", FMODBridge_check_unsigned_long_long(L, 1));
+    lua_pushstring(L, s);
+    return 1;
+}
+
+/* Struct properties */
 
 #define declarePropertyGetter(typename, type) \
     static int CONCAT(FMODBridge_propertyGet_, typename)(lua_State *L) { \
@@ -140,16 +231,16 @@ declarePropertyGetter(short, short);
 declarePropertySetter(short, short);
 declarePropertyGetter(int, int);
 declarePropertySetter(int, int);
-declarePropertyGetter(long, long);
-declarePropertySetter(long, long);
+declarePropertyGetter(long_long, long long);
+declarePropertySetter(long_long, long long);
 declarePropertyGetter(unsigned_char, unsigned char);
 declarePropertySetter(unsigned_char, unsigned char);
 declarePropertyGetter(unsigned_short, unsigned short);
 declarePropertySetter(unsigned_short, unsigned short);
 declarePropertyGetter(unsigned_int, unsigned int);
 declarePropertySetter(unsigned_int, unsigned int);
-declarePropertyGetter(unsigned_long, unsigned long);
-declarePropertySetter(unsigned_long, unsigned long);
+declarePropertyGetter(unsigned_long_long, unsigned long long);
+declarePropertySetter(unsigned_long_long, unsigned long long);
 declarePropertyGetter(float, float);
 declarePropertySetter(float, float);
 declarePropertyGetter(double, double);
@@ -232,6 +323,8 @@ static int structNewIndexMetamethod(lua_State *L) {
     return 0;
 }
 
+/* Custom function definitions */
+
 void * FMODBridge_check_ptr_void_size(lua_State *L, int index, size_t *length) {
     if (lua_type(L, index) == LUA_TSTRING) {
         return (char*)lua_tolstring(L, index, length);
@@ -311,7 +404,7 @@ static int _FMODBridge_func_FMOD_Studio_EventInstance_Set3DAttributes(lua_State 
 // TODO: FMOD_Studio_Bank_GetStringInfo
 // TODO: FMOD_Studio_CommandReplay_GetCommandString
 
-// Do something with long long values
+/* Generated function definitions */
 
 {% for f in functions %}
 /* {{ f.name }}({% for arg in f.args %}{{ arg.usage }} {{ arg.type.c_type }} {{ arg.name }}, {% endfor %}) */
@@ -331,6 +424,8 @@ static int _FMODBridge_func_{{ f.name }}(lua_State *L) {
 #endif
 {% endif %}
 {% endfor %}
+
+/* Register everything to the Lua namespace */
 
 extern "C" void FMODBridge_register(lua_State *L) {
     lua_newtable(L);
@@ -397,6 +492,34 @@ extern "C" void FMODBridge_register(lua_State *L) {
     #define addProperty(structName, name, typename) \
         addPropertyGetter(structName, name, typename); \
         addPropertySetter(structName, name, typename)
+
+    beginStruct(long_long);
+    lua_pushnumber(L, FMODBridge_registry_long_long);
+    lua_pushcclosure(L, &longLongConstructor, 1);
+    lua_setfield(L, -6, "s64");
+    lua_pushcfunction(L, &longLongGetValue);
+    lua_setfield(L, -3, "value");
+    lua_pushcfunction(L, &longLongGetLow);
+    lua_setfield(L, -3, "low");
+    lua_pushcfunction(L, &longLongGetHigh);
+    lua_setfield(L, -3, "high");
+    lua_pushcfunction(L, &longLongToString);
+    lua_setfield(L, -4, "__tostring");
+    endStruct();
+
+    beginStruct(unsigned_long_long);
+    lua_pushnumber(L, FMODBridge_registry_unsigned_long_long);
+    lua_pushcclosure(L, &longLongConstructor, 1);
+    lua_setfield(L, -6, "u64");
+    lua_pushcfunction(L, &unsignedLongLongGetValue);
+    lua_setfield(L, -3, "value");
+    lua_pushcfunction(L, &unsignedLongLongGetLow);
+    lua_setfield(L, -3, "low");
+    lua_pushcfunction(L, &unsignedLongLongGetHigh);
+    lua_setfield(L, -3, "high");
+    lua_pushcfunction(L, &unsignedLongLongToString);
+    lua_setfield(L, -4, "__tostring");
+    endStruct();
 
     {% for struct in structs %}beginStruct({{ struct.name }});
         {% if not struct.is_class %}addStructConstructor({{ struct.name }}, "{{ struct.constructor_name }}", {{ struct.constructor_table }});
