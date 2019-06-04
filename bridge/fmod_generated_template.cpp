@@ -419,6 +419,7 @@ static int _FMODBridge_func_{{ f.name }}(lua_State *L) {
     {% endif %}{% endfor %}ensure({{ f.library }}, {{ f.name }}, FMOD_RESULT{% for arg in f.args %}, {{ arg.type.c_type }}{% endfor %});
     errCheck({{ f.name }}({% for arg in f.args %}{% if not loop.first %}, {% endif %}{{ arg.accessor }}{{ arg.name }}{% endfor %}));
     {% for arg in f.args %}{% if arg.usage == "output" %}FMODBridge_push_{{ arg.type.child.name }}(L, {{ arg.name }});
+    {% elif arg.usage == "output_ptr" %}lua_pushvalue(L, {{ arg.output_ptr_index - f.output_ptr_count - arg.output_index }});
     {% endif %}{% endfor %}return {{ f.return_count }};
 }
 #endif
