@@ -1,15 +1,11 @@
-#include "fmod_bridge.hpp"
+#include "fmod_bridge.h"
 #include <fmod_errors.h>
-#include <LuaBridge/LuaBridge.h>
 #include <string.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
-using namespace luabridge;
-
-extern "C" {
 FMOD_STUDIO_SYSTEM* FMODBridge_system = NULL;
 FMOD_SYSTEM* FMODBridge_lowLevelSystem = NULL;
 bool FMODBridge_isPaused = false;
@@ -17,7 +13,6 @@ bool FMODBridge_isPaused = false;
 #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
 bool FMODBridge_isLinked = false;
 #endif
-}
 
 static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
     if (0 == strcmp(str, "default")) { return FMOD_SPEAKERMODE_DEFAULT; }
@@ -43,7 +38,7 @@ static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
     } \
 } while(0)
 
-extern "C" void FMODBridge_init(lua_State *L) {
+void FMODBridge_init(lua_State *L) {
     #ifdef __EMSCRIPTEN__
     EM_ASM(Module.cwrap = Module.cwrap || cwrap);
     #endif
@@ -115,7 +110,7 @@ extern "C" void FMODBridge_init(lua_State *L) {
     FMODBridge_register(L);
 }
 
-extern "C" void FMODBridge_update() {
+void FMODBridge_update() {
     if (!FMODBridge_system || FMODBridge_isPaused) { return; }
 
     ensure(ST, FMOD_Studio_System_Update, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
@@ -130,7 +125,7 @@ extern "C" void FMODBridge_update() {
     }
 }
 
-extern "C" void FMODBridge_finalize() {
+void FMODBridge_finalize() {
     if (FMODBridge_system) {
         ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
 
@@ -150,7 +145,7 @@ extern "C" void FMODBridge_finalize() {
     #endif
 }
 
-extern "C" void FMODBridge_resumeMixer() {
+void FMODBridge_resumeMixer() {
     if (FMODBridge_system && FMODBridge_isPaused) {
         ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
         ensure(LL, FMOD_System_MixerResume, FMOD_RESULT, FMOD_SYSTEM*);
@@ -159,7 +154,7 @@ extern "C" void FMODBridge_resumeMixer() {
     }
 }
 
-extern "C" void FMODBridge_suspendMixer() {
+void FMODBridge_suspendMixer() {
     if (FMODBridge_system && !FMODBridge_isPaused) {
         ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
         ensure(LL, FMOD_System_MixerSuspend, FMOD_RESULT, FMOD_SYSTEM*);
@@ -170,7 +165,7 @@ extern "C" void FMODBridge_suspendMixer() {
 
 #ifdef __EMSCRIPTEN__
 __attribute__((used))
-extern "C" void FMODBridge_unmuteAfterUserInteraction() {
+void FMODBridge_unmuteAfterUserInteraction() {
     if (FMODBridge_system && !FMODBridge_isPaused) {
         ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
         ensure(LL, FMOD_System_MixerSuspend, FMOD_RESULT, FMOD_SYSTEM*);
@@ -181,13 +176,13 @@ extern "C" void FMODBridge_unmuteAfterUserInteraction() {
 }
 #endif
 
-extern "C" void FMODBridge_activateApp() {
+void FMODBridge_activateApp() {
     #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
     FMODBridge_resumeMixer();
     #endif
 }
 
-extern "C" void FMODBridge_deactivateApp() {
+void FMODBridge_deactivateApp() {
     #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
     FMODBridge_suspendMixer();
     #endif
