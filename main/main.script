@@ -16,6 +16,19 @@ function init(self)
   local event = event_description:create_instance()
   self.event = event
 
+  -- Error handling example
+  local ok, err = pcall(function ()
+    fmod.studio.system:get_event("event:/Inexistent event")
+  end)
+  if not ok then
+    print(err)
+    local code = fmod.error_code[err] -- The FMOD error code (a number).
+    print(code)
+    if code == fmod.ERR_EVENT_NOTFOUND then
+      print("Ooops! This event doesn't exist!")
+    end
+  end
+
   local listener_attr = fmod._3D_ATTRIBUTES()
   self.listener_attr = listener_attr
   listener_attr.position = go.get_world_position("listener") * world_scale
