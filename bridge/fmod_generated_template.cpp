@@ -332,10 +332,7 @@ static int _FMODBridge_func_{{ f.name }}(lua_State *L) {
 {% endif %}
 {% endfor %}
 
-extern "C" void FMODBridge_registerClasses(lua_State *L) {
-}
-
-extern "C" void FMODBridge_registerEnums(lua_State *L) {
+extern "C" void FMODBridge_register(lua_State *L) {
     lua_newtable(L);
     lua_pushvalue(L, -1);
     lua_setglobal(L, "fmod");

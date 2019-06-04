@@ -112,8 +112,7 @@ extern "C" void FMODBridge_init(lua_State *L) {
     FMODBridge_initIOSInterruptionHandler();
     #endif
 
-    FMODBridge_registerEnums(L);
-    FMODBridge_registerClasses(L);
+    FMODBridge_register(L);
 }
 
 extern "C" void FMODBridge_update() {
