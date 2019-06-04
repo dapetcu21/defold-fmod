@@ -112,11 +112,15 @@ end
 
 ## 64-bit values
 
-Since Lua 5.1 doesn't have a 64-bit type, you can use `fmod.s64()` and `fmod.u64()`
-to create 64-bit values.
+A small amount of FMOD functions and structs work with 64-bit number types.
+Lua 5.1 doesn't have a 64-bit type. Functions with 64-bit arguments accept
+regular lua numbers instead if the extra precision is not needed, but if you
+need more, use `fmod.s64()` and `fmod.u64()`,
+
+Functions that return 64-bit numbers will return instances of `fmod.s64` or `fmod.u64`.
 
 ```lua
-x = fmod.s64(num) -- Converts a Lua number (up to 52bits of integer precision) to a 64-bit value
+x = fmod.s64(num) -- Converts a Lua number (up to 52 bits of integer precision) to a 64-bit value
 x = fmod.s64(low, high) -- Creates a 64-bit value from two 32-bit integers
 x.value -- Does the best-effort conversion to a Lua number (accurate within 52 bits of precision)
 x.low -- Gets the lowest 32-bits as an unsigned int value
