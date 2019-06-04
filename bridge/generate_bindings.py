@@ -320,7 +320,7 @@ def generate_bindings(ast):
         loader = FileSystemLoader('.'),
         autoescape = False,
     )
-    template = env.get_template('fmod_generated_template.cpp')
+    template = env.get_template('fmod_generated_template.c')
 
     output = template.render(
         enums = enums,
@@ -329,7 +329,7 @@ def generate_bindings(ast):
         global_functions = global_functions,
     )
 
-    with open('src/fmod_generated.cpp', 'w') as f:
+    with open('src/fmod_generated.c', 'w') as f:
         f.write(output)
 
 

@@ -2,7 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "fmod_bridge.hpp"
+#include "fmod_bridge.h"
 #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
 
 #ifndef _WIN32
@@ -14,17 +14,17 @@
 
 #include <string.h>
 #include <stdlib.h>
+
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #endif
+
 #ifdef __linux__
 #include <unistd.h>
 #endif
 
-extern "C" {
 dlModuleT FMODBridge_dlHandleLL = NULL;
 dlModuleT FMODBridge_dlHandleST = NULL;
-}
 
 #if defined(_WIN32)
     #define SEP "\\"
@@ -94,7 +94,7 @@ static void jniLogException(JNIEnv* env) {
     env->DeleteLocalRef(e);
 }
 
-extern "C" bool FMODBridge_linkLibraries() {
+bool FMODBridge_linkLibraries() {
     FMODBridge::AttachScope jniScope;
     JNIEnv* env = jniScope.env;
 
@@ -160,7 +160,7 @@ extern "C" bool FMODBridge_linkLibraries() {
     return result;
 }
 
-extern "C" void FMODBridge_cleanupLibraries() {
+void FMODBridge_cleanupLibraries() {
     FMODBridge::AttachScope jniScope;
     JNIEnv* env = jniScope.env;
 
@@ -181,7 +181,7 @@ static bool endsIn(const char * haystack, const char * needle) {
     return (haystackLen >= needleLen && 0 == strcmp(needle, haystack + haystackLen - needleLen));
 }
 
-extern "C" bool FMODBridge_linkLibraries() {
+bool FMODBridge_linkLibraries() {
     if (FMODBridge_dlHandleLL && FMODBridge_dlHandleST) {
         return true;
     }
@@ -211,36 +211,36 @@ extern "C" bool FMODBridge_linkLibraries() {
         #ifdef __APPLE__
         uint32_t bufsize = 0;
         _NSGetExecutablePath(NULL, &bufsize);
-        exePath = new char[bufsize];
+        exePath = (char*)malloc(bufsize);
         _NSGetExecutablePath(exePath, &bufsize);
         libPath = dirname(exePath);
-        char* newPath = new char[strlen(libPath) + 1];
+        char* newPath = (char*)malloc(strlen(libPath) + 1);
         strcpy(newPath, libPath);
         libPath = newPath;
         mustFreeLibPath = true;
 
         #elif defined(__linux__)
-        exePath = new char[PATH_MAX + 2];
+        exePath = (char*)malloc(PATH_MAX + 2);
         ssize_t ret = readlink("/proc/self/exe", exePath, PATH_MAX + 2);
         if (ret >= 0 && ret <= PATH_MAX + 1) {
           exePath[ret] = 0;
-          char* newPath = new char[ret + 1];
+          char* newPath = (char*)malloc(ret + 1);
           strcpy(newPath, exePath);
           libPath = dirname(newPath); // dirname() clobbers newPath
-          char* finalPath = new char[ret + 1];
+          char* finalPath = (char*)malloc(ret + 1);
           strcpy(finalPath, libPath);
           libPath = finalPath;
           mustFreeLibPath = true;
-          delete[] newPath;
+          free(newPath);
         } else {
           exePath[0] = 0;
         }
 
         #elif defined(_WIN32)
-        exePath = new char[MAX_PATH];
+        exePath = (char*)malloc(MAX_PATH);
         size_t ret = GetModuleFileNameA(GetModuleHandle(NULL), exePath, MAX_PATH);
         if (ret > 0 && ret < MAX_PATH) {
-            char* newPath = new char[MAX_PATH];
+            char* newPath = (char*)malloc(MAX_PATH);
             strcpy(newPath, exePath);
             dirname(newPath);
             libPath = newPath;
@@ -298,7 +298,7 @@ extern "C" bool FMODBridge_linkLibraries() {
             size_t resPathLen = strlen(resPath);
             size_t libPathLen = strlen(FMB_LIB_PATH);
             size_t len = 0;
-            char* newPath = new char[projPathLen + 1 + resPathLen + libPathLen + 1];
+            char* newPath = (char*)malloc(projPathLen + 1 + resPathLen + libPathLen + 1);
 
             strcpy(newPath, projPath);
             len += projPathLen;
@@ -318,7 +318,7 @@ extern "C" bool FMODBridge_linkLibraries() {
 
             strcat(newPath + len, FMB_LIB_PATH);
 
-            if (mustFreeLibPath) { delete[] libPath; }
+            if (mustFreeLibPath) { free((void*)libPath); }
             libPath = newPath;
             mustFreeLibPath = true;
         }
@@ -352,9 +352,9 @@ extern "C" bool FMODBridge_linkLibraries() {
             if (!var) { LOGW("%s", dlerror()); }
     #endif
 
-    if (exePath) { delete[] exePath; }
+    if (exePath) { free(exePath); }
     size_t maxPathLen = strlen(libPath) + 20;
-    exePath = new char[maxPathLen + 1];
+    exePath = (char*)malloc(maxPathLen + 1);
 
     strcpy(exePath, libPath);
     strncat(exePath, SEP LIBPREFIX "fmod" LIBPOSTFIX "." LIBEXT, maxPathLen);
@@ -364,12 +364,12 @@ extern "C" bool FMODBridge_linkLibraries() {
     strncat(exePath, SEP LIBPREFIX "fmodstudio" LIBPOSTFIX "." LIBEXT, maxPathLen);
     libOpen(FMODBridge_dlHandleST, exePath);
 
-    if (mustFreeLibPath) { delete[] libPath; }
-    delete[] exePath;
+    if (mustFreeLibPath) { free((void*)libPath); }
+    free(exePath);
     return (FMODBridge_dlHandleLL && FMODBridge_dlHandleST);
 }
 
-extern "C" void FMODBridge_cleanupLibraries() {
+void FMODBridge_cleanupLibraries() {
 }
 #endif
 #endif

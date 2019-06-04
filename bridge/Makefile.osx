@@ -1,21 +1,20 @@
 LIBPATH := ../fmod/lib/x86_64-osx/libfmodbridge.a
 
 SOURCES = \
-	src/fmod_init.cpp \
-	src/fmod_dynamic_loading.cpp \
-	src/fmod_generated.cpp
+	src/fmod_init.c \
+	src/fmod_dynamic_loading.c \
+	src/fmod_generated.c
 
-HEADERS = \
-	src/fmod_bridge.hpp \
+HEADERS = src/fmod_bridge.h
 
-CXXFLAGS := -std=c++11 -stdlib=libc++ -O3 -fvisibility=hidden -fno-exceptions -I./include -mmacosx-version-min=10.7
+CFLAGS := -std=c11 -O3 -fvisibility=hidden -I./include -mmacosx-version-min=10.7
 
 all: $(LIBPATH)
 
-OBJECTS = $(patsubst src/%.cpp,build/osx-%.o,$(SOURCES))
+OBJECTS = $(patsubst src/%.c,build/osx-%.o,$(SOURCES))
 
-build/osx-%.o: src/%.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+build/osx-%.o: src/%.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(LIBPATH): $(OBJECTS)
 	libtool -static $^ -o $@

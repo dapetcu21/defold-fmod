@@ -1,10 +1,8 @@
 #ifndef FMOD_BRIDGE_H
 #define FMOD_BRIDGE_H
 
-extern "C" {
 #include <luajit-2.0/lua.h>
 #include <luajit-2.0/lauxlib.h>
-}
 
 #include <stdint.h>
 #include <fmod_studio.h>
@@ -63,62 +61,54 @@ extern "C" {
                 TWOORMORE, TWOORMORE, TWOORMORE, TWOORMORE, ONE, throwaway)
 #define SELECT_10TH(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, ...) a10
 
-extern "C" {
-    // Extension API
-    typedef unsigned int FMODBridge_HBuffer;
-    int FMODBridge_dmBuffer_GetBytes(FMODBridge_HBuffer, void**, uint32_t*);
-    void FMODBridge_dmScript_PushBuffer(lua_State* L, FMODBridge_HBuffer);
-    FMODBridge_HBuffer FMODBridge_dmScript_CheckBuffer(lua_State* L, int);
-    void FMODBridge_dmScript_PushVector3(lua_State* L, float x, float y, float z);
-    FMOD_VECTOR FMODBridge_dmScript_CheckVector3(lua_State* L, int index);
-    const char* FMODBridge_dmConfigFile_GetString(const char*, const char*);
-    int32_t FMODBridge_dmConfigFile_GetInt(const char*, int32_t);
+// Extension API
+typedef unsigned int FMODBridge_HBuffer;
+int FMODBridge_dmBuffer_GetBytes(FMODBridge_HBuffer, void**, uint32_t*);
+void FMODBridge_dmScript_PushBuffer(lua_State* L, FMODBridge_HBuffer);
+FMODBridge_HBuffer FMODBridge_dmScript_CheckBuffer(lua_State* L, int);
+void FMODBridge_dmScript_PushVector3(lua_State* L, float x, float y, float z);
+FMOD_VECTOR FMODBridge_dmScript_CheckVector3(lua_State* L, int index);
+const char* FMODBridge_dmConfigFile_GetString(const char*, const char*);
+int32_t FMODBridge_dmConfigFile_GetInt(const char*, int32_t);
+
 #ifdef __ANDROID__
-    JavaVM* FMODBridge_dmGraphics_GetNativeAndroidJavaVM();
-    jobject FMODBridge_dmGraphics_GetNativeAndroidActivity();
+JavaVM* FMODBridge_dmGraphics_GetNativeAndroidJavaVM();
+jobject FMODBridge_dmGraphics_GetNativeAndroidActivity();
 #endif
 
-    // Lifecycle functions
-    void FMODBridge_init(lua_State* L);
-    void FMODBridge_update();
-    void FMODBridge_finalize();
-    void FMODBridge_activateApp();
-    void FMODBridge_deactivateApp();
+// Lifecycle functions
+void FMODBridge_init(lua_State* L);
+void FMODBridge_update();
+void FMODBridge_finalize();
+void FMODBridge_activateApp();
+void FMODBridge_deactivateApp();
 
-    // Internal functions and members
-    extern FMOD_STUDIO_SYSTEM* FMODBridge_system;
-    extern FMOD_SYSTEM* FMODBridge_lowLevelSystem;
-    extern bool FMODBridge_isPaused;
+// Internal functions and members
+extern FMOD_STUDIO_SYSTEM* FMODBridge_system;
+extern FMOD_SYSTEM* FMODBridge_lowLevelSystem;
+extern bool FMODBridge_isPaused;
 
-    #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
-    extern dlModuleT FMODBridge_dlHandleLL;
-    extern dlModuleT FMODBridge_dlHandleST;
-    extern bool FMODBridge_isLinked;
-    bool FMODBridge_linkLibraries();
-    void FMODBridge_cleanupLibraries();
-    #endif
+#ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
+extern dlModuleT FMODBridge_dlHandleLL;
+extern dlModuleT FMODBridge_dlHandleST;
+extern bool FMODBridge_isLinked;
+bool FMODBridge_linkLibraries();
+void FMODBridge_cleanupLibraries();
+#endif
 
-    void FMODBridge_register(lua_State *L);
+void FMODBridge_register(lua_State *L);
 
-    void FMODBridge_suspendMixer();
-    void FMODBridge_resumeMixer();
+void FMODBridge_suspendMixer();
+void FMODBridge_resumeMixer();
 
-    #if TARGET_OS_IPHONE
-    void FMODBridge_initIOSInterruptionHandler();
-    #endif
-}
+#if TARGET_OS_IPHONE
+void FMODBridge_initIOSInterruptionHandler();
+#endif
 
-namespace FMODBridge {
-    #ifdef __ANDROID__
-    JNIEnv* attachJNI();
-    bool detachJNI(JNIEnv* env);
-    struct AttachScope {
-        JNIEnv* env;
-        AttachScope() : env(attachJNI()) {}
-        ~AttachScope() { detachJNI(env); }
-    };
-    #endif
-}
+#ifdef __ANDROID__
+JNIEnv* FMODBridge_attachJNI();
+void FMODBridge_detachJNI();
+#endif
 
 #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
 
@@ -140,13 +130,7 @@ namespace FMODBridge {
         } \
     }
 
-#ifdef __ANDROID__
-#define ensure(lib, fname, retType, ...) \
-    FMODBridge::AttachScope CONCAT(fname, _AttachScope); \
-    ensure_(lib, fname, retType, __VA_ARGS__)
-#else
 #define ensure(lib, fname, retType, ...) ensure_(lib, fname, retType, __VA_ARGS__)
-#endif
 
 #else
 #define ensure(lib, fname, retType, ...)
