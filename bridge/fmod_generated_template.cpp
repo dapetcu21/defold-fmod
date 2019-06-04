@@ -3,9 +3,15 @@
 #include "fmod_bridge.hpp"
 #include "fmod_errors.h"
 
+static int FMODBridge_registry_FMOD_RESULT = LUA_REFNIL;
 inline static void errCheck_(FMOD_RESULT res, lua_State* L) {
     if (res != FMOD_OK) {
         lua_pushstring(L, FMOD_ErrorString(res));
+        lua_rawgeti(L, LUA_REGISTRYINDEX, FMODBridge_registry_FMOD_RESULT);
+        lua_pushvalue(L, -2);
+        lua_pushnumber(L, res);
+        lua_rawset(L, -3);
+        lua_pop(L, 1);
         lua_error(L);
     }
 }
@@ -337,6 +343,11 @@ extern "C" void FMODBridge_registerEnums(lua_State *L) {
     lua_newtable(L);
     lua_pushvalue(L, -1);
     lua_setfield(L, -3, "studio");
+
+    lua_newtable(L);
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -4, "error_code");
+    FMODBridge_registry_FMOD_RESULT = luaL_ref(L, LUA_REGISTRYINDEX);
 
     #define addEnum(x) \
         lua_pushstring(L, #x); \

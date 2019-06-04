@@ -51,7 +51,7 @@ lib_path = path/to/fmod/res
 Structs and classes are exposed on the `fmod` and `fmod.studio` namespaces. All
 method names are converted from `camelCase` to `snake_case`. Methods that
 returned values through pointer arguments now actually return the values and
-throw with an error string when their result is not `FMOD_OK`.
+throw with a Lua error when their result is not `FMOD_OK`.
 
 Enums are exposed on the `fmod` table without the leading `FMOD_`.
 (eg.: `FMOD_STUDIO_PLAYBACK_PLAYING` is exposed as `fmod.STUDIO_PLAYBACK_PLAYING`)
@@ -81,12 +81,34 @@ event:start()
 
 ## Memory management
 
-The following FMOD classes are automatically garbage collected by Lua and
-you don't need to call `release()` manually:
-`FMOD_STUDIO_EVENTINSTANCE`
+Instances of `FMOD_STUDIO_EVENTINSTANCE` are automatically garbage collected by
+Lua and `release()` is called automatically for you when you no longer hold
+references.
 
-**Anything else is not memory managed and you need to call `instance:release()`
-manually.**
+**Any other class is not memory managed and you still need to call `instance:release()`
+manually, where applicable.**
+
+## Error handling
+
+You can retrieve the error code of an FMOD error and use it for more specific
+error handling:
+
+```lua
+local ok, err = pcall(function ()
+  return fmod.studio.system:get_event("event:/Inexistent event")
+end)
+if ok then
+  local event_description = err
+  event_description:create_instance():start()
+else
+  print(err) -- The error is a string
+  local code = fmod.error_code[err] -- The FMOD error code (a number).
+  print(code)
+  if code == fmod.ERR_EVENT_NOTFOUND then
+    print("Ooops! This event doesn't exist!")
+  end
+end
+```
 
 ## 64-bit values
 
