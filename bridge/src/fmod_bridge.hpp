@@ -98,8 +98,7 @@ extern "C" {
     void FMODBridge_cleanupLibraries();
     #endif
 
-    void FMODBridge_registerClasses(lua_State *L);
-    void FMODBridge_registerEnums(lua_State *L);
+    void FMODBridge_register(lua_State *L);
 
     void FMODBridge_suspendMixer();
     void FMODBridge_resumeMixer();

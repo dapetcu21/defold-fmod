@@ -1,13 +1,13 @@
 [project]
 title = FMOD
 version = 0.1
-custom_resources = banks/
+custom_resources = example/banks/
 
 [bootstrap]
-main_collection = /main/main.collectionc
+main_collection = /example/example.collectionc
 
 [input]
-game_binding = /input/game.input_bindingc
+game_binding = /example/game.input_bindingc
 use_accelerometer = 0
 
 [display]
