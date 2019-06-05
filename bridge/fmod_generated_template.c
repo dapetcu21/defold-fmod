@@ -96,7 +96,54 @@ static void * pushClass(lua_State *L, void * instance, int registryIndex) {
     return instance;
 }
 
+static int FMODBridge_registry_refcount = LUA_REFNIL;
+
+static void * pushClassRefCount(lua_State *L, void * instance, int registryIndex) {
+    pushClass(L, instance, registryIndex);
+
+    /* Increment the ref count */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, FMODBridge_registry_refcount);
+    lua_pushlightuserdata(L, instance);
+    lua_rawget(L, -2);
+    lua_Number refcount = lua_tonumber(L, -1); /* If the value is nil, lua_tonumber returns 0 */
+    refcount += 1;
+    lua_pushlightuserdata(L, instance);
+    lua_pushnumber(L, refcount);
+    lua_rawset(L, -4);
+    lua_pop(L, 2);
+
+    return instance;
+}
+
 #define checkClass(L, index, registryIndex, structName) (*((void**)checkStruct(L, index, registryIndex, structName)))
+
+static int classGC(lua_State *L) {
+    void * instance = *((void**)lua_touserdata(L, 1));
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, FMODBridge_registry_refcount);
+    lua_pushlightuserdata(L, instance);
+    lua_rawget(L, -2);
+
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 2);
+        return 0;
+    }
+
+    lua_Number refcount = lua_tonumber(L, -1);
+    refcount -= 1;
+    lua_pushlightuserdata(L, instance);
+    lua_pushnumber(L, refcount);
+    lua_rawset(L, -4);
+    lua_pop(L, 2);
+
+    if (refcount == 0) {
+        lua_pushvalue(L, lua_upvalueindex(1));
+        lua_pushvalue(L, 1);
+        lua_pcall(L, 1, 0, 0);
+    }
+
+    return 0;
+}
 
 {% for struct in structs
     %}static int FMODBridge_registry_{{ struct.name }} = LUA_REFNIL;
@@ -255,7 +302,8 @@ declarePropertySetter(FMOD_VECTOR, FMOD_VECTOR);
 
 {% for struct in structs %}
 #ifndef FMODBridge_push_ptr_{{ struct.name }}
-{% if struct.is_class %}#define FMODBridge_push_ptr_{{ struct.name }}(L, instance) (({{ struct.name }}*)pushClass(L, instance, FMODBridge_registry_{{ struct.name }}))
+{% if struct.ref_counted %}#define FMODBridge_push_ptr_{{ struct.name }}(L, instance) (({{ struct.name }}*)pushClassRefCount(L, instance, FMODBridge_registry_{{ struct.name }}))
+{% elif struct.is_class %}#define FMODBridge_push_ptr_{{ struct.name }}(L, instance) (({{ struct.name }}*)pushClass(L, instance, FMODBridge_registry_{{ struct.name }}))
 {% else %}#define FMODBridge_push_ptr_{{ struct.name }}(L, structData) (({{ struct.name }}*)pushStruct(L, structData, sizeof({{ struct.name }}), FMODBridge_registry_{{ struct.name }}))
 {% endif %}#endif
 #ifndef FMODBridge_check_ptr_{{ struct.name }}
@@ -617,7 +665,13 @@ static int _FMODBridge_func_{{ f.name }}(lua_State *L) {
     errCheck({{ f.name }}({% for arg in f.args %}{% if not loop.first %}, {% endif %}{{ arg.accessor }}{{ arg.name }}{% endfor %}));
     {% for arg in f.args %}{% if arg.usage == "output" %}FMODBridge_push_{{ arg.type.child.name }}(L, {{ arg.name }});
     {% elif arg.usage == "output_ptr" %}lua_pushvalue(L, {{ arg.output_ptr_index - f.output_ptr_count - arg.output_index }});
-    {% endif %}{% endfor %}return {{ f.return_count }};
+    {% endif %}{% endfor %}{% if f.refcount_release %}
+    lua_rawgeti(L, LUA_REGISTRYINDEX, FMODBridge_registry_refcount);
+    lua_pushlightuserdata(L, {{ f.args[0].name }});
+    lua_pushnil(L);
+    lua_rawset(L, -3);
+    lua_pop(L, 1);
+    {% endif %}return {{ f.return_count }};
 }
 #endif
 {% endif %}
@@ -638,6 +692,9 @@ void FMODBridge_register(lua_State *L) {
     lua_pushvalue(L, -1);
     lua_setfield(L, -4, "error_code");
     FMODBridge_registry_FMOD_RESULT = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    lua_newtable(L);
+    FMODBridge_registry_refcount = luaL_ref(L, LUA_REGISTRYINDEX);
 
     #define addEnum(x) \
         lua_pushstring(L, #x); \
@@ -668,6 +725,11 @@ void FMODBridge_register(lua_State *L) {
         lua_newtable(L); \
         lua_pushvalue(L, -1); \
         lua_setfield(L, -4, "__fieldset")
+
+    #define addDestructor(structName, releaseFname) \
+        lua_pushcfunction(L, &CONCAT(FMODBridge_func_, releaseFname)); \
+        lua_pushcclosure(L, &classGC, 1); \
+        lua_setfield(L, -4, "__gc")
 
     #define endStruct() lua_pop(L, 3)
 
@@ -721,6 +783,7 @@ void FMODBridge_register(lua_State *L) {
 
     {% for struct in structs %}beginStruct({{ struct.name }});
         {% if not struct.is_class %}addStructConstructor({{ struct.name }}, "{{ struct.constructor_name }}", {{ struct.constructor_table }});
+        {% endif %}{% if struct.ref_counted %}addDestructor({{ struct.name }}, {{ struct.release_name }});
         {% endif %}{% for property in struct.properties %}/* {{ property[1].c_type }} {{ property[0] }} */
         {% if property[1].readable %}addPropertyGetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});
         {% endif %}{% if property[1].writeable %}addPropertySetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});

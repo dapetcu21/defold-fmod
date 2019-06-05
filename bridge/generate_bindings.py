@@ -13,6 +13,10 @@ exclusions = {
     "FMOD_VECTOR": True,
 }
 
+ref_counted = {
+    "FMOD_STUDIO_EVENTINSTANCE": True,
+}
+
 accessors = {
     "input_deref": "*",
     "input_ptr": "&",
@@ -121,6 +125,7 @@ def generate_bindings(ast):
         def __init__(self):
             self.methods = []
             self.properties = []
+            self.ref_counted = False
 
         def parse_struct(self, node):
             self.name = node.name
@@ -147,6 +152,7 @@ def generate_bindings(ast):
         def make_class(self, name):
             self.name = name
             self.is_class = True
+            self.ref_counted = node.name in ref_counted
 
     class MethodArgument:
         def __init__(self, node):
@@ -179,6 +185,7 @@ def generate_bindings(ast):
             self.name = node.name
             self.args = []
             self.library = "UK"
+            self.struct = None
 
         def parse_arguments(self):
             for param in self.node.type.args.params:
@@ -193,6 +200,7 @@ def generate_bindings(ast):
                     if caps_name.startswith(type_name + "_"):
                         method_name = self.name[len(type_name) + 1:]
                         struct = structs[type_name]
+                        self.struct = struct
                         struct.methods.append((to_snake_case(method_name), self))
                         if caps_name.startswith("FMOD_STUDIO_"):
                             self.library = "ST"
@@ -232,6 +240,9 @@ def generate_bindings(ast):
                 arg.accessor = accessors[arg.usage] if arg.usage in accessors else ""
             self.return_count = return_count
             self.output_ptr_count = output_ptr_count
+            self.refcount_release = (self.struct and self.struct.name in ref_counted and self.struct.name + "_RELEASE" == self.name.upper())
+            if self.refcount_release:
+                self.struct.release_name = self.name
             if not self.generated:
                 print("Cannot auto-generate: " + self.name)
 
