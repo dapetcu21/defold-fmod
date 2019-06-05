@@ -1,28 +1,34 @@
-LIBPATH := ../fmod/lib/armv7-android/libfmodbridge.a
+LIBPATH_ARM := ../fmod/lib/armv7-android/libfmodbridge.a
+LIBPATH_ARM64 := ../fmod/lib/arm64-android/libfmodbridge.a
 JARPATH := ../fmod/lib/android/fmodbridge.jar
 
 SOURCES = \
-	src/fmod_init.cpp \
-	src/fmod_classes.cpp \
-	src/fmod_enums.cpp \
-	src/fmod_dynamic_loading.cpp
+	src/fmod_init.c \
+	src/fmod_dynamic_loading.c \
+	src/fmod_generated.c
 
 HEADERS = \
-	src/fmod_bridge.hpp \
-	src/fmod_helpers.hpp
+	src/fmod_bridge.h
 
 JAVA_FILES = \
 	src/me/petcu/fmodbridge/BridgeHelper.java
 
-STANDALONE_NDK := /opt/android-ndk-standalone-arm
-CXX := $(STANDALONE_NDK)/bin/arm-linux-androideabi-g++
-AR := $(STANDALONE_NDK)/bin/arm-linux-androideabi-ar
+ANDROID_NDK := $(HOME)/Tools/android-ndk-r17c
+CC_ARM := $(ANDROID_NDK)/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang -target armv7a-linux-androideabi14 --sysroot=$(ANDROID_NDK)/sysroot -I$(ANDROID_NDK)/sysroot/usr/include/arm-linux-androideabi
+CC_ARM64 := $(ANDROID_NDK)/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang -target aarch64-linux-androideabi21 --sysroot=$(ANDROID_NDK)/sysroot -I$(ANDROID_NDK)/sysroot/usr/include/aarch64-linux-androideabi
+AR := $(ANDROID_NDK)/toolchains/llvm/prebuilt/bin/llvm-ar
 
-CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include -fpic -ffunction-sections -fstack-protector -Wno-psabi -march=armv7-a -mfloat-abi=softfp -mfpu=vfp -fomit-frame-pointer -fno-strict-aliasing -fno-exceptions -funwind-tables
+CFLAGS := -std=c11 -O3 -fvisibility=hidden -I./include -fpic -fomit-frame-pointer \
+	-fno-strict-aliasing -funwind-tables -ffunction-sections -fstack-protector \
+	-DANDROID -Wa,--noexecstack \
+	-I$(ANDROID_NDK)/sources/android/cpufeatures
+CFLAGS_ARM := $(CFLAGS) -march=armv7-a -mfloat-abi=softfp -mfpu=vfp -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__
+CFLAGS_ARM64 := $(CFLAGS) -march=armv8-a -D__aarch64__
 
-all: $(LIBPATH) $(JARPATH)
+all: $(LIBPATH_ARM) $(LIBPATH_ARM64) $(JARPATH)
 
-OBJECTS = $(patsubst src/%.cpp,build/android-%.o,$(SOURCES))
+OBJECTS_ARM = $(patsubst src/%.c,build/android-armv7-%.o,$(SOURCES))
+OBJECTS_ARM64 = $(patsubst src/%.c,build/android-arm64-%.o,$(SOURCES))
 
 CLASSPATH = build/android-classes
 
@@ -32,13 +38,19 @@ $(CLASSPATH)/me/petcu/fmodbridge/BridgeHelper.class: src/me/petcu/fmodbridge/Bri
 $(JARPATH): $(CLASSPATH)/me/petcu/fmodbridge/BridgeHelper.class
 	jar cf $@ -C $(CLASSPATH) me
 
-build/android-%.o: src/%.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+build/android-armv7-%.o: src/%.c $(HEADERS)
+	$(CC_ARM) $(CFLAGS_ARM) -c $< -o $@
 
-$(LIBPATH): $(OBJECTS)
+build/android-arm64-%.o: src/%.c $(HEADERS)
+	$(CC_ARM64) $(CFLAGS_ARM) -c $< -o $@
+
+$(LIBPATH_ARM): $(OBJECTS_ARM)
+	$(AR) rcs $@ $^
+
+$(LIBPATH_ARM64): $(OBJECTS_ARM64)
 	$(AR) rcs $@ $^
 
 clean:
-	rm -rf $(LIBPATH) build/android-*.o $(CLASSPATH) $(JARPATH)
+	rm -rf $(LIBPATH_ARM) $(LIBPATH_ARM64) build/android-*.o $(CLASSPATH) $(JARPATH)
 
 .PHONY: all clean
