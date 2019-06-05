@@ -1,25 +1,23 @@
 LIBPATH := ../fmod/lib/web/libfmodbridge.a
 
 SOURCES = \
-	src/fmod_init.cpp \
-	src/fmod_classes.cpp \
-	src/fmod_enums.cpp
+	src/fmod_init.c \
+	src/fmod_dynamic_loading.c \
+	src/fmod_generated.c
 
-HEADERS = \
-	src/fmod_bridge.hpp \
-	src/fmod_helpers.hpp
+HEADERS = src/fmod_bridge.h
 
-CXX := em++
+CC := emcc
 AR := emar
 
-CXXFLAGS := -std=c++11 -O3 -fvisibility=hidden -I./include
+CFLAGS := -O3 -fvisibility=hidden -I./include
 
 all: $(LIBPATH)
 
-OBJECTS = $(patsubst src/%.cpp,build/js-%.bc,$(SOURCES))
+OBJECTS = $(patsubst src/%.c,build/js-%.bc,$(SOURCES))
 
-build/js-%.bc: src/%.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+build/js-%.bc: src/%.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(LIBPATH): $(OBJECTS)
 	$(AR) rcs $@ $^

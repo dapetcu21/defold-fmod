@@ -65,13 +65,13 @@ make -f Makefile.android STANDALONE_NDK=/path/to/android-ndk-arm-standalone
 
 ### HTML5
 
-[Install and activate Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html) 1.38.12:
+[Install and activate Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html) 1.38.13:
 
 ```
 git clone https://github.com/juj/emsdk.git
 cd emsdk
-./emsdk install sdk-1.38.12-64bit
-./emsdk activate sdk-1.38.12-64bit
+./emsdk install sdk-1.38.13-64bit
+./emsdk activate sdk-1.38.13-64bit
 source ./emsdk_env.sh
 ```
 
