@@ -2,7 +2,6 @@ LIBPATH := ../fmod/lib/web/libfmodbridge.a
 
 SOURCES = \
 	src/fmod_init.c \
-	src/fmod_dynamic_loading.c \
 	src/fmod_generated.c
 
 HEADERS = src/fmod_bridge.h
