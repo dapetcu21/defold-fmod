@@ -5,6 +5,8 @@
 #include <luajit-2.0/lauxlib.h>
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include <fmod_studio.h>
 #include <fmod.h>
 
