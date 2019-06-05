@@ -56,6 +56,7 @@ def generate_bindings(ast):
     global_functions = []
     structs = {}
     basic_types = {}
+    enum_types = []
 
     class ParsedTypeDecl:
         def __init__(self, *, node=None, name=None, c_type="", type=TypeBasic, readable=True, writeable=True):
@@ -92,13 +93,9 @@ def generate_bindings(ast):
                     if name in basic_types:
                         other = basic_types[name]
                         self.name = other.name
-                        self.c_type = other.c_type
-                        self.const = const
-                        if const and not other.const:
-                            self.c_type = "const " + self.c_type
+                        self.type = other.type
                         self.readable = other.readable
                         self.writeable = other.writeable
-                        self.type = other.type
                         return
 
                     self.type = types[name] if name in types else TypeUnknown
@@ -280,17 +277,18 @@ def generate_bindings(ast):
     basic_types["ptr_char"] = ParsedTypeDecl(name="ptr_char", c_type="char*", writeable=False, type=TypePointer)
     basic_types["FMOD_VECTOR"] = ParsedTypeDecl(c_type="FMOD_VECTOR")
 
+    int_type = basic_types["int"]
+
     for key in basic_types.keys():
         types[key] = TypeBasic
-
-    int_type = basic_types["int"]
 
     for node in ast:
         if isinstance(node, c_ast.Typedef):
             if isinstance(node.type, c_ast.TypeDecl):
                 if isinstance(node.type.type, c_ast.Enum):
                     types[node.name] = TypeBasic
-                    basic_types[node.name] = int_type
+                    basic_types[node.name] = ParsedTypeDecl(c_type=node.name)
+                    enum_types.append(node.name)
                     for enumlist in node.type.type:
                         for enum in enumlist:
                             if re.search("_FORCEINT$", enum.name) == None:
@@ -302,8 +300,8 @@ def generate_bindings(ast):
                 elif node.name not in basic_types:
                     parsed_type = ParsedTypeDecl(node=node.type)
                     if parsed_type.name in basic_types:
-                        basic_types[node.name] = basic_types[parsed_type.name]
                         types[node.name] = TypeBasic
+                        basic_types[node.name] = basic_types[parsed_type.name]
                     else:
                         print("Unknown typedef")
                         node.show()
@@ -338,6 +336,7 @@ def generate_bindings(ast):
         structs = list(structs.values()),
         functions = functions,
         global_functions = global_functions,
+        enum_types = enum_types,
     )
 
     with open('src/fmod_generated.c', 'w') as f:

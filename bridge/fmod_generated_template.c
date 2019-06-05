@@ -62,6 +62,11 @@ inline void _FMODBridge_push_ptr_FMOD_VECTOR(lua_State *L, const FMOD_VECTOR * v
     FMODBridge_dmScript_PushVector3(L, vec->x, vec->y, vec->z);
 }
 
+{% for enum in enum_types %}
+#define FMODBridge_push_{{ enum }}(L, x) lua_pushnumber(L, (lua_Number)(x))
+#define FMODBridge_check_{{ enum }}(L, index) (({{ enum }})luaL_checknumber(L, index))
+{% endfor %}
+
 /* Structs and Classes */
 
 static void * pushStruct(lua_State *L, const void * structData, size_t structSize, int registryIndex) {
@@ -300,6 +305,11 @@ declarePropertyGetter(ptr_char, char*);
 declarePropertyGetterPtr(FMOD_VECTOR, FMOD_VECTOR);
 declarePropertySetter(FMOD_VECTOR, FMOD_VECTOR);
 
+{% for enum in enum_types %}
+#define FMODBridge_propertyGet_{{ enum }} FMODBridge_propertyGet_int
+#define FMODBridge_propertySet_{{ enum }} FMODBridge_propertySet_int
+{% endfor %}
+
 {% for struct in structs %}
 #ifndef FMODBridge_push_ptr_{{ struct.name }}
 {% if struct.ref_counted %}#define FMODBridge_push_ptr_{{ struct.name }}(L, instance) (({{ struct.name }}*)pushClassRefCount(L, instance, FMODBridge_registry_{{ struct.name }}))
@@ -478,14 +488,14 @@ static int _FMODBridge_func_FMOD_System_GetDriverInfo(lua_State *L) {
     char name[256];
     FMOD_GUID* guid = FMODBridge_push_ptr_FMOD_GUID(L, NULL);
     int systemrate;
-    int speakermode;
+    FMOD_SPEAKERMODE speakermode;
     int speakermodechannels;
-    ensure(LL, FMOD_System_GetDriverInfo, FMOD_RESULT, FMOD_SYSTEM*, int, char*, int, FMOD_GUID*, int*, int*, int*);
+    ensure(LL, FMOD_System_GetDriverInfo, FMOD_RESULT, FMOD_SYSTEM*, int, char*, int, FMOD_GUID*, int*, FMOD_SPEAKERMODE*, int*);
     errCheck(FMOD_System_GetDriverInfo(system, id, name, 256, guid, &systemrate, &speakermode, &speakermodechannels));
     lua_pushstring(L, name);
     lua_pushvalue(L, -2);
     FMODBridge_push_int(L, systemrate);
-    FMODBridge_push_int(L, speakermode);
+    FMODBridge_push_FMOD_SPEAKERMODE(L, speakermode);
     FMODBridge_push_int(L, speakermodechannels);
     return 5;
 }
@@ -494,12 +504,12 @@ static int _FMODBridge_func_FMOD_System_GetDriverInfo(lua_State *L) {
 static int _FMODBridge_func_FMOD_System_GetPluginInfo(lua_State *L) {
     FMOD_SYSTEM* system = FMODBridge_check_ptr_FMOD_SYSTEM(L, 1);
     unsigned int handle = FMODBridge_check_unsigned_int(L, 2);
-    int plugintype;
+    FMOD_PLUGINTYPE plugintype;
     char name[256];
     unsigned int version;
-    ensure(LL, FMOD_System_GetPluginInfo, FMOD_RESULT, FMOD_SYSTEM*, unsigned int, int*, char*, int, unsigned int*);
+    ensure(LL, FMOD_System_GetPluginInfo, FMOD_RESULT, FMOD_SYSTEM*, unsigned int, FMOD_PLUGINTYPE*, char*, int, unsigned int*);
     errCheck(FMOD_System_GetPluginInfo(system, handle, &plugintype, name, 256, &version));
-    FMODBridge_push_int(L, plugintype);
+    FMODBridge_push_FMOD_PLUGINTYPE(L, plugintype);
     lua_pushstring(L, name);
     FMODBridge_push_unsigned_int(L, version);
     return 3;
@@ -512,15 +522,15 @@ static int _FMODBridge_func_FMOD_System_GetRecordDriverInfo(lua_State *L) {
     char name[256];
     FMOD_GUID* guid = FMODBridge_push_ptr_FMOD_GUID(L, NULL);
     int systemrate;
-    int speakermode;
+    FMOD_SPEAKERMODE speakermode;
     int speakermodechannels;
     unsigned int state;
-    ensure(LL, FMOD_System_GetRecordDriverInfo, FMOD_RESULT, FMOD_SYSTEM*, int, char*, int, FMOD_GUID*, int*, int*, int*, unsigned int*);
+    ensure(LL, FMOD_System_GetRecordDriverInfo, FMOD_RESULT, FMOD_SYSTEM*, int, char*, int, FMOD_GUID*, int*, FMOD_SPEAKERMODE*, int*, unsigned int*);
     errCheck(FMOD_System_GetRecordDriverInfo(system, id, name, 256, guid, &systemrate, &speakermode, &speakermodechannels, &state));
     lua_pushstring(L, name);
     lua_pushvalue(L, -2);
     FMODBridge_push_int(L, systemrate);
-    FMODBridge_push_int(L, speakermode);
+    FMODBridge_push_FMOD_SPEAKERMODE(L, speakermode);
     FMODBridge_push_int(L, speakermodechannels);
     FMODBridge_push_unsigned_int(L, state);
     return 6;
