@@ -1,24 +1,21 @@
 LIBPATH64 := ../fmod/lib/x86_64-linux/libfmodbridge.a
 
 SOURCES = \
-	src/fmod_init.cpp \
-	src/fmod_classes.cpp \
-	src/fmod_enums.cpp \
-	src/fmod_dynamic_loading.cpp
+	src/fmod_init.c \
+	src/fmod_generated.c \
+	src/fmod_dynamic_loading.c
 
 HEADERS = \
-	src/fmod_bridge.hpp \
-	src/fmod_helpers.hpp
+	src/fmod_bridge.h
 
-CXXFLAGS := -std=c++11 -fPIC -O3 -fvisibility=hidden -I./include
-LDFLAGS := -shared
+CFLAGS := -std=c11 -fPIC -O3 -fvisibility=hidden -I./include
 
 all: $(LIBPATH64)
 
-OBJECTS64 = $(patsubst src/%.cpp,build/linux64-%.o,$(SOURCES))
+OBJECTS64 = $(patsubst src/%.c,build/linux64-%.o,$(SOURCES))
 
-build/linux64-%.o: src/%.cpp $(HEADERS)
-	$(CXX) -m64 $(CXXFLAGS) -c $< -o $@
+build/linux64-%.o: src/%.c $(HEADERS)
+	$(CC) -m64 $(CFLAGS) -c $< -o $@
 
 $(LIBPATH64): $(OBJECTS64)
 	ar rcs $@ $^
