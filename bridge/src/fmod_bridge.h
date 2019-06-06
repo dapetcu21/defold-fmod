@@ -108,8 +108,13 @@ void FMODBridge_initIOSInterruptionHandler();
 #endif
 
 #ifdef __ANDROID__
-JNIEnv* FMODBridge_attachJNI();
+void FMODBridge_attachJNI();
 void FMODBridge_detachJNI();
+#define attachJNI() FMODBridge_attachJNI()
+#define detachJNI() FMODBridge_detachJNI()
+#else
+#define attachJNI()
+#define detachJNI()
 #endif
 
 #ifdef FMOD_BRIDGE_LOAD_DYNAMICALLY
