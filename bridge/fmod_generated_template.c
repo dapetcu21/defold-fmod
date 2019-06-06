@@ -6,20 +6,18 @@
 /* Error handling */
 
 static int FMODBridge_registry_FMOD_RESULT = LUA_REFNIL;
-inline static void errCheck_(FMOD_RESULT res, lua_State* L) {
-    if (res != FMOD_OK) {
-        lua_pushstring(L, FMOD_ErrorString(res));
-        lua_rawgeti(L, LUA_REGISTRYINDEX, FMODBridge_registry_FMOD_RESULT);
-        lua_pushvalue(L, -2);
-        lua_pushnumber(L, res);
-        lua_rawset(L, -3);
-        lua_pop(L, 1);
-        lua_error(L);
-    }
+inline static void throwError(FMOD_RESULT res, lua_State* L) {
+    lua_pushstring(L, FMOD_ErrorString(res));
+    lua_rawgeti(L, LUA_REGISTRYINDEX, FMODBridge_registry_FMOD_RESULT);
+    lua_pushvalue(L, -2);
+    lua_pushnumber(L, res);
+    lua_rawset(L, -3);
+    lua_pop(L, 1);
+    lua_error(L);
 }
-#define errCheck(res) errCheck_(res, L)
-#define errCheckBegin(expr) do { FMOD_RESULT res = (expr); if (res != FMOD_OK) {
-#define errCheckEnd errCheck_(res, L); } } while (0)
+#define errCheckBegin(expr) do { attachJNI(); FMOD_RESULT res = (expr); detachJNI(); if (res != FMOD_OK) {
+#define errCheckEnd throwError(res, L); } } while (0)
+#define errCheck(res) errCheckBegin(res); errCheckEnd
 
 /* Basic types */
 
@@ -595,11 +593,16 @@ static int _FMODBridge_func_FMOD_Studio_System_LookupPath(lua_State *L) {
     const FMOD_GUID* id = FMODBridge_check_ptr_FMOD_GUID(L, 2);
     int retrieved;
     ensure(ST, FMOD_Studio_System_LookupPath, FMOD_RESULT, FMOD_STUDIO_SYSTEM*, const FMOD_GUID*, char*, int, int*);
-    errCheck(FMOD_Studio_System_LookupPath(system, id, NULL, 0, &retrieved));
+    attachJNI();
+    errCheckBegin(FMOD_Studio_System_LookupPath(system, id, NULL, 0, &retrieved)) {
+        detachJNI();
+    } errCheckEnd;
     char *path = (char*)malloc(retrieved);
     errCheckBegin(FMOD_Studio_System_LookupPath(system, id, path, retrieved, &retrieved)) {
+        detachJNI();
         free(path);
     } errCheckEnd;
+    detachJNI();
     lua_pushstring(L, path);
     free(path);
     return 1;
@@ -609,11 +612,16 @@ static int _FMODBridge_func_FMOD_Studio_System_LookupPath(lua_State *L) {
     type1* arg1 = CONCAT(FMODBridge_check_ptr_, type1)(L, 1); \
     int retrieved; \
     ensure(ST, fname, FMOD_RESULT, type1*, char*, int, int*); \
-    errCheck(fname(arg1, NULL, 0, &retrieved)); \
+    attachJNI(); \
+    errCheckBegin(fname(arg1, NULL, 0, &retrieved)) { \
+        detachJNI(); \
+    } errCheckEnd; \
     char *path = (char*)malloc(retrieved); \
     errCheckBegin(fname(arg1, path, retrieved, &retrieved)) { \
+        detachJNI(); \
         free(path); \
     } errCheckEnd; \
+    detachJNI(); \
     lua_pushstring(L, path); \
     free(path); \
     return 1; \
@@ -638,11 +646,16 @@ static int _FMODBridge_func_FMOD_Studio_Bank_GetStringInfo(lua_State *L) {
     FMOD_GUID* id = FMODBridge_push_ptr_FMOD_GUID(L, NULL);
     int retrieved;
     ensure(ST, FMOD_Studio_Bank_GetStringInfo, FMOD_RESULT, FMOD_STUDIO_BANK*, int, FMOD_GUID*, char*, int, int*);
-    errCheck(FMOD_Studio_Bank_GetStringInfo(bank, index, id, NULL, 0, &retrieved));
+    attachJNI();
+    errCheckBegin(FMOD_Studio_Bank_GetStringInfo(bank, index, id, NULL, 0, &retrieved)) {
+        detachJNI();
+    } errCheckEnd;
     char *path = (char*)malloc(retrieved);
     errCheckBegin(FMOD_Studio_Bank_GetStringInfo(bank, index, id, path, retrieved, &retrieved)) {
+        detachJNI();
         free(path);
     } errCheckEnd;
+    detachJNI();
     lua_pushstring(L, path);
     free(path);
     return 2;
