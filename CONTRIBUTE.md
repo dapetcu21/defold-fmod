@@ -77,3 +77,12 @@ Then, in this repo:
 cd bridge
 make -f Makefile.emscripten
 ```
+
+## Updating FMOD to a newer version
+
+This just boils down to downloading all the FMOD distributions and copying the
+libraries to the appropriate locations. On HTML5 one extra step is required:
+
+```
+emar rcs path/to/libfmodstudio.bc fmod/lib/web/libfmodstudio.a
+```
