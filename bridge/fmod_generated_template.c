@@ -833,5 +833,8 @@ void FMODBridge_register(lua_State *L) {
     FMODBridge_push_ptr_FMOD_SYSTEM(L, FMODBridge_lowLevelSystem);
     lua_setfield(L, -3, "system");
 
+    lua_pushcfunction(L, &FMODBridge_getBundleRoot);
+    lua_setfield(L, -3, "get_bundle_root");
+
     lua_pop(L, 2);
 }

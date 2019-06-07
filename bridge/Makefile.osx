@@ -5,18 +5,25 @@ SOURCES = \
 	src/fmod_dynamic_loading.c \
 	src/fmod_generated.c
 
+OBJC_SOURCES = \
+	src/fmod_darwin.m
+
 HEADERS = src/fmod_bridge.h
 
 CFLAGS := -std=c11 -O3 -fvisibility=hidden -I./include -mmacosx-version-min=10.7
 
 all: $(LIBPATH)
 
-OBJECTS = $(patsubst src/%.c,build/osx-%.o,$(SOURCES))
+OBJECTS = $(patsubst src/%.c,build/osx-c-%.o,$(SOURCES))
+OBJECTS_OBJC = $(patsubst src/%.m,build/osx-m-%.o,$(OBJC_SOURCES))
 
-build/osx-%.o: src/%.c $(HEADERS)
+build/osx-c-%.o: src/%.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(LIBPATH): $(OBJECTS)
+build/osx-m-%.o: src/%.m $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(LIBPATH): $(OBJECTS) $(OBJECTS_OBJC)
 	libtool -static $^ -o $@
 
 clean:

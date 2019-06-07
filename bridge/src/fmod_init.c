@@ -206,3 +206,40 @@ void FMODBridge_deactivateApp() {
     FMODBridge_suspendMixer();
     #endif
 }
+
+#if !defined(__APPLE__)
+int FMODBridge_getBundleRoot(lua_State* L) {
+#if defined(_WIN32)
+    HMODULE hModule = GetModuleHandle(NULL);
+    char path[MAX_PATH];
+    GetModuleFileName(hModule, path, MAX_PATH);
+    PathRemoveFileSpec(path);
+    lua_pushstring(L, path);
+    return 1;
+#elif defined(__linux__) && !defined(__ANDROID__)
+    char* path = (char*)malloc(PATH_MAX + 2);
+    ssize_t ret = readlink("/proc/self/exe", path, PATH_MAX + 2);
+    if (ret >= 0 && ret <= PATH_MAX + 1) {
+        lua_pushstring(L, dirname(path));
+    } else {
+        const char* path2 = (const char*)getauxval(AT_EXECFN);
+        if (!path2) {
+            lua_pushstring(L, ".");
+            free(path);
+            return 1;
+        }
+        if (!realpath(path2, path)) {
+            lua_pushstring(L, ".");
+            free(path);
+            return 1;
+        }
+        lua_pushstring(L, dirname(path));
+    }
+    free(path);
+    return 1;
+#else
+    lua_pushstring(L, ".");
+    return 1;
+#endif
+}
+#endif
