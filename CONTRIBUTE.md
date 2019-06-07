@@ -11,8 +11,8 @@ When changing something, the bridge library must be recompiled for all the
 platforms affected by the change.
 
 The implementation of this library is generated from the FMOD headers by a
-Python script. You'll need Python 3 with the `pycparser` and `jinja2` packages
-installed from PiP.
+Python script. To re-generate it, you will need Python 3 with the `pycparser`
+and `jinja2` packages installed from PiP:
 
 ```
 cd bridge
@@ -39,7 +39,6 @@ On Ubuntu 16.04, install the GCC toolchain with
 
 ```bash
 cd bridge
-make -f Makefile.osx
 make -f Makefile.linux
 ```
 
@@ -50,17 +49,14 @@ the `Release x86` and `Release x64` targets.
 
 ### Android
 
-Install Android NDK and Java 8, then generate a standalone toolchain:
+Download and install [Android NDK r17c] and [Java 8], then to build the bridge:
 
-```bash
-$ANDROID_NDK_HOME/build/tools/make_standalone_toolchain.py --arch arm --install-dir /path/to/android-ndk-arm-standalone
-```
-
-Then, to build the bridge:
+[Android NDK r17c]:https://developer.android.com/ndk/downloads/older_releases.html
+[Java 8]:https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 
 ```bash
 cd bridge
-make -f Makefile.android STANDALONE_NDK=/path/to/android-ndk-arm-standalone
+make -f Makefile.android ANDROID_NDK=/path/to/android-ndk-r17c
 ```
 
 ### HTML5
