@@ -56,9 +56,8 @@ static int FMODBridge_jni_refcount = 0;
 void FMODBridge_attachJNI()
 {
     if (FMODBridge_jni_refcount == 0) {
-        JNIEnv* env;
         JavaVM* vm = FMODBridge_dmGraphics_GetNativeAndroidJavaVM();
-        (*vm)->AttachCurrentThread(vm, &env, NULL);
+        (*vm)->AttachCurrentThread(vm, &FMODBridge_jni_env, NULL);
     }
     FMODBridge_jni_refcount += 1;
 }
@@ -178,7 +177,7 @@ void FMODBridge_cleanupLibraries() {
     JNIEnv* env = FMODBridge_jni_env;
 
     jclass fmodClass = jniGetClass(env, "org.fmod.FMOD");
-    jmethodID closeMethod = (*env)->GetStaticMethodID(env, fmodClass, "close", "(V)V");
+    jmethodID closeMethod = (*env)->GetStaticMethodID(env, fmodClass, "close", "()V");
     (*env)->CallStaticVoidMethod(env, fmodClass, closeMethod);
 
     if ((*env)->ExceptionCheck(env)) {
