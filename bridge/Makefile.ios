@@ -6,7 +6,7 @@ SOURCES = \
 	src/fmod_generated.c
 
 OBJC_SOURCES = \
-	src/fmod_ios.m
+	src/fmod_darwin.m
 
 HEADERS = \
 	src/fmod_bridge.h

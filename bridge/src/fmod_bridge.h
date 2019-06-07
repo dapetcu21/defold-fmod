@@ -99,6 +99,7 @@ void FMODBridge_cleanupLibraries();
 #endif
 
 void FMODBridge_register(lua_State *L);
+int FMODBridge_getBundleRoot(lua_State *L);
 
 void FMODBridge_suspendMixer();
 void FMODBridge_resumeMixer();

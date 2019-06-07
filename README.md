@@ -138,6 +138,35 @@ used by FMOD Studio.
 live_update = 1
 ```
 
+## Loading banks from the file system
+
+For development it's ok to put your banks in `custom_resources` and use
+`load_bank_memory` to load them, but this is inefficient (costs a lot of memory
+and you don't benefit from streaming).
+
+When building, you want your banks on the file system. In your
+`bundled_resources` directory, add the banks to the following paths:
+
+* For Windows, Linux and iOS: `win32/banks/`, `linux/banks/`, `ios/banks/`
+* For macOS: `osx/Contents/Resources/banks`
+* For Android: `android/assets/banks`
+
+Then, from your game code:
+
+```lua
+local bundle_path = fmod.get_bundle_root() -- The path to your game's directory
+local path_to_banks = bundle_path .. "/banks"
+local system_name = sys.get_sys_info().system_name
+if system_name == "Darwin" then
+  path_to_banks = bundle_path .. "/Contents/Resources/banks"
+elseif system_name == "Android" then
+  path_to_banks = "file:///android_asset/banks"
+end
+fmod.studio.system:load_bank_memory(path_to_banks .. "/Master Bank.bank", fmod.STUDIO_LOAD_BANK_NORMAL)
+```
+
+**Warning: Don't use relative paths for loading banks. Use `fmod.get_bundle_root()`. Relying on the current working directory being the same as the game's installation directory is not always correct (especially on platforms like macOS and iOS).**
+
 ## Contributing
 
 See [CONTRIBUTE.md](./CONTRIBUTE.md) for details about how to contribute to this project.
