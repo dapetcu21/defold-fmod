@@ -41,7 +41,7 @@ inline static void throwError(FMOD_RESULT res, lua_State* L) {
 #define FMODBridge_check_FMOD_BOOL(L, index) (luaL_checktype(L, index, LUA_TBOOLEAN), (FMOD_BOOL)lua_toboolean(L, index))
 
 #define FMODBridge_push_ptr_char _FMODBridge_push_ptr_char
-inline void _FMODBridge_push_ptr_char(lua_State *L, const char * x) {
+inline static void _FMODBridge_push_ptr_char(lua_State *L, const char * x) {
     if (x) {
         lua_pushstring(L, x);
     } else {
@@ -52,11 +52,11 @@ inline void _FMODBridge_push_ptr_char(lua_State *L, const char * x) {
 
 #define FMODBridge_check_FMOD_VECTOR FMODBridge_dmScript_CheckVector3
 #define FMODBridge_push_FMOD_VECTOR _FMODBridge_push_FMOD_VECTOR
-inline void _FMODBridge_push_FMOD_VECTOR(lua_State *L, FMOD_VECTOR vec) {
+inline static void _FMODBridge_push_FMOD_VECTOR(lua_State *L, FMOD_VECTOR vec) {
     FMODBridge_dmScript_PushVector3(L, vec.x, vec.y, vec.z);
 }
 #define FMODBridge_push_ptr_FMOD_VECTOR _FMODBridge_push_ptr_FMOD_VECTOR
-inline void _FMODBridge_push_ptr_FMOD_VECTOR(lua_State *L, const FMOD_VECTOR * vec) {
+inline static void _FMODBridge_push_ptr_FMOD_VECTOR(lua_State *L, const FMOD_VECTOR * vec) {
     FMODBridge_dmScript_PushVector3(L, vec->x, vec->y, vec->z);
 }
 
