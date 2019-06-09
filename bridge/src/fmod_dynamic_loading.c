@@ -21,6 +21,7 @@
 
 #ifdef __linux__
 #include <unistd.h>
+#include <linux/limits.h>
 #endif
 
 dlModuleT FMODBridge_dlHandleLL = NULL;
@@ -213,7 +214,7 @@ bool FMODBridge_linkLibraries() {
     bool mustFreeLibPath = false;
 
     char* env = NULL;
-    #if defined(__linux__)
+    #if defined(_GNU_SOURCE)
     env = secure_getenv("DEFOLD_FMOD_LIB_PATH");
     #elif !defined(_WIN32)
     env = getenv("DEFOLD_FMOD_LIB_PATH");

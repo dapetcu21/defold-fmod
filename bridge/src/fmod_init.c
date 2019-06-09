@@ -6,6 +6,16 @@
 #include <emscripten.h>
 #endif
 
+#ifdef __linux__
+#include <sys/auxv.h>
+#include <sys/types.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <linux/limits.h>
+#include <libgen.h>
+#include <unistd.h>
+#endif
+
 FMOD_STUDIO_SYSTEM* FMODBridge_system = NULL;
 FMOD_SYSTEM* FMODBridge_lowLevelSystem = NULL;
 bool FMODBridge_isPaused = false;
