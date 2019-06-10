@@ -15,24 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\fmod_bridge.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\fmod_helpers.hpp">
+    <ClInclude Include="..\src\fmod_bridge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\fmod_classes.cpp">
+    <ClCompile Include="..\src\fmod_dynamic_loading.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\fmod_enums.cpp">
+    <ClCompile Include="..\src\fmod_generated.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\fmod_init.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\fmod_dynamic_loading.cpp">
+    <ClCompile Include="..\src\fmod_init.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
