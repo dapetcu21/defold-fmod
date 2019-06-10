@@ -351,17 +351,11 @@ bool FMODBridge_linkLibraries() {
 
     #ifdef _WIN32
         #define LIBPREFIX ""
-        #if defined(__x86_64__) || defined(_M_X64)
-            #define LIBPOSTFIX "64"
-        #else
-            #define LIBPOSTFIX ""
-        #endif
         #define libOpen(var, path) \
             var = LoadLibraryA(path); \
             if (!var) { LOGW("LoadLibrary(\"%s\") failed with error code %lu", path, GetLastError()); }
     #else
         #define LIBPREFIX "lib"
-        #define LIBPOSTFIX ""
         #define libOpen(var, path) \
             var = dlopen(path, RTLD_NOW | RTLD_GLOBAL); \
             if (!var) { LOGW("%s", dlerror()); }
@@ -372,11 +366,11 @@ bool FMODBridge_linkLibraries() {
     exePath = (char*)malloc(maxPathLen + 1);
 
     strcpy(exePath, libPath);
-    strncat(exePath, SEP LIBPREFIX "fmod" LIBPOSTFIX "." LIBEXT, maxPathLen);
+    strncat(exePath, SEP LIBPREFIX "fmod." LIBEXT, maxPathLen);
     libOpen(FMODBridge_dlHandleLL, exePath);
 
     strcpy(exePath, libPath);
-    strncat(exePath, SEP LIBPREFIX "fmodstudio" LIBPOSTFIX "." LIBEXT, maxPathLen);
+    strncat(exePath, SEP LIBPREFIX "fmodstudio." LIBEXT, maxPathLen);
     libOpen(FMODBridge_dlHandleST, exePath);
 
     if (mustFreeLibPath) { free((void*)libPath); }

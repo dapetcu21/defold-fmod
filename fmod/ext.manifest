@@ -11,3 +11,11 @@ platforms:
   x86_64-ios:
     context:
       frameworks: ["AVFoundation"]
+
+  x86_64-win32:
+    context:
+      libs: ["shlwapi.lib"]
+
+  x86-win32:
+    context:
+      libs: ["shlwapi.lib"]

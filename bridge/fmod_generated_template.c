@@ -227,14 +227,14 @@ static int unsignedLongLongGetHigh(lua_State *L) {
 
 static int longLongToString(lua_State *L) {
     char s[22];
-    sprintf(s, "%lld", FMODBridge_check_long_long(L, 1));
+    sprintf_s(s, 22, "%lld", FMODBridge_check_long_long(L, 1));
     lua_pushstring(L, s);
     return 1;
 }
 
 static int unsignedLongLongToString(lua_State *L) {
     char s[22];
-    sprintf(s, "%llu", FMODBridge_check_unsigned_long_long(L, 1));
+    sprintf_s(s, 22, "%llu", FMODBridge_check_unsigned_long_long(L, 1));
     lua_pushstring(L, s);
     return 1;
 }

@@ -16,6 +16,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef _WIN32
+#include <shlwapi.h>
+#endif
+
 FMOD_STUDIO_SYSTEM* FMODBridge_system = NULL;
 FMOD_SYSTEM* FMODBridge_lowLevelSystem = NULL;
 bool FMODBridge_isPaused = false;
@@ -222,8 +226,8 @@ int FMODBridge_getBundleRoot(lua_State* L) {
 #if defined(_WIN32)
     HMODULE hModule = GetModuleHandle(NULL);
     char path[MAX_PATH];
-    GetModuleFileName(hModule, path, MAX_PATH);
-    PathRemoveFileSpec(path);
+    GetModuleFileNameA(hModule, path, MAX_PATH);
+    PathRemoveFileSpecA(path);
     lua_pushstring(L, path);
     return 1;
 #elif defined(__linux__) && !defined(__ANDROID__)
