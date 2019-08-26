@@ -13,7 +13,7 @@ function init(self)
   fmod.studio.system:load_bank_memory(resource.load("/example/banks/Vehicles.bank"), fmod.STUDIO_LOAD_BANK_NORMAL)
 
   -- You can alternatively use this path to load banks from your bundle_resources dir
-  print(fmod.get_bundle_root())
+  print(sys.get_application_path())
 
   local event_description = fmod.studio.system:get_event("event:/Vehicles/Basic Engine")
   local event = event_description:create_instance()

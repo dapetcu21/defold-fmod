@@ -700,6 +700,23 @@ static int _FMODBridge_func_{{ f.name }}(lua_State *L) {
 {% endif %}
 {% endfor %}
 
+static int deprecatedWrapper(lua_State * L) {
+    if (lua_toboolean(L, lua_upvalueindex(3))) {
+        lua_pushboolean(L, 0);
+        lua_replace(L, lua_upvalueindex(3));
+        const char * message = lua_tostring(L, lua_upvalueindex(2));
+        LOGW("%s", message);
+    }
+
+    int nargs = lua_gettop(L);
+    lua_pushvalue(L, lua_upvalueindex(1));
+    for (int i = 0; i < nargs; i += 1) {
+        lua_pushvalue(L, i + 1);
+    }
+    lua_call(L, nargs, LUA_MULTRET);
+    return lua_gettop(L) - nargs;
+}
+
 /* Register everything to the Lua namespace */
 
 void FMODBridge_register(lua_State *L) {
@@ -834,6 +851,18 @@ void FMODBridge_register(lua_State *L) {
     lua_setfield(L, -3, "system");
 
     lua_pushcfunction(L, &FMODBridge_getBundleRoot);
+
+    lua_getglobal(L, "sys");
+    lua_getfield(L, -1, "get_application_path");
+    int hasGetAppPath = !lua_isnoneornil(L, -1);
+    lua_pop(L, 2);
+
+    if (hasGetAppPath) {
+        lua_pushstring(L, "fmod.get_bundle_root() is deprecated. Use sys.get_application_path() instead");
+        lua_pushboolean(L, 1);
+        lua_pushcclosure(L, &deprecatedWrapper, 3);
+    }
+
     lua_setfield(L, -3, "get_bundle_root");
 
     lua_pop(L, 2);

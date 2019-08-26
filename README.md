@@ -154,7 +154,7 @@ When building, you want your banks on the file system. In your
 Then, from your game code:
 
 ```lua
-local bundle_path = fmod.get_bundle_root() -- The path to your game's directory
+local bundle_path = sys.get_application_path() -- The path to your game's directory
 local path_to_banks = bundle_path .. "/banks"
 local system_name = sys.get_sys_info().system_name
 if system_name == "Darwin" then
@@ -165,7 +165,7 @@ end
 fmod.studio.system:load_bank_memory(path_to_banks .. "/Master Bank.bank", fmod.STUDIO_LOAD_BANK_NORMAL)
 ```
 
-**Warning: Don't use relative paths for loading banks. Use `fmod.get_bundle_root()`. Relying on the current working directory being the same as the game's installation directory is not always correct (especially on platforms like macOS and iOS).**
+**Warning: Don't use relative paths for loading banks. Use `sys.get_application_path()`. Relying on the current working directory being the same as the game's installation directory is not always correct (especially on platforms like macOS and iOS).**
 
 ## Contributing
 
