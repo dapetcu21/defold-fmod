@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include <stddef.h>
 #include "fmod_bridge.h"
 #include "fmod_errors.h"
@@ -227,14 +228,14 @@ static int unsignedLongLongGetHigh(lua_State *L) {
 
 static int longLongToString(lua_State *L) {
     char s[22];
-    sprintf_s(s, 22, "%lld", FMODBridge_check_long_long(L, 1));
+    snprintf(s, 22, "%lld", FMODBridge_check_long_long(L, 1));
     lua_pushstring(L, s);
     return 1;
 }
 
 static int unsignedLongLongToString(lua_State *L) {
     char s[22];
-    sprintf_s(s, 22, "%llu", FMODBridge_check_unsigned_long_long(L, 1));
+    snprintf(s, 22, "%llu", FMODBridge_check_unsigned_long_long(L, 1));
     lua_pushstring(L, s);
     return 1;
 }
@@ -379,6 +380,14 @@ static int structNewIndexMetamethod(lua_State *L) {
     lua_pushvalue(L, 3);
     lua_call(L, 2, 0);
     return 0;
+}
+
+static int structEqualityMetamethod(lua_State *L) {
+    size_t structSize = (size_t)lua_tonumber(L, lua_upvalueindex(1));
+    const char * a = (const char*)lua_touserdata(L, 1);
+    const char * b = (const char*)lua_touserdata(L, 2);
+    lua_pushboolean(L, !memcmp(a, b, structSize));
+    return 1;
 }
 
 /* Custom function definitions */
@@ -766,6 +775,16 @@ void FMODBridge_register(lua_State *L) {
         lua_pushvalue(L, -1); \
         lua_setfield(L, -4, "__fieldset")
 
+    #define addStructEquality(structName) \
+        lua_pushnumber(L, sizeof(structName)); \
+        lua_pushcclosure(L, &structEqualityMetamethod, 1); \
+        lua_setfield(L, -4, "__eq")
+
+    #define addClassEquality(structName) \
+        lua_pushnumber(L, sizeof(structName*)); \
+        lua_pushcclosure(L, &structEqualityMetamethod, 1); \
+        lua_setfield(L, -4, "__eq")
+
     #define addDestructor(structName, releaseFname) \
         lua_pushcfunction(L, &CONCAT(FMODBridge_func_, releaseFname)); \
         lua_pushcclosure(L, &classGC, 1); \
@@ -794,6 +813,7 @@ void FMODBridge_register(lua_State *L) {
         addPropertySetter(structName, name, typename)
 
     beginStruct(long_long);
+    addStructEquality(long long);
     lua_pushnumber(L, FMODBridge_registry_long_long);
     lua_pushcclosure(L, &longLongConstructor, 1);
     lua_setfield(L, -6, "s64");
@@ -808,6 +828,7 @@ void FMODBridge_register(lua_State *L) {
     endStruct();
 
     beginStruct(unsigned_long_long);
+    addStructEquality(unsigned long long);
     lua_pushnumber(L, FMODBridge_registry_unsigned_long_long);
     lua_pushcclosure(L, &longLongConstructor, 1);
     lua_setfield(L, -6, "u64");
@@ -822,7 +843,9 @@ void FMODBridge_register(lua_State *L) {
     endStruct();
 
     {% for struct in structs %}beginStruct({{ struct.name }});
-        {% if not struct.is_class %}addStructConstructor({{ struct.name }}, "{{ struct.constructor_name }}", {{ struct.constructor_table }});
+        {% if struct.is_class %}addClassEquality({{ struct.name }});
+        {% else %}addStructEquality({{ struct.name }});
+        {% endif %}{% if not struct.is_class %}addStructConstructor({{ struct.name }}, "{{ struct.constructor_name }}", {{ struct.constructor_table }});
         {% endif %}{% if struct.ref_counted %}addDestructor({{ struct.name }}, {{ struct.release_name }});
         {% endif %}{% for property in struct.properties %}/* {{ property[1].c_type }} {{ property[0] }} */
         {% if property[1].readable %}addPropertyGetter({{ struct.name }}, {{ property[0] }}, {{ property[1].name }});

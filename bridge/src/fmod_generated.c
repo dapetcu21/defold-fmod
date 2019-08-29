@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include <stddef.h>
 #include "fmod_bridge.h"
 #include "fmod_errors.h"
@@ -509,14 +510,14 @@ static int unsignedLongLongGetHigh(lua_State *L) {
 
 static int longLongToString(lua_State *L) {
     char s[22];
-    sprintf_s(s, 22, "%lld", FMODBridge_check_long_long(L, 1));
+    snprintf(s, 22, "%lld", FMODBridge_check_long_long(L, 1));
     lua_pushstring(L, s);
     return 1;
 }
 
 static int unsignedLongLongToString(lua_State *L) {
     char s[22];
-    sprintf_s(s, 22, "%llu", FMODBridge_check_unsigned_long_long(L, 1));
+    snprintf(s, 22, "%llu", FMODBridge_check_unsigned_long_long(L, 1));
     lua_pushstring(L, s);
     return 1;
 }
@@ -1774,6 +1775,14 @@ static int structNewIndexMetamethod(lua_State *L) {
     lua_pushvalue(L, 3);
     lua_call(L, 2, 0);
     return 0;
+}
+
+static int structEqualityMetamethod(lua_State *L) {
+    size_t structSize = (size_t)lua_tonumber(L, lua_upvalueindex(1));
+    const char * a = (const char*)lua_touserdata(L, 1);
+    const char * b = (const char*)lua_touserdata(L, 2);
+    lua_pushboolean(L, !memcmp(a, b, structSize));
+    return 1;
 }
 
 /* Custom function definitions */
@@ -10064,6 +10073,16 @@ void FMODBridge_register(lua_State *L) {
         lua_pushvalue(L, -1); \
         lua_setfield(L, -4, "__fieldset")
 
+    #define addStructEquality(structName) \
+        lua_pushnumber(L, sizeof(structName)); \
+        lua_pushcclosure(L, &structEqualityMetamethod, 1); \
+        lua_setfield(L, -4, "__eq")
+
+    #define addClassEquality(structName) \
+        lua_pushnumber(L, sizeof(structName*)); \
+        lua_pushcclosure(L, &structEqualityMetamethod, 1); \
+        lua_setfield(L, -4, "__eq")
+
     #define addDestructor(structName, releaseFname) \
         lua_pushcfunction(L, &CONCAT(FMODBridge_func_, releaseFname)); \
         lua_pushcclosure(L, &classGC, 1); \
@@ -10092,6 +10111,7 @@ void FMODBridge_register(lua_State *L) {
         addPropertySetter(structName, name, typename)
 
     beginStruct(long_long);
+    addStructEquality(long long);
     lua_pushnumber(L, FMODBridge_registry_long_long);
     lua_pushcclosure(L, &longLongConstructor, 1);
     lua_setfield(L, -6, "s64");
@@ -10106,6 +10126,7 @@ void FMODBridge_register(lua_State *L) {
     endStruct();
 
     beginStruct(unsigned_long_long);
+    addStructEquality(unsigned long long);
     lua_pushnumber(L, FMODBridge_registry_unsigned_long_long);
     lua_pushcclosure(L, &longLongConstructor, 1);
     lua_setfield(L, -6, "u64");
@@ -10120,6 +10141,7 @@ void FMODBridge_register(lua_State *L) {
     endStruct();
 
     beginStruct(FMOD_SYSTEM);
+        addClassEquality(FMOD_SYSTEM);
         #ifdef FMODBridge_func_FMOD_System_Release
         lua_pushcfunction(L, &FMODBridge_func_FMOD_System_Release);
         lua_setfield(L, -4, "release");
@@ -10489,6 +10511,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_SOUND);
+        addClassEquality(FMOD_SOUND);
         #ifdef FMODBridge_func_FMOD_Sound_Release
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Sound_Release);
         lua_setfield(L, -4, "release");
@@ -10666,11 +10689,13 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_CHANNELCONTROL);
+        addClassEquality(FMOD_CHANNELCONTROL);
         #ifdef FMODBridge_extras_FMOD_CHANNELCONTROL
         FMODBridge_extras_FMOD_CHANNELCONTROL
         #endif
     endStruct();
     beginStruct(FMOD_CHANNEL);
+        addClassEquality(FMOD_CHANNEL);
         #ifdef FMODBridge_func_FMOD_Channel_GetSystemObject
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Channel_GetSystemObject);
         lua_setfield(L, -4, "get_system_object");
@@ -10980,6 +11005,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_CHANNELGROUP);
+        addClassEquality(FMOD_CHANNELGROUP);
         #ifdef FMODBridge_func_FMOD_ChannelGroup_GetSystemObject
         lua_pushcfunction(L, &FMODBridge_func_FMOD_ChannelGroup_GetSystemObject);
         lua_setfield(L, -4, "get_system_object");
@@ -11261,6 +11287,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_SOUNDGROUP);
+        addClassEquality(FMOD_SOUNDGROUP);
         #ifdef FMODBridge_func_FMOD_SoundGroup_Release
         lua_pushcfunction(L, &FMODBridge_func_FMOD_SoundGroup_Release);
         lua_setfield(L, -4, "release");
@@ -11334,6 +11361,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_REVERB3D);
+        addClassEquality(FMOD_REVERB3D);
         #ifdef FMODBridge_func_FMOD_Reverb3D_Release
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Reverb3D_Release);
         lua_setfield(L, -4, "release");
@@ -11375,6 +11403,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP);
+        addClassEquality(FMOD_DSP);
         #ifdef FMODBridge_func_FMOD_DSP_Release
         lua_pushcfunction(L, &FMODBridge_func_FMOD_DSP_Release);
         lua_setfield(L, -4, "release");
@@ -11540,6 +11569,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSPCONNECTION);
+        addClassEquality(FMOD_DSPCONNECTION);
         #ifdef FMODBridge_func_FMOD_DSPConnection_GetInput
         lua_pushcfunction(L, &FMODBridge_func_FMOD_DSPConnection_GetInput);
         lua_setfield(L, -4, "get_input");
@@ -11581,11 +11611,13 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_POLYGON);
+        addClassEquality(FMOD_POLYGON);
         #ifdef FMODBridge_extras_FMOD_POLYGON
         FMODBridge_extras_FMOD_POLYGON
         #endif
     endStruct();
     beginStruct(FMOD_GEOMETRY);
+        addClassEquality(FMOD_GEOMETRY);
         #ifdef FMODBridge_func_FMOD_Geometry_Release
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Geometry_Release);
         lua_setfield(L, -4, "release");
@@ -11671,11 +11703,13 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_SYNCPOINT);
+        addClassEquality(FMOD_SYNCPOINT);
         #ifdef FMODBridge_extras_FMOD_SYNCPOINT
         FMODBridge_extras_FMOD_SYNCPOINT
         #endif
     endStruct();
     beginStruct(FMOD_ASYNCREADINFO);
+        addStructEquality(FMOD_ASYNCREADINFO);
         addStructConstructor(FMOD_ASYNCREADINFO, "ASYNCREADINFO", -2);
         /* void* handle */
         /* unsigned int offset */
@@ -11698,6 +11732,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_3D_ATTRIBUTES);
+        addStructEquality(FMOD_3D_ATTRIBUTES);
         addStructConstructor(FMOD_3D_ATTRIBUTES, "_3D_ATTRIBUTES", -2);
         /* FMOD_VECTOR position */
         addPropertyGetter(FMOD_3D_ATTRIBUTES, position, FMOD_VECTOR);
@@ -11716,6 +11751,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_GUID);
+        addStructEquality(FMOD_GUID);
         addStructConstructor(FMOD_GUID, "GUID", -2);
         /* unsigned int Data1 */
         addPropertyGetter(FMOD_GUID, Data1, unsigned_int);
@@ -11732,6 +11768,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_PLUGINLIST);
+        addStructEquality(FMOD_PLUGINLIST);
         addStructConstructor(FMOD_PLUGINLIST, "PLUGINLIST", -2);
         /* FMOD_PLUGINTYPE type */
         addPropertyGetter(FMOD_PLUGINLIST, type, FMOD_PLUGINTYPE);
@@ -11742,6 +11779,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_ADVANCEDSETTINGS);
+        addStructEquality(FMOD_ADVANCEDSETTINGS);
         addStructConstructor(FMOD_ADVANCEDSETTINGS, "ADVANCEDSETTINGS", -2);
         /* int cbSize */
         addPropertyGetter(FMOD_ADVANCEDSETTINGS, cbSize, int);
@@ -11816,6 +11854,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_TAG);
+        addStructEquality(FMOD_TAG);
         addStructConstructor(FMOD_TAG, "TAG", -2);
         /* FMOD_TAGTYPE type */
         addPropertyGetter(FMOD_TAG, type, FMOD_TAGTYPE);
@@ -11837,6 +11876,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_CREATESOUNDEXINFO);
+        addStructEquality(FMOD_CREATESOUNDEXINFO);
         addStructConstructor(FMOD_CREATESOUNDEXINFO, "CREATESOUNDEXINFO", -2);
         /* int cbsize */
         addPropertyGetter(FMOD_CREATESOUNDEXINFO, cbsize, int);
@@ -11921,6 +11961,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_REVERB_PROPERTIES);
+        addStructEquality(FMOD_REVERB_PROPERTIES);
         addStructConstructor(FMOD_REVERB_PROPERTIES, "REVERB_PROPERTIES", -2);
         /* float DecayTime */
         addPropertyGetter(FMOD_REVERB_PROPERTIES, DecayTime, float);
@@ -11963,6 +12004,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_ERRORCALLBACK_INFO);
+        addStructEquality(FMOD_ERRORCALLBACK_INFO);
         addStructConstructor(FMOD_ERRORCALLBACK_INFO, "ERRORCALLBACK_INFO", -2);
         /* FMOD_RESULT result */
         addPropertyGetter(FMOD_ERRORCALLBACK_INFO, result, FMOD_RESULT);
@@ -11978,6 +12020,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_CODEC_STATE);
+        addStructEquality(FMOD_CODEC_STATE);
         addStructConstructor(FMOD_CODEC_STATE, "CODEC_STATE", -2);
         /* int numsubsounds */
         addPropertyGetter(FMOD_CODEC_STATE, numsubsounds, int);
@@ -12000,6 +12043,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_CODEC_WAVEFORMAT);
+        addStructEquality(FMOD_CODEC_WAVEFORMAT);
         addStructConstructor(FMOD_CODEC_WAVEFORMAT, "CODEC_WAVEFORMAT", -2);
         /* const char* name */
         /* FMOD_SOUND_FORMAT format */
@@ -12043,6 +12087,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_CODEC_DESCRIPTION);
+        addStructEquality(FMOD_CODEC_DESCRIPTION);
         addStructConstructor(FMOD_CODEC_DESCRIPTION, "CODEC_DESCRIPTION", -2);
         /* const char* name */
         /* unsigned int version */
@@ -12067,6 +12112,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_STATE);
+        addStructEquality(FMOD_DSP_STATE);
         addStructConstructor(FMOD_DSP_STATE, "DSP_STATE", -2);
         /* void* instance */
         /* void* plugindata */
@@ -12090,6 +12136,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_BUFFER_ARRAY);
+        addStructEquality(FMOD_DSP_BUFFER_ARRAY);
         addStructConstructor(FMOD_DSP_BUFFER_ARRAY, "DSP_BUFFER_ARRAY", -2);
         /* int numbuffers */
         addPropertyGetter(FMOD_DSP_BUFFER_ARRAY, numbuffers, int);
@@ -12105,6 +12152,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_COMPLEX);
+        addStructEquality(FMOD_COMPLEX);
         addStructConstructor(FMOD_COMPLEX, "COMPLEX", -2);
         /* float real */
         addPropertyGetter(FMOD_COMPLEX, real, float);
@@ -12117,6 +12165,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_FLOAT_MAPPING_PIECEWISE_LINEAR);
+        addStructEquality(FMOD_DSP_PARAMETER_FLOAT_MAPPING_PIECEWISE_LINEAR);
         addStructConstructor(FMOD_DSP_PARAMETER_FLOAT_MAPPING_PIECEWISE_LINEAR, "DSP_PARAMETER_FLOAT_MAPPING_PIECEWISE_LINEAR", -2);
         /* int numpoints */
         addPropertyGetter(FMOD_DSP_PARAMETER_FLOAT_MAPPING_PIECEWISE_LINEAR, numpoints, int);
@@ -12128,6 +12177,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_FLOAT_MAPPING);
+        addStructEquality(FMOD_DSP_PARAMETER_FLOAT_MAPPING);
         addStructConstructor(FMOD_DSP_PARAMETER_FLOAT_MAPPING, "DSP_PARAMETER_FLOAT_MAPPING", -2);
         /* FMOD_DSP_PARAMETER_FLOAT_MAPPING_TYPE type */
         addPropertyGetter(FMOD_DSP_PARAMETER_FLOAT_MAPPING, type, FMOD_DSP_PARAMETER_FLOAT_MAPPING_TYPE);
@@ -12140,6 +12190,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_DESC_FLOAT);
+        addStructEquality(FMOD_DSP_PARAMETER_DESC_FLOAT);
         addStructConstructor(FMOD_DSP_PARAMETER_DESC_FLOAT, "DSP_PARAMETER_DESC_FLOAT", -2);
         /* float min */
         addPropertyGetter(FMOD_DSP_PARAMETER_DESC_FLOAT, min, float);
@@ -12158,6 +12209,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_DESC_INT);
+        addStructEquality(FMOD_DSP_PARAMETER_DESC_INT);
         addStructConstructor(FMOD_DSP_PARAMETER_DESC_INT, "DSP_PARAMETER_DESC_INT", -2);
         /* int min */
         addPropertyGetter(FMOD_DSP_PARAMETER_DESC_INT, min, int);
@@ -12177,6 +12229,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_DESC_BOOL);
+        addStructEquality(FMOD_DSP_PARAMETER_DESC_BOOL);
         addStructConstructor(FMOD_DSP_PARAMETER_DESC_BOOL, "DSP_PARAMETER_DESC_BOOL", -2);
         /* FMOD_BOOL defaultval */
         addPropertyGetter(FMOD_DSP_PARAMETER_DESC_BOOL, defaultval, FMOD_BOOL);
@@ -12187,6 +12240,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_DESC_DATA);
+        addStructEquality(FMOD_DSP_PARAMETER_DESC_DATA);
         addStructConstructor(FMOD_DSP_PARAMETER_DESC_DATA, "DSP_PARAMETER_DESC_DATA", -2);
         /* int datatype */
         addPropertyGetter(FMOD_DSP_PARAMETER_DESC_DATA, datatype, int);
@@ -12196,6 +12250,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_DESC);
+        addStructEquality(FMOD_DSP_PARAMETER_DESC);
         addStructConstructor(FMOD_DSP_PARAMETER_DESC, "DSP_PARAMETER_DESC", -2);
         /* FMOD_DSP_PARAMETER_TYPE type */
         addPropertyGetter(FMOD_DSP_PARAMETER_DESC, type, FMOD_DSP_PARAMETER_TYPE);
@@ -12208,6 +12263,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_OVERALLGAIN);
+        addStructEquality(FMOD_DSP_PARAMETER_OVERALLGAIN);
         addStructConstructor(FMOD_DSP_PARAMETER_OVERALLGAIN, "DSP_PARAMETER_OVERALLGAIN", -2);
         /* float linear_gain */
         addPropertyGetter(FMOD_DSP_PARAMETER_OVERALLGAIN, linear_gain, float);
@@ -12220,6 +12276,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_3DATTRIBUTES);
+        addStructEquality(FMOD_DSP_PARAMETER_3DATTRIBUTES);
         addStructConstructor(FMOD_DSP_PARAMETER_3DATTRIBUTES, "DSP_PARAMETER_3DATTRIBUTES", -2);
         /* FMOD_3D_ATTRIBUTES relative */
         addPropertyGetter(FMOD_DSP_PARAMETER_3DATTRIBUTES, relative, FMOD_3D_ATTRIBUTES);
@@ -12232,6 +12289,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_3DATTRIBUTES_MULTI);
+        addStructEquality(FMOD_DSP_PARAMETER_3DATTRIBUTES_MULTI);
         addStructConstructor(FMOD_DSP_PARAMETER_3DATTRIBUTES_MULTI, "DSP_PARAMETER_3DATTRIBUTES_MULTI", -2);
         /* int numlisteners */
         addPropertyGetter(FMOD_DSP_PARAMETER_3DATTRIBUTES_MULTI, numlisteners, int);
@@ -12246,6 +12304,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_SIDECHAIN);
+        addStructEquality(FMOD_DSP_PARAMETER_SIDECHAIN);
         addStructConstructor(FMOD_DSP_PARAMETER_SIDECHAIN, "DSP_PARAMETER_SIDECHAIN", -2);
         /* FMOD_BOOL sidechainenable */
         addPropertyGetter(FMOD_DSP_PARAMETER_SIDECHAIN, sidechainenable, FMOD_BOOL);
@@ -12255,6 +12314,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_PARAMETER_FFT);
+        addStructEquality(FMOD_DSP_PARAMETER_FFT);
         addStructConstructor(FMOD_DSP_PARAMETER_FFT, "DSP_PARAMETER_FFT", -2);
         /* int length */
         addPropertyGetter(FMOD_DSP_PARAMETER_FFT, length, int);
@@ -12268,6 +12328,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_DESCRIPTION);
+        addStructEquality(FMOD_DSP_DESCRIPTION);
         addStructConstructor(FMOD_DSP_DESCRIPTION, "DSP_DESCRIPTION", -2);
         /* unsigned int pluginsdkversion */
         addPropertyGetter(FMOD_DSP_DESCRIPTION, pluginsdkversion, unsigned_int);
@@ -12310,6 +12371,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_STATE_DFT_FUNCTIONS);
+        addStructEquality(FMOD_DSP_STATE_DFT_FUNCTIONS);
         addStructConstructor(FMOD_DSP_STATE_DFT_FUNCTIONS, "DSP_STATE_DFT_FUNCTIONS", -2);
         /* FMOD_DSP_DFT_FFTREAL_FUNC fftreal */
         /* FMOD_DSP_DFT_IFFTREAL_FUNC inversefftreal */
@@ -12318,6 +12380,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_STATE_PAN_FUNCTIONS);
+        addStructEquality(FMOD_DSP_STATE_PAN_FUNCTIONS);
         addStructConstructor(FMOD_DSP_STATE_PAN_FUNCTIONS, "DSP_STATE_PAN_FUNCTIONS", -2);
         /* FMOD_DSP_PAN_SUMMONOMATRIX_FUNC summonomatrix */
         /* FMOD_DSP_PAN_SUMSTEREOMATRIX_FUNC sumstereomatrix */
@@ -12330,6 +12393,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_STATE_FUNCTIONS);
+        addStructEquality(FMOD_DSP_STATE_FUNCTIONS);
         addStructConstructor(FMOD_DSP_STATE_FUNCTIONS, "DSP_STATE_FUNCTIONS", -2);
         /* FMOD_DSP_ALLOC_FUNC alloc */
         /* FMOD_DSP_REALLOC_FUNC realloc */
@@ -12350,6 +12414,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_DSP_METERING_INFO);
+        addStructEquality(FMOD_DSP_METERING_INFO);
         addStructConstructor(FMOD_DSP_METERING_INFO, "DSP_METERING_INFO", -2);
         /* int numsamples */
         addPropertyGetter(FMOD_DSP_METERING_INFO, numsamples, int);
@@ -12364,6 +12429,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_OUTPUT_STATE);
+        addStructEquality(FMOD_OUTPUT_STATE);
         addStructConstructor(FMOD_OUTPUT_STATE, "OUTPUT_STATE", -2);
         /* void* plugindata */
         /* FMOD_OUTPUT_READFROMMIXER_FUNC readfrommixer */
@@ -12377,6 +12443,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_OUTPUT_OBJECT3DINFO);
+        addStructEquality(FMOD_OUTPUT_OBJECT3DINFO);
         addStructConstructor(FMOD_OUTPUT_OBJECT3DINFO, "OUTPUT_OBJECT3DINFO", -2);
         /* float* buffer */
         /* unsigned int bufferlength */
@@ -12399,6 +12466,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_OUTPUT_DESCRIPTION);
+        addStructEquality(FMOD_OUTPUT_DESCRIPTION);
         addStructConstructor(FMOD_OUTPUT_DESCRIPTION, "OUTPUT_DESCRIPTION", -2);
         /* unsigned int apiversion */
         addPropertyGetter(FMOD_OUTPUT_DESCRIPTION, apiversion, unsigned_int);
@@ -12434,6 +12502,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_SYSTEM);
+        addClassEquality(FMOD_STUDIO_SYSTEM);
         #ifdef FMODBridge_func_FMOD_Studio_System_IsValid
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Studio_System_IsValid);
         lua_setfield(L, -4, "is_valid");
@@ -12647,6 +12716,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_EVENTDESCRIPTION);
+        addClassEquality(FMOD_STUDIO_EVENTDESCRIPTION);
         #ifdef FMODBridge_func_FMOD_Studio_EventDescription_IsValid
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Studio_EventDescription_IsValid);
         lua_setfield(L, -4, "is_valid");
@@ -12768,6 +12838,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_EVENTINSTANCE);
+        addClassEquality(FMOD_STUDIO_EVENTINSTANCE);
         addDestructor(FMOD_STUDIO_EVENTINSTANCE, FMOD_Studio_EventInstance_Release);
         #ifdef FMODBridge_func_FMOD_Studio_EventInstance_IsValid
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Studio_EventInstance_IsValid);
@@ -12906,6 +12977,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_BUS);
+        addClassEquality(FMOD_STUDIO_BUS);
         #ifdef FMODBridge_func_FMOD_Studio_Bus_IsValid
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Studio_Bus_IsValid);
         lua_setfield(L, -4, "is_valid");
@@ -12963,6 +13035,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_VCA);
+        addClassEquality(FMOD_STUDIO_VCA);
         #ifdef FMODBridge_func_FMOD_Studio_VCA_IsValid
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Studio_VCA_IsValid);
         lua_setfield(L, -4, "is_valid");
@@ -12988,6 +13061,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_BANK);
+        addClassEquality(FMOD_STUDIO_BANK);
         #ifdef FMODBridge_func_FMOD_Studio_Bank_IsValid
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Studio_Bank_IsValid);
         lua_setfield(L, -4, "is_valid");
@@ -13065,6 +13139,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_COMMANDREPLAY);
+        addClassEquality(FMOD_STUDIO_COMMANDREPLAY);
         #ifdef FMODBridge_func_FMOD_Studio_CommandReplay_IsValid
         lua_pushcfunction(L, &FMODBridge_func_FMOD_Studio_CommandReplay_IsValid);
         lua_setfield(L, -4, "is_valid");
@@ -13158,6 +13233,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_BANK_INFO);
+        addStructEquality(FMOD_STUDIO_BANK_INFO);
         addStructConstructor(FMOD_STUDIO_BANK_INFO, "BANK_INFO", -1);
         /* int size */
         addPropertyGetter(FMOD_STUDIO_BANK_INFO, size, int);
@@ -13175,6 +13251,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_PARAMETER_ID);
+        addStructEquality(FMOD_STUDIO_PARAMETER_ID);
         addStructConstructor(FMOD_STUDIO_PARAMETER_ID, "PARAMETER_ID", -1);
         /* unsigned int data1 */
         addPropertyGetter(FMOD_STUDIO_PARAMETER_ID, data1, unsigned_int);
@@ -13187,6 +13264,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_PARAMETER_DESCRIPTION);
+        addStructEquality(FMOD_STUDIO_PARAMETER_DESCRIPTION);
         addStructConstructor(FMOD_STUDIO_PARAMETER_DESCRIPTION, "PARAMETER_DESCRIPTION", -1);
         /* const char* name */
         /* FMOD_STUDIO_PARAMETER_ID id */
@@ -13212,6 +13290,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_USER_PROPERTY);
+        addStructEquality(FMOD_STUDIO_USER_PROPERTY);
         addStructConstructor(FMOD_STUDIO_USER_PROPERTY, "USER_PROPERTY", -1);
         /* const char* name */
         /* FMOD_STUDIO_USER_PROPERTY_TYPE type */
@@ -13222,6 +13301,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_PROGRAMMER_SOUND_PROPERTIES);
+        addStructEquality(FMOD_STUDIO_PROGRAMMER_SOUND_PROPERTIES);
         addStructConstructor(FMOD_STUDIO_PROGRAMMER_SOUND_PROPERTIES, "PROGRAMMER_SOUND_PROPERTIES", -1);
         /* const char* name */
         /* FMOD_SOUND* sound */
@@ -13234,6 +13314,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_PLUGIN_INSTANCE_PROPERTIES);
+        addStructEquality(FMOD_STUDIO_PLUGIN_INSTANCE_PROPERTIES);
         addStructConstructor(FMOD_STUDIO_PLUGIN_INSTANCE_PROPERTIES, "PLUGIN_INSTANCE_PROPERTIES", -1);
         /* const char* name */
         /* FMOD_DSP* dsp */
@@ -13243,6 +13324,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_TIMELINE_MARKER_PROPERTIES);
+        addStructEquality(FMOD_STUDIO_TIMELINE_MARKER_PROPERTIES);
         addStructConstructor(FMOD_STUDIO_TIMELINE_MARKER_PROPERTIES, "TIMELINE_MARKER_PROPERTIES", -1);
         /* const char* name */
         /* int position */
@@ -13253,6 +13335,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_TIMELINE_BEAT_PROPERTIES);
+        addStructEquality(FMOD_STUDIO_TIMELINE_BEAT_PROPERTIES);
         addStructConstructor(FMOD_STUDIO_TIMELINE_BEAT_PROPERTIES, "TIMELINE_BEAT_PROPERTIES", -1);
         /* int bar */
         addPropertyGetter(FMOD_STUDIO_TIMELINE_BEAT_PROPERTIES, bar, int);
@@ -13277,6 +13360,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_ADVANCEDSETTINGS);
+        addStructEquality(FMOD_STUDIO_ADVANCEDSETTINGS);
         addStructConstructor(FMOD_STUDIO_ADVANCEDSETTINGS, "ADVANCEDSETTINGS", -1);
         /* int cbsize */
         addPropertyGetter(FMOD_STUDIO_ADVANCEDSETTINGS, cbsize, int);
@@ -13302,6 +13386,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_CPU_USAGE);
+        addStructEquality(FMOD_STUDIO_CPU_USAGE);
         addStructConstructor(FMOD_STUDIO_CPU_USAGE, "CPU_USAGE", -1);
         /* float dspusage */
         addPropertyGetter(FMOD_STUDIO_CPU_USAGE, dspusage, float);
@@ -13323,6 +13408,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_BUFFER_INFO);
+        addStructEquality(FMOD_STUDIO_BUFFER_INFO);
         addStructConstructor(FMOD_STUDIO_BUFFER_INFO, "BUFFER_INFO", -1);
         /* int currentusage */
         addPropertyGetter(FMOD_STUDIO_BUFFER_INFO, currentusage, int);
@@ -13344,6 +13430,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_BUFFER_USAGE);
+        addStructEquality(FMOD_STUDIO_BUFFER_USAGE);
         addStructConstructor(FMOD_STUDIO_BUFFER_USAGE, "BUFFER_USAGE", -1);
         /* FMOD_STUDIO_BUFFER_INFO studiocommandqueue */
         addPropertyGetter(FMOD_STUDIO_BUFFER_USAGE, studiocommandqueue, FMOD_STUDIO_BUFFER_INFO);
@@ -13356,6 +13443,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_SOUND_INFO);
+        addStructEquality(FMOD_STUDIO_SOUND_INFO);
         addStructConstructor(FMOD_STUDIO_SOUND_INFO, "SOUND_INFO", -1);
         /* const char* name_or_data */
         /* FMOD_MODE mode */
@@ -13372,6 +13460,7 @@ void FMODBridge_register(lua_State *L) {
         #endif
     endStruct();
     beginStruct(FMOD_STUDIO_COMMAND_INFO);
+        addStructEquality(FMOD_STUDIO_COMMAND_INFO);
         addStructConstructor(FMOD_STUDIO_COMMAND_INFO, "COMMAND_INFO", -1);
         /* const char* commandname */
         /* int parentcommandindex */
