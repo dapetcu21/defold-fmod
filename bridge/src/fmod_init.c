@@ -87,10 +87,23 @@ void FMODBridge_init(lua_State *L) {
     check(FMOD_Studio_System_GetCoreSystem(FMODBridge_system, &FMODBridge_lowLevelSystem));
 
     int defaultSampleRate = 0;
+    unsigned int bufferLength = 0;
+    int numBuffers = 0;
+
     #ifdef __EMSCRIPTEN__
     check(FMOD_System_GetDriverInfo(FMODBridge_lowLevelSystem, 0, NULL, 0, NULL, &defaultSampleRate, NULL, NULL));
-    check(FMOD_System_SetDSPBufferSize(FMODBridge_lowLevelSystem, 2048, 2));
+    bufferLength = 2048;
+    numBuffers = 2;
     #endif
+
+    bufferLength = (unsigned int)FMODBridge_dmConfigFile_GetInt("fmod.buffer_length", bufferLength);
+    numBuffers = FMODBridge_dmConfigFile_GetInt("fmod.num_buffers", numBuffers);
+
+    if (bufferLength || numBuffers) {
+        if (!bufferLength) { bufferLength = 1024; }
+        if (!numBuffers) { numBuffers = 4; }
+        check(FMOD_System_SetDSPBufferSize(FMODBridge_lowLevelSystem, bufferLength, numBuffers));
+    }
 
     int sampleRate = FMODBridge_dmConfigFile_GetInt("fmod.sample_rate", defaultSampleRate);
     int numRawSpeakers = FMODBridge_dmConfigFile_GetInt("fmod.num_raw_speakers", 0);
