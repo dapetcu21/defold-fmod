@@ -74,12 +74,48 @@ FMODBridge_Vector3 FMODBridge_dmScript_CheckVector3(lua_State* L, int index) {
     return result;
 }
 
+#if defined(DM_PLATFORM_OSX)
+#define CONFIG_SUFFIX "_macos"
+#elif defined(DM_PLATFORM_WINDOWS)
+#define CONFIG_SUFFIX "_windows"
+#elif defined(DM_PLATFORM_LINUX)
+#define CONFIG_SUFFIX "_linux"
+#elif defined(DM_PLATFORM_IOS)
+#define CONFIG_SUFFIX "_ios"
+#elif defined(DM_PLATFORM_ANDROID)
+#define CONFIG_SUFFIX "_android"
+#elif defined(DM_PLATFORM_HTML5)
+#define CONFIG_SUFFIX "_html5"
+#else
+#define CONFIG_SUFFIX ""
+#endif
+
 const char* FMODBridge_dmConfigFile_GetString(const char* config, const char* defaultValue) {
-    return dmConfigFile::GetString(appConfig, config, defaultValue);
+    const char* value = dmConfigFile::GetString(appConfig, config, defaultValue);
+
+    size_t configLen = strlen(config);
+    char *platformKey = new char[configLen + strlen(CONFIG_SUFFIX) + 1];
+    strcpy(platformKey, config);
+    strcpy(platformKey + configLen, CONFIG_SUFFIX);
+
+    value = dmConfigFile::GetString(appConfig, platformKey, value);
+
+    delete[] platformKey;
+    return value;
 }
 
 int32_t FMODBridge_dmConfigFile_GetInt(const char* config, int32_t defaultValue) {
-    return dmConfigFile::GetInt(appConfig, config, defaultValue);
+    int32_t value = dmConfigFile::GetInt(appConfig, config, defaultValue);
+
+    size_t configLen = strlen(config);
+    char *platformKey = new char[configLen + strlen(CONFIG_SUFFIX) + 1];
+    strcpy(platformKey, config);
+    strcpy(platformKey + configLen, CONFIG_SUFFIX);
+
+    value = dmConfigFile::GetInt(appConfig, platformKey, value);
+
+    delete[] platformKey;
+    return value;
 }
 
 #ifdef DM_PLATFORM_ANDROID
