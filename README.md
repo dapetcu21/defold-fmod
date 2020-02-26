@@ -33,6 +33,14 @@ Supported values for `speaker_mode` are: `default`, `raw`, `mono`, `stereo`,
 
 If ever needed, you can also set `sample_rate` and `num_raw_speakers` in the same way.
 
+If you have issues with stutter, you can try adjusting
+`buffer_length` and `num_buffers` from here as well.
+[More details here](https://fmod.com/resources/documentation-api?version=2.0&page=core-api-system.html#system_setdspbuffersize).
+
+If you need platform-specific overrides for these settings, append one of
+`_macos`, `_windows`, `_linux`, `_android`, `_ios`, `_html5` to the config key
+(eg. `buffer_length_android`).
+
 ### Running in the editor
 
 The game will bundle fine, but in order for FMOD to be available when running
