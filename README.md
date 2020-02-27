@@ -170,7 +170,7 @@ if system_name == "Darwin" then
 elseif system_name == "Android" then
   path_to_banks = "file:///android_asset/banks"
 end
-fmod.studio.system:load_bank_memory(path_to_banks .. "/Master Bank.bank", fmod.STUDIO_LOAD_BANK_NORMAL)
+fmod.studio.system:load_bank_file(path_to_banks .. "/Master Bank.bank", fmod.STUDIO_LOAD_BANK_NORMAL)
 ```
 
 **Warning: Don't use relative paths for loading banks. Use `sys.get_application_path()`. Relying on the current working directory being the same as the game's installation directory is not always correct (especially on platforms like macOS and iOS).**
