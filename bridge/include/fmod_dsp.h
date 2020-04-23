@@ -1,6 +1,6 @@
 /* ======================================================================================== */
 /* FMOD Core API - DSP header file.                                                         */
-/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2019.                               */
+/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2020.                               */
 /*                                                                                          */
 /* Use this header if you are wanting to develop your own DSP plugin to use with FMODs      */
 /* dsp system.  With this header you can make your own DSP plugin that FMOD can             */
@@ -115,20 +115,20 @@ typedef FMOD_RESULT (F_CALL *FMOD_DSP_PAN_GETROLLOFFGAIN_FUNC)            (FMOD_
 /*
     DSP Structures
 */
-typedef struct FMOD_DSP_BUFFER_ARRAY
+struct FMOD_DSP_BUFFER_ARRAY
 {
     int                numbuffers;
     int               *buffernumchannels;
     FMOD_CHANNELMASK  *bufferchannelmask;
     float            **buffers;
     FMOD_SPEAKERMODE   speakermode;
-} FMOD_DSP_BUFFER_ARRAY;
+};
 
-typedef struct FMOD_COMPLEX
+struct FMOD_COMPLEX
 {
     float real;
     float imag;
-} FMOD_COMPLEX;
+};
 
 typedef struct FMOD_DSP_PARAMETER_FLOAT_MAPPING_PIECEWISE_LINEAR
 {

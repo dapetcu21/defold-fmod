@@ -1,6 +1,6 @@
 /* ======================================================================================== */
 /* FMOD Studio API - C header file.                                                         */
-/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2019.                               */
+/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2020.                               */
 /*                                                                                          */
 /* Use this header in conjunction with fmod_studio_common.h (which contains all the         */
 /* constants / callbacks) to develop using the C language.                                  */
@@ -54,8 +54,8 @@ FMOD_RESULT F_API FMOD_Studio_System_LookupID(FMOD_STUDIO_SYSTEM *system, const 
 FMOD_RESULT F_API FMOD_Studio_System_LookupPath(FMOD_STUDIO_SYSTEM *system, const FMOD_GUID *id, char *path, int size, int *retrieved);
 FMOD_RESULT F_API FMOD_Studio_System_GetNumListeners(FMOD_STUDIO_SYSTEM *system, int *numlisteners);
 FMOD_RESULT F_API FMOD_Studio_System_SetNumListeners(FMOD_STUDIO_SYSTEM *system, int numlisteners);
-FMOD_RESULT F_API FMOD_Studio_System_GetListenerAttributes(FMOD_STUDIO_SYSTEM *system, int index, FMOD_3D_ATTRIBUTES *attributes);
-FMOD_RESULT F_API FMOD_Studio_System_SetListenerAttributes(FMOD_STUDIO_SYSTEM *system, int index, FMOD_3D_ATTRIBUTES *attributes);
+FMOD_RESULT F_API FMOD_Studio_System_GetListenerAttributes(FMOD_STUDIO_SYSTEM *system, int index, FMOD_3D_ATTRIBUTES *attributes, FMOD_VECTOR *attenuationposition);
+FMOD_RESULT F_API FMOD_Studio_System_SetListenerAttributes(FMOD_STUDIO_SYSTEM *system, int index, const FMOD_3D_ATTRIBUTES *attributes, const FMOD_VECTOR *attenuationposition);
 FMOD_RESULT F_API FMOD_Studio_System_GetListenerWeight(FMOD_STUDIO_SYSTEM *system, int index, float *weight);
 FMOD_RESULT F_API FMOD_Studio_System_SetListenerWeight(FMOD_STUDIO_SYSTEM *system, int index, float weight);
 FMOD_RESULT F_API FMOD_Studio_System_LoadBankFile(FMOD_STUDIO_SYSTEM *system, const char *filename, FMOD_STUDIO_LOAD_BANK_FLAGS flags, FMOD_STUDIO_BANK **bank);
@@ -79,6 +79,7 @@ FMOD_RESULT F_API FMOD_Studio_System_ResetBufferUsage(FMOD_STUDIO_SYSTEM *system
 FMOD_RESULT F_API FMOD_Studio_System_SetCallback(FMOD_STUDIO_SYSTEM *system, FMOD_STUDIO_SYSTEM_CALLBACK callback, FMOD_STUDIO_SYSTEM_CALLBACK_TYPE callbackmask);
 FMOD_RESULT F_API FMOD_Studio_System_SetUserData(FMOD_STUDIO_SYSTEM *system, void *userdata);
 FMOD_RESULT F_API FMOD_Studio_System_GetUserData(FMOD_STUDIO_SYSTEM *system, void **userdata);
+FMOD_RESULT F_API FMOD_Studio_System_GetMemoryUsage(FMOD_STUDIO_SYSTEM *system, FMOD_STUDIO_MEMORY_USAGE *memoryusage);
 
 /*
     EventDescription
@@ -149,6 +150,8 @@ FMOD_RESULT F_API FMOD_Studio_EventInstance_TriggerCue(FMOD_STUDIO_EVENTINSTANCE
 FMOD_RESULT F_API FMOD_Studio_EventInstance_SetCallback(FMOD_STUDIO_EVENTINSTANCE *eventinstance, FMOD_STUDIO_EVENT_CALLBACK callback, FMOD_STUDIO_EVENT_CALLBACK_TYPE callbackmask);
 FMOD_RESULT F_API FMOD_Studio_EventInstance_GetUserData(FMOD_STUDIO_EVENTINSTANCE *eventinstance, void **userdata);
 FMOD_RESULT F_API FMOD_Studio_EventInstance_SetUserData(FMOD_STUDIO_EVENTINSTANCE *eventinstance, void *userdata);
+FMOD_RESULT F_API FMOD_Studio_EventInstance_GetCPUUsage(FMOD_STUDIO_EVENTINSTANCE *eventinstance, unsigned int *exclusive, unsigned int *inclusive);
+FMOD_RESULT F_API FMOD_Studio_EventInstance_GetMemoryUsage(FMOD_STUDIO_EVENTINSTANCE *eventinstance, FMOD_STUDIO_MEMORY_USAGE *memoryusage);
 
 /*
     Bus
@@ -166,6 +169,8 @@ FMOD_RESULT F_API FMOD_Studio_Bus_StopAllEvents(FMOD_STUDIO_BUS *bus, FMOD_STUDI
 FMOD_RESULT F_API FMOD_Studio_Bus_LockChannelGroup(FMOD_STUDIO_BUS *bus);
 FMOD_RESULT F_API FMOD_Studio_Bus_UnlockChannelGroup(FMOD_STUDIO_BUS *bus);
 FMOD_RESULT F_API FMOD_Studio_Bus_GetChannelGroup(FMOD_STUDIO_BUS *bus, FMOD_CHANNELGROUP **group);
+FMOD_RESULT F_API FMOD_Studio_Bus_GetCPUUsage(FMOD_STUDIO_BUS *bus, unsigned int *exclusive, unsigned int *inclusive);
+FMOD_RESULT F_API FMOD_Studio_Bus_GetMemoryUsage(FMOD_STUDIO_BUS *bus, FMOD_STUDIO_MEMORY_USAGE *memoryusage);
 
 /*
     VCA

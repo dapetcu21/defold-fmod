@@ -427,8 +427,13 @@ static int _FMODBridge_func_FMOD_Studio_System_SetListenerAttributes(lua_State *
     FMOD_STUDIO_SYSTEM* system = FMODBridge_check_ptr_FMOD_STUDIO_SYSTEM(L, 1);
     int index = FMODBridge_check_int(L, 2);
     FMOD_3D_ATTRIBUTES* attributes = FMODBridge_check_ptr_FMOD_3D_ATTRIBUTES(L, 3);
-    ensure(ST, FMOD_Studio_System_SetListenerAttributes, FMOD_RESULT, FMOD_STUDIO_SYSTEM*, int, FMOD_3D_ATTRIBUTES*);
-    errCheck(FMOD_Studio_System_SetListenerAttributes(system, index, attributes));
+    FMOD_VECTOR attenuationposition;
+    int hasAttenuationPosition = !lua_isnoneornil(L, 4);
+    if (hasAttenuationPosition) {
+        attenuationposition = FMODBridge_check_FMOD_VECTOR(L, 4);
+    }
+    ensure(ST, FMOD_Studio_System_SetListenerAttributes, FMOD_RESULT, FMOD_STUDIO_SYSTEM*, int, const FMOD_3D_ATTRIBUTES*, const FMOD_VECTOR*);
+    errCheck(FMOD_Studio_System_SetListenerAttributes(system, index, attributes, hasAttenuationPosition ? &attenuationposition : NULL));
     return 0;
 }
 
