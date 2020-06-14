@@ -129,8 +129,10 @@ void FMODBridge_init(lua_State *L) {
         Module._FMODBridge_onClick = function () {
             ccall('FMODBridge_unmuteAfterUserInteraction', null, [], []);
             Module.canvas.removeEventListener('click', Module._FMODBridge_onClick);
+            Module.canvas.removeEventListener('touchend', Module._FMODBridge_onClick);
         };
-        Module.canvas.addEventListener('click', Module._FMODBridge_onClick, false);
+        Module.canvas.addEventListener('click', Module._FMODBridge_onClick);
+        Module.canvas.addEventListener('touchend', Module._FMODBridge_onClick, false);
     });
     #endif
 
