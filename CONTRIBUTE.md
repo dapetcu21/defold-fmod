@@ -61,13 +61,13 @@ make -f Makefile.android ANDROID_NDK=/path/to/android-ndk-r17c
 
 ### HTML5
 
-[Install and activate Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html) 1.38.13:
+[Install and activate Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html) 1.39.16:
 
 ```
 git clone https://github.com/juj/emsdk.git
 cd emsdk
-./emsdk install sdk-1.38.13-64bit
-./emsdk activate sdk-1.38.13-64bit
+./emsdk install sdk-1.39.16-64bit
+./emsdk activate sdk-1.39.16-64bit
 source ./emsdk_env.sh
 ```
 
@@ -81,8 +81,8 @@ make -f Makefile.emscripten
 ## Updating FMOD to a newer version
 
 This just boils down to downloading all the FMOD distributions and copying the
-libraries to the appropriate locations. On HTML5 one extra step is required:
+libraries to the appropriate locations. On HTML5, use the upstream W32 distribution:
 
 ```
-emar rcs path/to/libfmodstudio.bc fmod/lib/web/libfmodstudio.a
+cp path_to_fmodstudioapi/api/studio/lib/upstream/w32/fmodstudio.a  fmod/lib/web/libfmodstudio.a 
 ```
