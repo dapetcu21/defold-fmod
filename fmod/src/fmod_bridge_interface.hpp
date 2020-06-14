@@ -25,6 +25,8 @@ extern "C" {
     void FMODBridge_finalize();
     void FMODBridge_activateApp();
     void FMODBridge_deactivateApp();
+    void FMODBridge_iconifyApp();
+    void FMODBridge_deiconifyApp();
 }
 
 #endif

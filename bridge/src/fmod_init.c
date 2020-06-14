@@ -28,6 +28,10 @@ bool FMODBridge_isPaused = false;
 bool FMODBridge_isLinked = false;
 #endif
 
+static bool runWhileIconified = false;
+static bool iconified = false;
+static FMOD_BOOL masterChannelGroupPaused;
+
 static FMOD_SPEAKERMODE speakerModeFromString(const char* str) {
     if (0 == strcmp(str, "default")) { return FMOD_SPEAKERMODE_DEFAULT; }
     if (0 == strcmp(str, "stereo")) { return FMOD_SPEAKERMODE_STEREO; }
@@ -123,6 +127,12 @@ void FMODBridge_init(lua_State *L) {
     check(FMOD_Studio_System_Initialize(FMODBridge_system, 1024, studioInitFlags, FMOD_INIT_NORMAL, extraDriverData));
 
     FMODBridge_isPaused = false;
+
+    iconified = false;
+    runWhileIconified = FMODBridge_dmConfigFile_GetInt(
+        "fmod.run_while_iconified",
+        FMODBridge_dmConfigFile_GetInt("engine.run_while_iconified", 0)
+    ) != 0;
 
     #ifdef __EMSCRIPTEN__
     EM_ASM({
@@ -234,6 +244,44 @@ void FMODBridge_deactivateApp() {
     #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
     FMODBridge_suspendMixer();
     #endif
+}
+
+void FMODBridge_iconifyApp() {
+    if (iconified) { return; }
+    iconified = true;
+
+    if (!runWhileIconified && FMODBridge_lowLevelSystem) {
+        attachJNI();
+        ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
+        ensure(LL, FMOD_System_GetMasterChannelGroup, FMOD_RESULT, FMOD_SYSTEM*, FMOD_CHANNELGROUP**);
+        ensure(LL, FMOD_ChannelGroup_GetPaused, FMOD_RESULT, FMOD_CHANNELGROUP*, FMOD_BOOL*);
+        ensure(LL, FMOD_ChannelGroup_SetPaused, FMOD_RESULT, FMOD_CHANNELGROUP*, FMOD_BOOL);
+
+        FMOD_CHANNELGROUP *channelGroup;
+        check(FMOD_System_GetMasterChannelGroup(FMODBridge_lowLevelSystem, &channelGroup));
+        check(FMOD_ChannelGroup_GetPaused(channelGroup, &masterChannelGroupPaused));
+        check(FMOD_ChannelGroup_SetPaused(channelGroup, true));
+
+        detachJNI();
+    }
+}
+
+void FMODBridge_deiconifyApp() {
+    if (!iconified) { return; }
+    iconified = false;
+
+    if (!runWhileIconified && FMODBridge_lowLevelSystem) {
+        attachJNI();
+        ensure(ST, FMOD_Studio_System_Release, FMOD_RESULT, FMOD_STUDIO_SYSTEM*);
+        ensure(LL, FMOD_System_GetMasterChannelGroup, FMOD_RESULT, FMOD_SYSTEM*, FMOD_CHANNELGROUP**);
+        ensure(LL, FMOD_ChannelGroup_SetPaused, FMOD_RESULT, FMOD_CHANNELGROUP*, FMOD_BOOL);
+
+        FMOD_CHANNELGROUP *channelGroup;
+        check(FMOD_System_GetMasterChannelGroup(FMODBridge_lowLevelSystem, &channelGroup));
+        check(FMOD_ChannelGroup_SetPaused(channelGroup, masterChannelGroupPaused));
+
+        detachJNI();
+    }
 }
 
 #if !defined(__APPLE__)
