@@ -61,13 +61,13 @@ make -f Makefile.android ANDROID_NDK=/path/to/android-ndk-r17c
 
 ### HTML5
 
-[Install and activate Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html) 1.39.16:
+[Install and activate Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html) 1.39.17:
 
 ```
 git clone https://github.com/juj/emsdk.git
 cd emsdk
-./emsdk install sdk-1.39.16-64bit
-./emsdk activate sdk-1.39.16-64bit
+./emsdk install sdk-1.39.17-64bit
+./emsdk activate sdk-1.39.17-64bit
 source ./emsdk_env.sh
 ```
 
