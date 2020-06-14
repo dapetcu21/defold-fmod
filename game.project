@@ -28,3 +28,6 @@ include_dirs = fmod
 lib_path = fmod/res
 speaker_mode = 5.1
 
+[html5]
+heap_size = 512
+
