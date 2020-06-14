@@ -187,6 +187,15 @@ fmod.studio.system:load_bank_file(path_to_banks .. "/Master Bank.bank", fmod.STU
 
 **Warning: Don't use relative paths for loading banks. Use `sys.get_application_path()`. Relying on the current working directory being the same as the game's installation directory is not always correct (especially on platforms like macOS and iOS).**
 
+## Sound while the game is minimised
+
+By default, FMOD should respect the setting of `engine.run_while_iconified`. This
+means that if the engine can run in the background, FMOD will too, otherwise
+all audio will be paused while the engine is minimised (and paused as well).
+
+If you'd like to keep the engine running in the background but still pause the music,
+set `engine.run_while_iconified = 1` and add a new setting `fmod.run_while_iconified = 0`.
+
 ## Contributing
 
 See [CONTRIBUTE.md](./CONTRIBUTE.md) for details about how to contribute to this project.
