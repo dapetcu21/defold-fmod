@@ -6,7 +6,7 @@
 #endif
 #include <dmsdk/sdk.h>
 
-#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS) || defined(DM_PLATFORM_LINUX) || defined(DM_PLATFORM_IOS) || defined(DM_PLATFORM_HTML5) || defined(DM_PLATFORM_ANDROID)
+#if defined(DM_PLATFORM_OSX) || defined(DM_PLATFORM_WINDOWS) || defined(DM_PLATFORM_LINUX) || defined(DM_PLATFORM_IOS) || defined(DM_PLATFORM_HTML5) || defined(DM_PLATFORM_ANDROID) || defined(DM_PLATFORM_SWITCH)
 
 #include "fmod_bridge_interface.hpp"
 
@@ -88,6 +88,8 @@ FMODBridge_Vector3 FMODBridge_dmScript_CheckVector3(lua_State* L, int index) {
 #define CONFIG_SUFFIX "_android"
 #elif defined(DM_PLATFORM_HTML5)
 #define CONFIG_SUFFIX "_html5"
+#elif defined(DM_PLATFORM_SWITCH)
+#define CONFIG_SUFFIX "_switch"
 #else
 #define CONFIG_SUFFIX ""
 #endif
