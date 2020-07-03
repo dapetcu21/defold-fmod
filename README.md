@@ -196,6 +196,10 @@ all audio will be paused while the engine is minimised (and paused as well).
 If you'd like to keep the engine running in the background but still pause the music,
 set `engine.run_while_iconified = 1` and add a new setting `fmod.run_while_iconified = 0`.
 
+## Nintendo Switch support
+After [getting access to Defold for Nintendo Switch](https://defold.com/manuals/nintendo-switch/), 
+follow [these instructions](https://forum.defold.com/t/fmod-extension-for-switch/65719).
+
 ## Contributing
 
 See [CONTRIBUTE.md](./CONTRIBUTE.md) for details about how to contribute to this project.
