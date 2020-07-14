@@ -2,7 +2,7 @@
 
 # FMOD extension for Defold
 
-> **Experimental** [FMOD] sound engine bindings for Defold
+> [FMOD] sound engine bindings for Defold
 
 **Commercial usage of FMOD products may require a separate license directly with
 Firelight Technologies. For details refer to [fmod.com/resources/eula][fmod-license].**
