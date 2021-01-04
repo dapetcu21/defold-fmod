@@ -7,3 +7,7 @@ services:
     build: docker/build_web
     volumes:
     - "..:/repo"
+  build_android:
+    build: docker/build_android
+    volumes:
+    - "..:/repo"

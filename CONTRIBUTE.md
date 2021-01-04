@@ -46,51 +46,22 @@ make -f Makefile.osx
 make -f Makefile.ios
 ```
 
-### Linux
-
-On Ubuntu 16.04, install the GCC toolchain with
-`sudo apt-get install build-essential`, then:
-
-```bash
-cd bridge
-make -f Makefile.linux
-```
-
 ### Windows
 
 Install Visual Studio 2017, then open `bridge/vs_proj/fmodbridge.sln`. Build
 the `Release x86` and `Release x64` targets.
 
-### Android
+### Linux, Android, HTML5
 
-Download and install [Android NDK r17c] and [Java 8], then to build the bridge:
-
-[Android NDK r17c]:https://developer.android.com/ndk/downloads/older_releases.html
-[Java 8]:https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+You can build all of these in one go with Docker:
 
 ```bash
 cd bridge
-make -f Makefile.android ANDROID_NDK=/path/to/android-ndk-r17c
+docker-compose up
 ```
 
-### HTML5
-
-[Install and activate Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html) 1.39.17:
-
-```
-git clone https://github.com/juj/emsdk.git
-cd emsdk
-./emsdk install sdk-1.39.17-64bit
-./emsdk activate sdk-1.39.17-64bit
-source ./emsdk_env.sh
-```
-
-Then, in this repo:
-
-```bash
-cd bridge
-make -f Makefile.emscripten
-```
+Or use the respective Makefiles to build manually. Make sure to match
+the SDK versions that the Docker containers use.
 
 ## Updating FMOD to a newer version
 
