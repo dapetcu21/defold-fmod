@@ -35,6 +35,13 @@ license agreement and let it install the CLI tools. Then:
 
 ```bash
 cd bridge
+./build_darwin.sh
+```
+
+Or, for iOS and macOS separately:
+
+```bash
+cd bridge
 make -f Makefile.osx
 make -f Makefile.ios
 ```

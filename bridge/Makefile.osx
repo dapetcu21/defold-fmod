@@ -1,4 +1,4 @@
-LIBPATH := ../fmod/lib/x86_64-osx/libfmodbridge.a
+LIBPATH := ../fmod/lib/osx/libfmodbridge.a
 
 SOURCES = \
 	src/fmod_init.c \
@@ -10,21 +10,41 @@ OBJC_SOURCES = \
 
 HEADERS = src/fmod_bridge.h
 
-CFLAGS := -std=c11 -O3 -fvisibility=hidden -I./include -mmacosx-version-min=10.7
+CFLAGS := -std=c11 -O3 -fvisibility=hidden -I./include
+CFLAGS_X86_64 := $(CFLAGS) -target x86_64-apple-macos10.7
+CFLAGS_ARM64 := $(CFLAGS) -target arm64-apple-macos11
 
 all: $(LIBPATH)
 
-OBJECTS = $(patsubst src/%.c,build/osx-c-%.o,$(SOURCES))
-OBJECTS_OBJC = $(patsubst src/%.m,build/osx-m-%.o,$(OBJC_SOURCES))
+build/osx-x86_64-c-%.o: src/%.c $(HEADERS)
+	$(CC) $(CFLAGS_X86_64) -c $< -o $@
 
-build/osx-c-%.o: src/%.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $< -o $@
+build/osx-x86_64-m-%.o: src/%.m $(HEADERS)
+	$(CC) $(CFLAGS_X86_64) -c $< -o $@
 
-build/osx-m-%.o: src/%.m $(HEADERS)
-	$(CC) $(CFLAGS) -c $< -o $@
+build/osx-arm64-c-%.o: src/%.c $(HEADERS)
+	$(CC) $(CFLAGS_ARM64) -c $< -o $@
 
-$(LIBPATH): $(OBJECTS) $(OBJECTS_OBJC)
+build/osx-arm64-m-%.o: src/%.m $(HEADERS)
+	$(CC) $(CFLAGS_ARM64) -c $< -o $@
+
+
+OBJECTS_X86_64 = $(patsubst src/%.c,build/osx-x86_64-c-%.o,$(SOURCES))
+OBJECTS_OBJC_X86_64 = $(patsubst src/%.m,build/osx-x86_64-m-%.o,$(OBJC_SOURCES))
+
+build/osx-x86_64-libfmodbridge.a: $(OBJECTS_X86_64) $(OBJECTS_OBJC_X86_64)
 	libtool -static $^ -o $@
+
+
+OBJECTS_ARM64 = $(patsubst src/%.c,build/osx-arm64-c-%.o,$(SOURCES))
+OBJECTS_OBJC_ARM64 = $(patsubst src/%.m,build/osx-arm64-m-%.o,$(OBJC_SOURCES))
+
+build/osx-arm64-libfmodbridge.a: $(OBJECTS_ARM64) $(OBJECTS_OBJC_ARM64)
+	libtool -static $^ -o $@
+
+
+$(LIBPATH): build/osx-x86_64-libfmodbridge.a build/osx-arm64-libfmodbridge.a
+	lipo -create -output $@ $^
 
 clean:
 	rm -f $(LIBPATH) build/osx-*.o
