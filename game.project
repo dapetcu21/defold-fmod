@@ -1,5 +1,5 @@
 [project]
-title = FMOD
+title = FMOD Example
 version = 0.1
 custom_resources = example/banks/
 
