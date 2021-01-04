@@ -49,10 +49,11 @@ cp "$TMPDIR/html5"/*/api/studio/lib/upstream/w32/fmodstudio.a $REPO/fmod/lib/web
 echo -e "${YELLOW}Updating Android FMOD...${NC}"
 mkdir -p "$TMPDIR/android"
 tar xzf "${PREFIX}android.tar.gz" -C "$TMPDIR/android" --strip-components 1
-cp -L "$TMPDIR/android/api/core/lib/arm64-v8a/libfmod.so" "$REPO/fmod/res/armv7-android/lib/arm64-v8a/libfmod.so"
-cp -L "$TMPDIR/android/api/studio/lib/arm64-v8a/libfmodstudio.so" "$REPO/fmod/res/armv7-android/lib/arm64-v8a/libfmodstudio.so"
-cp -L "$TMPDIR/android/api/core/lib/armeabi-v7a/libfmod.so" "$REPO/fmod/res/armv7-android/lib/armeabi-v7a/libfmod.so"
-cp -L "$TMPDIR/android/api/studio/lib/armeabi-v7a/libfmodstudio.so" "$REPO/fmod/res/armv7-android/lib/armeabi-v7a/libfmodstudio.so"
+cp -L "$TMPDIR/android/api/core/lib/arm64-v8a/libfmod.so" "$REPO/fmod/res/android/lib/arm64-v8a/libfmod.so"
+cp -L "$TMPDIR/android/api/studio/lib/arm64-v8a/libfmodstudio.so" "$REPO/fmod/res/android/lib/arm64-v8a/libfmodstudio.so"
+cp -L "$TMPDIR/android/api/core/lib/armeabi-v7a/libfmod.so" "$REPO/fmod/res/android/lib/armeabi-v7a/libfmod.so"
+cp -L "$TMPDIR/android/api/studio/lib/armeabi-v7a/libfmodstudio.so" "$REPO/fmod/res/android/lib/armeabi-v7a/libfmodstudio.so"
+cp -L "$TMPDIR/android/api/core/lib/fmod.jar" "$REPO/fmod/lib/android/fmod.jar"
 
 echo -e "${YELLOW}Copying FMOD headers...${NC}"
 rm -f "$REPO/bridge/include/fmod"*
