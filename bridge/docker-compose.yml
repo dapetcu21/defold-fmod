@@ -1,0 +1,5 @@
+services:
+  build_linux:
+    build: docker/build_linux
+    volumes:
+    - "..:/repo"
