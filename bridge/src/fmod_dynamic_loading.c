@@ -304,7 +304,7 @@ bool FMODBridge_linkLibraries() {
             }
 
             #ifdef __APPLE__
-            #define FMB_LIB_PATH SEP FMB_ARCH "-" FMB_PLATFORM SEP "Contents" SEP "MacOS"
+            #define FMB_LIB_PATH SEP FMB_PLATFORM SEP "Contents" SEP "MacOS"
             #else
             #define FMB_LIB_PATH SEP FMB_ARCH "-" FMB_PLATFORM
             #endif
