@@ -2905,6 +2905,22 @@ static int _FMODBridge_func_FMOD_System_GetCPUUsage(lua_State *L) {
 #endif
 
 
+/* FMOD_System_GetCPUUsageEx(input FMOD_SYSTEM* system, output float* convolutionThread1, output float* convolutionThread2, ) */
+#ifndef FMODBridge_func_FMOD_System_GetCPUUsageEx
+#define FMODBridge_func_FMOD_System_GetCPUUsageEx _FMODBridge_func_FMOD_System_GetCPUUsageEx
+static int _FMODBridge_func_FMOD_System_GetCPUUsageEx(lua_State *L) {
+    FMOD_SYSTEM* system = FMODBridge_check_ptr_FMOD_SYSTEM(L, 1);
+    float convolutionThread1;
+    float convolutionThread2;
+    ensure(LL, FMOD_System_GetCPUUsageEx, FMOD_RESULT, FMOD_SYSTEM*, float*, float*);
+    errCheck(FMOD_System_GetCPUUsageEx(system, &convolutionThread1, &convolutionThread2));
+    FMODBridge_push_float(L, convolutionThread1);
+    FMODBridge_push_float(L, convolutionThread2);
+    return 2;
+}
+#endif
+
+
 /* FMOD_System_GetFileUsage(input FMOD_SYSTEM* system, output long long* sampleBytesRead, output long long* streamBytesRead, output long long* otherBytesRead, ) */
 #ifndef FMODBridge_func_FMOD_System_GetFileUsage
 #define FMODBridge_func_FMOD_System_GetFileUsage _FMODBridge_func_FMOD_System_GetFileUsage
@@ -3077,6 +3093,21 @@ static int _FMODBridge_func_FMOD_System_GetChannel(lua_State *L) {
     ensure(LL, FMOD_System_GetChannel, FMOD_RESULT, FMOD_SYSTEM*, int, FMOD_CHANNEL**);
     errCheck(FMOD_System_GetChannel(system, channelid, &channel));
     FMODBridge_push_ptr_FMOD_CHANNEL(L, channel);
+    return 1;
+}
+#endif
+
+
+/* FMOD_System_GetDSPInfoByType(input FMOD_SYSTEM* system, input FMOD_DSP_TYPE type, output const FMOD_DSP_DESCRIPTION** description, ) */
+#ifndef FMODBridge_func_FMOD_System_GetDSPInfoByType
+#define FMODBridge_func_FMOD_System_GetDSPInfoByType _FMODBridge_func_FMOD_System_GetDSPInfoByType
+static int _FMODBridge_func_FMOD_System_GetDSPInfoByType(lua_State *L) {
+    FMOD_SYSTEM* system = FMODBridge_check_ptr_FMOD_SYSTEM(L, 1);
+    FMOD_DSP_TYPE type = FMODBridge_check_FMOD_DSP_TYPE(L, 2);
+    const FMOD_DSP_DESCRIPTION* description;
+    ensure(LL, FMOD_System_GetDSPInfoByType, FMOD_RESULT, FMOD_SYSTEM*, FMOD_DSP_TYPE, const FMOD_DSP_DESCRIPTION**);
+    errCheck(FMOD_System_GetDSPInfoByType(system, type, &description));
+    FMODBridge_push_ptr_FMOD_DSP_DESCRIPTION(L, description);
     return 1;
 }
 #endif
@@ -9408,6 +9439,8 @@ void FMODBridge_register(lua_State *L) {
     addEnum(THREAD_TYPE_STUDIO_UPDATE);
     addEnum(THREAD_TYPE_STUDIO_LOAD_BANK);
     addEnum(THREAD_TYPE_STUDIO_LOAD_SAMPLE);
+    addEnum(THREAD_TYPE_CONVOLUTION1);
+    addEnum(THREAD_TYPE_CONVOLUTION2);
     addEnum(THREAD_TYPE_MAX);
     addEnum(OK);
     addEnum(ERR_BADCOMMAND);
@@ -10089,6 +10122,8 @@ void FMODBridge_register(lua_State *L) {
     addEnum(SYSTEM_CALLBACK_PREUPDATE);
     addEnum(SYSTEM_CALLBACK_POSTUPDATE);
     addEnum(SYSTEM_CALLBACK_RECORDLISTCHANGED);
+    addEnum(SYSTEM_CALLBACK_BUFFEREDNOMIX);
+    addEnum(SYSTEM_CALLBACK_DEVICEREINITIALIZE);
     addEnum(SYSTEM_CALLBACK_ALL);
     addEnum(DEFAULT);
     addEnum(LOOP_OFF);
@@ -10157,6 +10192,8 @@ void FMODBridge_register(lua_State *L) {
     addEnum(THREAD_PRIORITY_STUDIO_UPDATE);
     addEnum(THREAD_PRIORITY_STUDIO_LOAD_BANK);
     addEnum(THREAD_PRIORITY_STUDIO_LOAD_SAMPLE);
+    addEnum(THREAD_PRIORITY_CONVOLUTION1);
+    addEnum(THREAD_PRIORITY_CONVOLUTION2);
     addEnum(THREAD_STACK_SIZE_DEFAULT);
     addEnum(THREAD_STACK_SIZE_MIXER);
     addEnum(THREAD_STACK_SIZE_FEEDER);
@@ -10169,6 +10206,8 @@ void FMODBridge_register(lua_State *L) {
     addEnum(THREAD_STACK_SIZE_STUDIO_UPDATE);
     addEnum(THREAD_STACK_SIZE_STUDIO_LOAD_BANK);
     addEnum(THREAD_STACK_SIZE_STUDIO_LOAD_SAMPLE);
+    addEnum(THREAD_STACK_SIZE_CONVOLUTION1);
+    addEnum(THREAD_STACK_SIZE_CONVOLUTION2);
     addEnum(THREAD_AFFINITY_GROUP_DEFAULT);
     addEnum(THREAD_AFFINITY_GROUP_A);
     addEnum(THREAD_AFFINITY_GROUP_B);
@@ -10184,6 +10223,8 @@ void FMODBridge_register(lua_State *L) {
     addEnum(THREAD_AFFINITY_STUDIO_UPDATE);
     addEnum(THREAD_AFFINITY_STUDIO_LOAD_BANK);
     addEnum(THREAD_AFFINITY_STUDIO_LOAD_SAMPLE);
+    addEnum(THREAD_AFFINITY_CONVOLUTION1);
+    addEnum(THREAD_AFFINITY_CONVOLUTION2);
     addEnum(THREAD_AFFINITY_CORE_ALL);
     addEnum(THREAD_AFFINITY_CORE_0);
     addEnum(THREAD_AFFINITY_CORE_1);
@@ -10217,6 +10258,7 @@ void FMODBridge_register(lua_State *L) {
     addEnum(STUDIO_PARAMETER_READONLY);
     addEnum(STUDIO_PARAMETER_AUTOMATIC);
     addEnum(STUDIO_PARAMETER_GLOBAL);
+    addEnum(STUDIO_PARAMETER_DISCRETE);
     addEnum(STUDIO_SYSTEM_CALLBACK_PREUPDATE);
     addEnum(STUDIO_SYSTEM_CALLBACK_POSTUPDATE);
     addEnum(STUDIO_SYSTEM_CALLBACK_BANK_UNLOAD);
@@ -10563,6 +10605,10 @@ void FMODBridge_register(lua_State *L) {
         lua_pushcfunction(L, &FMODBridge_func_FMOD_System_GetCPUUsage);
         lua_setfield(L, -4, "get_cpu_usage");
         #endif
+        #ifdef FMODBridge_func_FMOD_System_GetCPUUsageEx
+        lua_pushcfunction(L, &FMODBridge_func_FMOD_System_GetCPUUsageEx);
+        lua_setfield(L, -4, "get_cpu_usage_ex");
+        #endif
         #ifdef FMODBridge_func_FMOD_System_GetFileUsage
         lua_pushcfunction(L, &FMODBridge_func_FMOD_System_GetFileUsage);
         lua_setfield(L, -4, "get_file_usage");
@@ -10606,6 +10652,10 @@ void FMODBridge_register(lua_State *L) {
         #ifdef FMODBridge_func_FMOD_System_GetChannel
         lua_pushcfunction(L, &FMODBridge_func_FMOD_System_GetChannel);
         lua_setfield(L, -4, "get_channel");
+        #endif
+        #ifdef FMODBridge_func_FMOD_System_GetDSPInfoByType
+        lua_pushcfunction(L, &FMODBridge_func_FMOD_System_GetDSPInfoByType);
+        lua_setfield(L, -4, "get_dsp_info_by_type");
         #endif
         #ifdef FMODBridge_func_FMOD_System_GetMasterChannelGroup
         lua_pushcfunction(L, &FMODBridge_func_FMOD_System_GetMasterChannelGroup);
@@ -12038,6 +12088,9 @@ void FMODBridge_register(lua_State *L) {
         /* unsigned int randomSeed */
         addPropertyGetter(FMOD_ADVANCEDSETTINGS, randomSeed, unsigned_int);
         addPropertySetter(FMOD_ADVANCEDSETTINGS, randomSeed, unsigned_int);
+        /* int maxConvolutionThreads */
+        addPropertyGetter(FMOD_ADVANCEDSETTINGS, maxConvolutionThreads, int);
+        addPropertySetter(FMOD_ADVANCEDSETTINGS, maxConvolutionThreads, int);
         #ifdef FMODBridge_extras_FMOD_ADVANCEDSETTINGS
         FMODBridge_extras_FMOD_ADVANCEDSETTINGS
         #endif
@@ -12223,7 +12276,7 @@ void FMODBridge_register(lua_State *L) {
         addPropertySetter(FMOD_CODEC_STATE, filesize, unsigned_int);
         /* FMOD_FILE_READ_CALLBACK fileread */
         /* FMOD_FILE_SEEK_CALLBACK fileseek */
-        /* FMOD_CODEC_METADATA_CALLBACK metadata */
+        /* FMOD_CODEC_METADATA_FUNC metadata */
         /* int waveformatversion */
         addPropertyGetter(FMOD_CODEC_STATE, waveformatversion, int);
         addPropertySetter(FMOD_CODEC_STATE, waveformatversion, int);

@@ -42,6 +42,7 @@ typedef unsigned int FMOD_STUDIO_PARAMETER_FLAGS;
 #define FMOD_STUDIO_PARAMETER_READONLY                      0x00000001
 #define FMOD_STUDIO_PARAMETER_AUTOMATIC                     0x00000002
 #define FMOD_STUDIO_PARAMETER_GLOBAL                        0x00000004
+#define FMOD_STUDIO_PARAMETER_DISCRETE                      0x00000008
 
 typedef unsigned int FMOD_STUDIO_SYSTEM_CALLBACK_TYPE;
 #define FMOD_STUDIO_SYSTEM_CALLBACK_PREUPDATE               0x00000001

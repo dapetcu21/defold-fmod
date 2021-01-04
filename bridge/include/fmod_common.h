@@ -58,7 +58,7 @@ typedef unsigned long long         FMOD_PORT_INDEX;
 /*
     FMOD constants
 */
-#define FMOD_VERSION    0x00020100                     /* 0xaaaabbcc -> aaaa = product version, bb = major version, cc = minor version.*/
+#define FMOD_VERSION    0x00020107                     /* 0xaaaabbcc -> aaaa = product version, bb = major version, cc = minor version.*/
 
 typedef unsigned int FMOD_DEBUG_FLAGS;
 #define FMOD_DEBUG_LEVEL_NONE                       0x00000000
@@ -126,6 +126,8 @@ typedef unsigned int FMOD_SYSTEM_CALLBACK_TYPE;
 #define FMOD_SYSTEM_CALLBACK_PREUPDATE              0x00000400
 #define FMOD_SYSTEM_CALLBACK_POSTUPDATE             0x00000800
 #define FMOD_SYSTEM_CALLBACK_RECORDLISTCHANGED      0x00001000
+#define FMOD_SYSTEM_CALLBACK_BUFFEREDNOMIX          0x00002000
+#define FMOD_SYSTEM_CALLBACK_DEVICEREINITIALIZE     0x00004000
 #define FMOD_SYSTEM_CALLBACK_ALL                    0xFFFFFFFF
 
 typedef unsigned int FMOD_MODE;
@@ -203,6 +205,8 @@ typedef int FMOD_THREAD_PRIORITY;
 #define FMOD_THREAD_PRIORITY_STUDIO_UPDATE          FMOD_THREAD_PRIORITY_MEDIUM
 #define FMOD_THREAD_PRIORITY_STUDIO_LOAD_BANK       FMOD_THREAD_PRIORITY_MEDIUM
 #define FMOD_THREAD_PRIORITY_STUDIO_LOAD_SAMPLE     FMOD_THREAD_PRIORITY_MEDIUM
+#define FMOD_THREAD_PRIORITY_CONVOLUTION1           FMOD_THREAD_PRIORITY_VERY_HIGH
+#define FMOD_THREAD_PRIORITY_CONVOLUTION2           FMOD_THREAD_PRIORITY_VERY_HIGH
 
 typedef unsigned int FMOD_THREAD_STACK_SIZE;
 #define FMOD_THREAD_STACK_SIZE_DEFAULT              0
@@ -217,6 +221,8 @@ typedef unsigned int FMOD_THREAD_STACK_SIZE;
 #define FMOD_THREAD_STACK_SIZE_STUDIO_UPDATE        (96  * 1024)
 #define FMOD_THREAD_STACK_SIZE_STUDIO_LOAD_BANK     (96  * 1024)
 #define FMOD_THREAD_STACK_SIZE_STUDIO_LOAD_SAMPLE   (96  * 1024)
+#define FMOD_THREAD_STACK_SIZE_CONVOLUTION1         (16  * 1024)
+#define FMOD_THREAD_STACK_SIZE_CONVOLUTION2         (16  * 1024)
 
 typedef unsigned long long FMOD_THREAD_AFFINITY;
 /* Platform agnostic thread groupings */
@@ -236,6 +242,9 @@ typedef unsigned long long FMOD_THREAD_AFFINITY;
 #define FMOD_THREAD_AFFINITY_STUDIO_UPDATE          FMOD_THREAD_AFFINITY_GROUP_B
 #define FMOD_THREAD_AFFINITY_STUDIO_LOAD_BANK       FMOD_THREAD_AFFINITY_GROUP_C
 #define FMOD_THREAD_AFFINITY_STUDIO_LOAD_SAMPLE     FMOD_THREAD_AFFINITY_GROUP_C
+#define FMOD_THREAD_AFFINITY_CONVOLUTION1           FMOD_THREAD_AFFINITY_GROUP_C
+#define FMOD_THREAD_AFFINITY_CONVOLUTION2           FMOD_THREAD_AFFINITY_GROUP_C
+
 /* Core mask, valid up to 1 << 62 */
 #define FMOD_THREAD_AFFINITY_CORE_ALL               0
 #define FMOD_THREAD_AFFINITY_CORE_0                 (1 << 0)
@@ -300,6 +309,8 @@ typedef enum FMOD_THREAD_TYPE
     FMOD_THREAD_TYPE_STUDIO_UPDATE,
     FMOD_THREAD_TYPE_STUDIO_LOAD_BANK,
     FMOD_THREAD_TYPE_STUDIO_LOAD_SAMPLE,
+    FMOD_THREAD_TYPE_CONVOLUTION1,
+    FMOD_THREAD_TYPE_CONVOLUTION2,
 
     FMOD_THREAD_TYPE_MAX,
     FMOD_THREAD_TYPE_FORCEINT = 65536
@@ -754,6 +765,7 @@ typedef struct FMOD_ADVANCEDSETTINGS
     int                 DSPBufferPoolSize;
     FMOD_DSP_RESAMPLER  resamplerMethod;
     unsigned int        randomSeed;
+    int                 maxConvolutionThreads;
 } FMOD_ADVANCEDSETTINGS;
 
 typedef struct FMOD_TAG

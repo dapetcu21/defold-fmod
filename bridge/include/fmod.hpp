@@ -124,6 +124,7 @@ namespace FMOD
         FMOD_RESULT F_API getOutputHandle         (void **handle);
         FMOD_RESULT F_API getChannelsPlaying      (int *channels, int *realchannels = 0);
         FMOD_RESULT F_API getCPUUsage             (float *dsp, float *stream, float *geometry, float *update, float *total);
+        FMOD_RESULT F_API getCPUUsageEx           (float *convolutionThread1, float *convolutionThread2);
         FMOD_RESULT F_API getFileUsage            (long long *sampleBytesRead, long long *streamBytesRead, long long *otherBytesRead);
 
         // Sound/DSP/Channel/FX creation and retrieval.
@@ -138,6 +139,7 @@ namespace FMOD
         FMOD_RESULT F_API playSound               (Sound *sound, ChannelGroup *channelgroup, bool paused, Channel **channel);
         FMOD_RESULT F_API playDSP                 (DSP *dsp, ChannelGroup *channelgroup, bool paused, Channel **channel);
         FMOD_RESULT F_API getChannel              (int channelid, Channel **channel);
+        FMOD_RESULT F_API getDSPInfoByType        (FMOD_DSP_TYPE type, const FMOD_DSP_DESCRIPTION **description);
         FMOD_RESULT F_API getMasterChannelGroup   (ChannelGroup **channelgroup);
         FMOD_RESULT F_API getMasterSoundGroup     (SoundGroup **soundgroup);
 
