@@ -54,6 +54,10 @@ cp -L "$TMPDIR/android/api/studio/lib/arm64-v8a/libfmodstudio.so" "$REPO/fmod/re
 cp -L "$TMPDIR/android/api/core/lib/armeabi-v7a/libfmod.so" "$REPO/fmod/res/armv7-android/lib/armeabi-v7a/libfmod.so"
 cp -L "$TMPDIR/android/api/studio/lib/armeabi-v7a/libfmodstudio.so" "$REPO/fmod/res/armv7-android/lib/armeabi-v7a/libfmodstudio.so"
 
-echo -e "${GREEN}Done!${NC}"
+echo -e "${YELLOW}Copying FMOD headers...${NC}"
+rm -f "$REPO/bridge/include/fmod"*
+cp "$TMPDIR/linux/api/core/inc/"*.{h,hpp} "$REPO/bridge/include/"
+cp "$TMPDIR/linux/api/studio/inc/"*.{h,hpp} "$REPO/bridge/include/"
 
 rm -rf "$TMPDIR"
+echo -e "${GREEN}Done!${NC}"
