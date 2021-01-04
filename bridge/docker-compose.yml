@@ -3,3 +3,7 @@ services:
     build: docker/build_linux
     volumes:
     - "..:/repo"
+  build_web:
+    build: docker/build_web
+    volumes:
+    - "..:/repo"
