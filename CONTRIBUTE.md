@@ -19,6 +19,13 @@ cd bridge
 python generate_bindings.py
 ```
 
+Alternatively, if you don't want to install Python on your system, you can run
+it through Docker:
+
+```
+docker-compose -f bridge/docker_compose.generate_bindings.yml up
+```
+
 The bridge library comes with compilation scripts for each platform:
 
 ### macOS & iOS

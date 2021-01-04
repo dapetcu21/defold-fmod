@@ -1,0 +1,5 @@
+services:
+  generate_bindings:
+    build: docker/generate_bindings
+    volumes:
+      - ".:/bridge"
