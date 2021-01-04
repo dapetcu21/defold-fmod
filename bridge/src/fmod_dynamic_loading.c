@@ -350,7 +350,7 @@ bool FMODBridge_linkLibraries() {
     #endif
 
     #ifdef _WIN32
-        #define LIBPREFIX ""
+        #define LIBPREFIX "fmod-" FMB_ARCH SEP
         #define libOpen(var, path) \
             var = LoadLibraryA(path); \
             if (!var) { LOGW("LoadLibrary(\"%s\") failed with error code %lu", path, GetLastError()); }
