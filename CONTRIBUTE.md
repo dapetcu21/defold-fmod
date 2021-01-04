@@ -66,8 +66,14 @@ the SDK versions that the Docker containers use.
 ## Updating FMOD to a newer version
 
 This just boils down to downloading all the FMOD distributions and copying the
-libraries to the appropriate locations. On HTML5, use the upstream W32 distribution:
+libraries to the appropriate locations. A script is provided for the second part.
 
-```
-cp path_to_fmodstudioapi/api/studio/lib/upstream/w32/fmodstudio.a  fmod/lib/web/libfmodstudio.a 
+Download all the distributions to the same directory from 
+https://fmod.com/download (make sure to uncheck "Open safe files after 
+downloading" if using Safari), then, on macOS, run `update_fmod.sh` with the
+common prefix of the files you downloaded as the first argument:
+
+```bash
+# For example, if you downloaded FMOD 2.01.07:
+./update_fmod.sh ~/Downloads/fmodstudioapi20107
 ```
