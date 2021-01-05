@@ -68,9 +68,15 @@ the SDK versions that the Docker containers use.
 This just boils down to downloading all the FMOD distributions and copying the
 libraries to the appropriate locations. A script is provided for the second part.
 
+You need to be on macOS and have `unar` (The Unarchiver's CLI tool) installed:
+
+```bash
+brew install unar
+```
+
 Download all the distributions to the same directory from 
 https://fmod.com/download (make sure to uncheck "Open safe files after 
-downloading" if using Safari), then, on macOS, run `update_fmod.sh` with the
+downloading" if using Safari), then run `update_fmod.sh` with the
 common prefix of the files you downloaded as the first argument:
 
 ```bash
