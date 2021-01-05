@@ -1,0 +1,29 @@
+LIBPATH64 = ..\fmod\lib\x86_64-win32\fmodbridge.lib
+LIBPATH32 = ..\fmod\lib\x86-win32\fmodbridge.lib
+
+SOURCES = \
+	src\fmod_init.c \
+	src\fmod_dynamic_loading.c \
+	src\fmod_generated.c
+
+HEADERS = src\fmod_bridge.h
+
+CC = cl
+LD = lib
+CFLAGS = /I include /permissive- /GS /W3 /Gy /Zc:wchar_t /O2 /sdl /Zc:inline /fp:precise /D "NDEBUG" /D "_LIB" /D "_UNICODE" /D "UNICODE" /WX- /Zc:forScope /Oi /MT /FC /EHsc /nologo
+CFLAGS64 = $(CFLAGS)
+
+all: $(LIBPATH64)
+
+build\win-x86_64-c-%.obj: src\%.c $(HEADERS)
+	echo $(CC) $(CFLAGS64) /Fo $@ /c $<
+	$(CC) $(CFLAGS64) /Fo$@ /c $<
+
+OBJECTS64 = $(patsubst src\\%.c,build\win-x86_64-c-%.obj,$(SOURCES))
+$(LIBPATH64): $(OBJECTS64)
+	$(LD) /OUT:$@ $^
+
+clean:
+	del /F /Q $(LIBPATH32) $(LIBPATH64) build\win-*.obj
+
+.PHONY: all clean

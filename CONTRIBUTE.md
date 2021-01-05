@@ -48,8 +48,8 @@ make -f Makefile.ios
 
 ### Windows
 
-Install Visual Studio 2017, then open `bridge/vs_proj/fmodbridge.sln`. Build
-the `Release x86` and `Release x64` targets.
+Install [Visual Studio 2019 Build Tools](https://visualstudio.microsoft.com/downloads/)
+and [GNU Make](http://gnuwin32.sourceforge.net/packages/make.htm), then run `build_windows.bat`.
 
 ### Linux, Android, HTML5
 
