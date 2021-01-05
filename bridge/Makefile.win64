@@ -16,7 +16,6 @@ CFLAGS64 = $(CFLAGS)
 all: $(LIBPATH64)
 
 build\win-x86_64-c-%.obj: src\%.c $(HEADERS)
-	echo $(CC) $(CFLAGS64) /Fo $@ /c $<
 	$(CC) $(CFLAGS64) /Fo$@ /c $<
 
 OBJECTS64 = $(patsubst src\\%.c,build\win-x86_64-c-%.obj,$(SOURCES))
