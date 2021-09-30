@@ -22,6 +22,8 @@ inline static void throwError(FMOD_RESULT res, lua_State* L) {
 
 /* Basic types */
 
+#define optional(L, index, typename, x) (lua_isnoneornil(L, index) ? ((typename)0) : (x))
+
 #define FMODBridge_push_char(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_char(L, index) ((char)luaL_checknumber(L, index))
 #define FMODBridge_push_short(L, x) lua_pushnumber(L, (lua_Number)(x))
@@ -693,9 +695,9 @@ static int _FMODBridge_func_FMOD_Studio_CommandReplay_GetCommandString(lua_State
 {% if f.generated %}#ifndef FMODBridge_func_{{ f.name }}
 #define FMODBridge_func_{{ f.name }} _FMODBridge_func_{{ f.name }}
 static int _FMODBridge_func_{{ f.name }}(lua_State *L) {
-    {% for arg in f.args %}{% if arg.usage == "input" %}{{ arg.type.c_type }} {{ arg.name }} = FMODBridge_check_{{ arg.type.name }}(L, {{ arg.arg_index }});
-    {% elif arg.usage == "input_deref" %}{{ arg.type.c_type }}* {{ arg.name }} = FMODBridge_check_ptr_{{ arg.type.name }}(L, {{ arg.arg_index }});
-    {% elif arg.usage == "input_ptr" %}{{ arg.type.child.c_type }} {{ arg.name }} = FMODBridge_check_{{ arg.type.child.name }}(L, {{ arg.arg_index }});
+    {% for arg in f.args %}{% if arg.usage == "input" %}{{ arg.type.c_type }} {{ arg.name }} = {% if arg.optional %}optional(L, {{ arg.arg_index }}, {{ arg.type.c_type }}, {% endif %}FMODBridge_check_{{ arg.type.name }}(L, {{ arg.arg_index }}){% if arg.optional %}){% endif %};
+    {% elif arg.usage == "input_deref" %}{{ arg.type.c_type }}* {{ arg.name }} = {% if arg.optional %}optional(L, {{ arg.arg_index }}, {{ arg.type.c_type }}*, {% endif %}FMODBridge_check_ptr_{{ arg.type.name }}(L, {{ arg.arg_index }}){% if arg.optional %}){% endif %};
+    {% elif arg.usage == "input_ptr" %}{{ arg.type.child.c_type }} {{ arg.name }} = {% if arg.optional %}optional(L, {{ arg.arg_index }}, {{ arg.type.child.c_type }}, {% endif %}FMODBridge_check_{{ arg.type.child.name }}(L, {{ arg.arg_index }}){% if arg.optional %}){% endif %};
     {% elif arg.usage == "output" %}{{ arg.type.child.c_type }} {{ arg.name }};
     {% elif arg.usage == "output_ptr" %}{{ arg.type.c_type }} {{ arg.name }} = FMODBridge_push_{{ arg.type.name }}(L, NULL);
     {% endif %}{% endfor %}ensure({{ f.library }}, {{ f.name }}, FMOD_RESULT{% for arg in f.args %}, {{ arg.type.c_type }}{% endfor %});

@@ -23,6 +23,28 @@ accessors = {
     "output": "&",
 }
 
+arg_usage_overrides = {
+    "FMOD_System_CreateSound": {
+        "exinfo": "input"
+    },
+    "FMOD_System_CreateStream": {
+        "exinfo": "input"
+    },
+}
+
+optional_arguments = {
+    "FMOD_System_CreateSound": {
+        "exinfo": True
+    },
+    "FMOD_System_CreateStream": {
+        "exinfo": True
+    },
+    "FMOD_System_PlaySound": {
+        "channelgroup": True,
+        "paused": True,
+    },
+}
+
 valid = re.compile(r"^_*(IDs|[A-Z][a-z]+|[A-Z0-9]+(?![a-z]))")
 def to_snake_case(s):
     components = []
@@ -155,6 +177,7 @@ def generate_bindings(ast):
         def __init__(self, node):
             self.name = node.name
             self.arg_index = 0
+            self.optional = False
             type = ParsedTypeDecl(node=node.type)
             self.type = type
             self.usage = "unknown"
@@ -184,9 +207,16 @@ def generate_bindings(ast):
             self.library = "UK"
             self.struct = None
 
+
         def parse_arguments(self):
+            arg_overrides = arg_usage_overrides.get(self.name, {})
+            optionals = optional_arguments.get(self.name, {})
+
             for param in self.node.type.args.params:
-                self.args.append(MethodArgument(param))
+                arg = MethodArgument(param)
+                arg.usage = arg_overrides.get(arg.name, arg.usage)
+                arg.optional = optionals.get(arg.name, arg.optional)
+                self.args.append(arg)
 
         def detect_scope(self):
             first_arg = self.args[0]
