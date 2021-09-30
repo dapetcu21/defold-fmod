@@ -22,6 +22,8 @@ inline static void throwError(FMOD_RESULT res, lua_State* L) {
 
 /* Basic types */
 
+#define optional(L, index, typename, x) (lua_isnoneornil(L, index) ? ((typename)0) : (x))
+
 #define FMODBridge_push_char(L, x) lua_pushnumber(L, (lua_Number)(x))
 #define FMODBridge_check_char(L, index) ((char)luaL_checknumber(L, index))
 #define FMODBridge_push_short(L, x) lua_pushnumber(L, (lua_Number)(x))
@@ -2939,38 +2941,36 @@ static int _FMODBridge_func_FMOD_System_GetFileUsage(lua_State *L) {
 #endif
 
 
-/* FMOD_System_CreateSound(input FMOD_SYSTEM* system, input const char* name_or_data, input FMOD_MODE mode, output_ptr FMOD_CREATESOUNDEXINFO* exinfo, output FMOD_SOUND** sound, ) */
+/* FMOD_System_CreateSound(input FMOD_SYSTEM* system, input const char* name_or_data, input FMOD_MODE mode, input FMOD_CREATESOUNDEXINFO* exinfo, output FMOD_SOUND** sound, ) */
 #ifndef FMODBridge_func_FMOD_System_CreateSound
 #define FMODBridge_func_FMOD_System_CreateSound _FMODBridge_func_FMOD_System_CreateSound
 static int _FMODBridge_func_FMOD_System_CreateSound(lua_State *L) {
     FMOD_SYSTEM* system = FMODBridge_check_ptr_FMOD_SYSTEM(L, 1);
     const char* name_or_data = FMODBridge_check_ptr_char(L, 2);
     FMOD_MODE mode = FMODBridge_check_unsigned_int(L, 3);
-    FMOD_CREATESOUNDEXINFO* exinfo = FMODBridge_push_ptr_FMOD_CREATESOUNDEXINFO(L, NULL);
+    FMOD_CREATESOUNDEXINFO* exinfo = optional(L, 4, FMOD_CREATESOUNDEXINFO*, FMODBridge_check_ptr_FMOD_CREATESOUNDEXINFO(L, 4));
     FMOD_SOUND* sound;
     ensure(LL, FMOD_System_CreateSound, FMOD_RESULT, FMOD_SYSTEM*, const char*, FMOD_MODE, FMOD_CREATESOUNDEXINFO*, FMOD_SOUND**);
     errCheck(FMOD_System_CreateSound(system, name_or_data, mode, exinfo, &sound));
-    lua_pushvalue(L, -1);
     FMODBridge_push_ptr_FMOD_SOUND(L, sound);
-    return 2;
+    return 1;
 }
 #endif
 
 
-/* FMOD_System_CreateStream(input FMOD_SYSTEM* system, input const char* name_or_data, input FMOD_MODE mode, output_ptr FMOD_CREATESOUNDEXINFO* exinfo, output FMOD_SOUND** sound, ) */
+/* FMOD_System_CreateStream(input FMOD_SYSTEM* system, input const char* name_or_data, input FMOD_MODE mode, input FMOD_CREATESOUNDEXINFO* exinfo, output FMOD_SOUND** sound, ) */
 #ifndef FMODBridge_func_FMOD_System_CreateStream
 #define FMODBridge_func_FMOD_System_CreateStream _FMODBridge_func_FMOD_System_CreateStream
 static int _FMODBridge_func_FMOD_System_CreateStream(lua_State *L) {
     FMOD_SYSTEM* system = FMODBridge_check_ptr_FMOD_SYSTEM(L, 1);
     const char* name_or_data = FMODBridge_check_ptr_char(L, 2);
     FMOD_MODE mode = FMODBridge_check_unsigned_int(L, 3);
-    FMOD_CREATESOUNDEXINFO* exinfo = FMODBridge_push_ptr_FMOD_CREATESOUNDEXINFO(L, NULL);
+    FMOD_CREATESOUNDEXINFO* exinfo = optional(L, 4, FMOD_CREATESOUNDEXINFO*, FMODBridge_check_ptr_FMOD_CREATESOUNDEXINFO(L, 4));
     FMOD_SOUND* sound;
     ensure(LL, FMOD_System_CreateStream, FMOD_RESULT, FMOD_SYSTEM*, const char*, FMOD_MODE, FMOD_CREATESOUNDEXINFO*, FMOD_SOUND**);
     errCheck(FMOD_System_CreateStream(system, name_or_data, mode, exinfo, &sound));
-    lua_pushvalue(L, -1);
     FMODBridge_push_ptr_FMOD_SOUND(L, sound);
-    return 2;
+    return 1;
 }
 #endif
 
@@ -3055,8 +3055,8 @@ static int _FMODBridge_func_FMOD_System_CreateReverb3D(lua_State *L) {
 static int _FMODBridge_func_FMOD_System_PlaySound(lua_State *L) {
     FMOD_SYSTEM* system = FMODBridge_check_ptr_FMOD_SYSTEM(L, 1);
     FMOD_SOUND* sound = FMODBridge_check_ptr_FMOD_SOUND(L, 2);
-    FMOD_CHANNELGROUP* channelgroup = FMODBridge_check_ptr_FMOD_CHANNELGROUP(L, 3);
-    FMOD_BOOL paused = FMODBridge_check_FMOD_BOOL(L, 4);
+    FMOD_CHANNELGROUP* channelgroup = optional(L, 3, FMOD_CHANNELGROUP*, FMODBridge_check_ptr_FMOD_CHANNELGROUP(L, 3));
+    FMOD_BOOL paused = optional(L, 4, FMOD_BOOL, FMODBridge_check_FMOD_BOOL(L, 4));
     FMOD_CHANNEL* channel;
     ensure(LL, FMOD_System_PlaySound, FMOD_RESULT, FMOD_SYSTEM*, FMOD_SOUND*, FMOD_CHANNELGROUP*, FMOD_BOOL, FMOD_CHANNEL**);
     errCheck(FMOD_System_PlaySound(system, sound, channelgroup, paused, &channel));
