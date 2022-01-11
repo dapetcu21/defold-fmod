@@ -54,7 +54,7 @@ int FMODBridge_dmBuffer_GetBytes(FMODBridge_HBuffer buffer, void** bytes, uint32
 }
 
 void FMODBridge_dmScript_PushBuffer(lua_State* L, FMODBridge_HBuffer buffer) {
-    dmScript::LuaHBuffer wrapper = { buffer, dmScript::OWNER_C };
+    dmScript::LuaHBuffer wrapper(buffer, dmScript::OWNER_C);
     dmScript::PushBuffer(L, wrapper);
 }
 
