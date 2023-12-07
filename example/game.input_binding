@@ -1,3 +1,11 @@
+key_trigger {
+  input: KEY_UP
+  action: "up"
+}
+key_trigger {
+  input: KEY_DOWN
+  action: "down"
+}
 mouse_trigger {
   input: MOUSE_BUTTON_LEFT
   action: "click"

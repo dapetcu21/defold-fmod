@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="AudioFile" id="{41ebee6f-7152-4a46-abf5-66fc10beefb3}">
+		<property name="assetPath">
+			<value>242740__marlonhj__engine.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>1</value>
+		</property>
+		<property name="length">
+			<value>2.3668749999999998</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{ed13fbb6-f14b-4dec-b881-2a5339471836}</destination>
+		</relationship>
+	</object>
+</objects>
