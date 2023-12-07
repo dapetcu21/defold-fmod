@@ -21,7 +21,7 @@ function init(self)
   self.event = event
 
   -- Error handling example
-  --[[local ok, err = pcall(function ()
+  local ok, err = pcall(function ()
     fmod.studio.system:get_event("event:/Inexistent event")
   end)
   if not ok then
@@ -31,7 +31,7 @@ function init(self)
     if code == fmod.ERR_EVENT_NOTFOUND then
       print("Ooops! This event doesn't exist!")
     end
-  end]]
+  end
 
   local listener_attr = fmod._3D_ATTRIBUTES()
   self.listener_attr = listener_attr
